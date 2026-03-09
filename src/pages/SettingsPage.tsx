@@ -32,6 +32,7 @@ const SettingsPage = () => {
     postal_code: "", city: "", country: "France", legal_status: "",
     vat_number: "", ape_code: "", website: "", invoice_footer: "",
     google_review_url: "", vat_enabled: true, logo_url: "",
+    intake_checklist_items: [] as string[],
   });
 
   useEffect(() => {
