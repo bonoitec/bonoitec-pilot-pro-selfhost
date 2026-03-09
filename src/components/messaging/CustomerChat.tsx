@@ -31,7 +31,7 @@ export function CustomerChat({ trackingCode }: CustomerChatProps) {
       _tracking_code: trackingCode.toUpperCase(),
     });
     if (data && Array.isArray(data)) {
-      setMessages(data);
+      setMessages(data as unknown as Message[]);
     }
   };
 

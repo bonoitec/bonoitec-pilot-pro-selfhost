@@ -38,18 +38,19 @@ interface Props {
 }
 
 export function StatusNotificationSuggester({ repair, newStatus, onDismiss }: Props) {
-  const template = defaultMessages[newStatus];
-  if (!template) return null;
+  const { toast } = useToast();
+  const qc = useQueryClient();
 
+  const template = defaultMessages[newStatus];
   const device = repair.devices ? `${repair.devices.brand} ${repair.devices.model}` : "votre appareil";
   const reference = repair.reference || repair.tracking_code || "";
 
   const fillTemplate = (text: string) =>
     text.replace(/\{\{device\}\}/g, device).replace(/\{\{reference\}\}/g, reference);
 
-  const [message, setMessage] = useState(fillTemplate(template.body));
-  const { toast } = useToast();
-  const qc = useQueryClient();
+  const [message, setMessage] = useState(template ? fillTemplate(template.body) : "");
+
+  if (!template) return null;
 
   const sendNotification = useMutation({
     mutationFn: async () => {
