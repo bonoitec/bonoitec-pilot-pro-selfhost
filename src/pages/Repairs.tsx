@@ -204,7 +204,7 @@ const Repairs = () => {
         )}
       </Tabs>
 
-      <CreateRepairDialog open={showCreate} onOpenChange={setShowCreate} />
+      <CreateRepairWizard open={showCreate} onOpenChange={setShowCreate} />
       <RepairDetailDialog open={!!selectedRepair} onOpenChange={(o) => !o && setSelectedRepair(null)} repair={selectedRepair} />
     </div>
   );
