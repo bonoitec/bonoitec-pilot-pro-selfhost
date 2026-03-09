@@ -117,6 +117,7 @@ const Index = () => {
           )}
         </CardContent>
       </Card>
+      <CreateRepairWizard open={showWizard} onOpenChange={setShowWizard} />
     </div>
   );
 };
