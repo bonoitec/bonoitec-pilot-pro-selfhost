@@ -1,9 +1,12 @@
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Wrench, Clock, CheckCircle2, DollarSign, AlertTriangle, TrendingUp } from "lucide-react";
+import { Wrench, Clock, CheckCircle2, DollarSign, AlertTriangle, TrendingUp, Plus } from "lucide-react";
+import { CreateRepairWizard } from "@/components/dialogs/CreateRepairWizard";
 
 const statusLabels: Record<string, string> = {
   nouveau: "Nouveau",
