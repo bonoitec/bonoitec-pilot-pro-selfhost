@@ -20,7 +20,7 @@ interface ConversationSummary {
   unread_count: number;
 }
 
-export default function Messages() {
+const Messages = forwardRef<HTMLDivElement>(function Messages(_props, ref) {
   const [search, setSearch] = useState("");
   const [selectedRepairId, setSelectedRepairId] = useState<string | null>(null);
   const [selectedOrgId, setSelectedOrgId] = useState<string>("");
