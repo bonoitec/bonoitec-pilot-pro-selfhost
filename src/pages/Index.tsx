@@ -64,9 +64,14 @@ const Index = () => {
 
   return (
     <div className="space-y-6 animate-fade-in">
-      <div>
-        <h1 className="text-2xl font-bold">Dashboard</h1>
-        <p className="text-muted-foreground text-sm">Vue d'ensemble de votre atelier</p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold">Dashboard</h1>
+          <p className="text-muted-foreground text-sm">Vue d'ensemble de votre atelier</p>
+        </div>
+        <Button onClick={() => setShowWizard(true)} size="lg">
+          <Plus className="h-4 w-4 mr-2" />Créer une réparation
+        </Button>
       </div>
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
