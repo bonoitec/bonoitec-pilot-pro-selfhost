@@ -603,6 +603,13 @@ export type Database = {
             referencedRelation: "organizations"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "repairs_technician_id_fkey"
+            columns: ["technician_id"]
+            isOneToOne: false
+            referencedRelation: "technicians"
+            referencedColumns: ["id"]
+          },
         ]
       }
       technicians: {
@@ -688,6 +695,7 @@ export type Database = {
         }
         Returns: Json
       }
+      get_repair_by_tracking_code: { Args: { _code: string }; Returns: Json }
       get_user_org_id: { Args: never; Returns: string }
       has_role: {
         Args: {
@@ -696,6 +704,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      validate_deposit_code: { Args: { _code: string }; Returns: boolean }
     }
     Enums: {
       app_role: "admin" | "technician"
