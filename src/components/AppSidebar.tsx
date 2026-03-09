@@ -2,6 +2,7 @@ import {
   LayoutDashboard, Wrench, Users, Smartphone, Package,
   FileText, Receipt, UserCog, BarChart3, Bot, Settings,
   Zap, BookOpen, QrCode, Cpu, ShoppingBag, Bell, Cog,
+  MessageSquare,
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
