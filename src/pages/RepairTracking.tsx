@@ -25,11 +25,9 @@ export default function RepairTracking() {
   useEffect(() => {
     if (!code) return;
     const fetchRepair = async () => {
-      const { data, error: err } = await supabase
-        .from("repairs")
-        .select("*, clients(name), devices(brand, model, type)")
-        .eq("tracking_code", code.toUpperCase())
-        .maybeSingle();
+      const { data, error: err } = await supabase.rpc("get_repair_by_tracking_code", {
+        _code: code.toUpperCase(),
+      });
 
       if (err || !data) {
         setError("Réparation introuvable. Vérifiez votre code de suivi.");
@@ -39,16 +37,6 @@ export default function RepairTracking() {
       setLoading(false);
     };
     fetchRepair();
-
-    // Realtime subscription
-    const channel = supabase
-      .channel(`repair-${code}`)
-      .on("postgres_changes", { event: "UPDATE", schema: "public", table: "repairs", filter: `tracking_code=eq.${code.toUpperCase()}` }, (payload) => {
-        setRepair((prev: any) => ({ ...prev, ...payload.new }));
-      })
-      .subscribe();
-
-    return () => { supabase.removeChannel(channel); };
   }, [code]);
 
   if (loading) {
@@ -78,7 +66,6 @@ export default function RepairTracking() {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Header */}
       <div className="bg-card border-b sticky top-0 z-10">
         <div className="max-w-lg mx-auto p-4 flex items-center gap-3">
           <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
@@ -93,7 +80,6 @@ export default function RepairTracking() {
       </div>
 
       <div className="max-w-lg mx-auto p-4 space-y-4">
-        {/* Status Banner */}
         <Card className="overflow-hidden">
           <div className={`p-6 text-center ${currentStatus.color} border-0`}>
             <p className="text-4xl mb-2">{currentStatus.emoji}</p>
@@ -106,7 +92,6 @@ export default function RepairTracking() {
           </div>
         </Card>
 
-        {/* Progress Steps */}
         <Card>
           <CardContent className="p-4">
             <div className="space-y-3">
@@ -134,36 +119,22 @@ export default function RepairTracking() {
           </CardContent>
         </Card>
 
-        {/* Details */}
         <Card>
           <CardContent className="p-4 space-y-3">
             <h3 className="text-sm font-semibold">Détails</h3>
-            {repair.devices && (
+            {repair.device_brand && (
               <div className="flex justify-between text-sm">
                 <span className="text-muted-foreground">Appareil</span>
-                <span className="font-medium">{repair.devices.brand} {repair.devices.model}</span>
+                <span className="font-medium">{repair.device_brand} {repair.device_model}</span>
               </div>
             )}
             <div className="flex justify-between text-sm">
               <span className="text-muted-foreground">Problème</span>
               <span className="font-medium text-right max-w-[60%]">{repair.issue}</span>
             </div>
-            {repair.diagnostic && (
-              <div className="flex justify-between text-sm">
-                <span className="text-muted-foreground">Diagnostic</span>
-                <span className="font-medium text-right max-w-[60%]">{repair.diagnostic}</span>
-              </div>
-            )}
-            {repair.final_price && (
-              <div className="flex justify-between text-sm">
-                <span className="text-muted-foreground">Prix</span>
-                <span className="font-bold">{repair.final_price} €</span>
-              </div>
-            )}
           </CardContent>
         </Card>
 
-        {/* Tech Message */}
         {repair.technician_message && (
           <Card className="border-primary/20">
             <CardContent className="p-4">
@@ -176,7 +147,6 @@ export default function RepairTracking() {
           </Card>
         )}
 
-        {/* Photos */}
         {repair.photos && Array.isArray(repair.photos) && repair.photos.length > 0 && (
           <Card>
             <CardContent className="p-4">

@@ -32,7 +32,7 @@ export default function DepositForm() {
 
   useEffect(() => {
     if (!code) return;
-    supabase.from("deposit_codes").select("id").eq("code", code).eq("active", true).maybeSingle()
+    supabase.rpc("validate_deposit_code", { _code: code })
       .then(({ data }) => setValid(!!data));
   }, [code]);
 
