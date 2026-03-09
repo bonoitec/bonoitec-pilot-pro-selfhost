@@ -10,7 +10,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
-import { User, Smartphone, AlertCircle, Settings, StickyNote, ClipboardCheck, Star } from "lucide-react";
+import { User, Smartphone, AlertCircle, Settings, StickyNote, ClipboardCheck, Star, PenTool } from "lucide-react";
+import { SignaturePad } from "@/components/SignaturePad";
 
 interface Props {
   open: boolean;
@@ -54,6 +55,7 @@ export function CreateRepairDialog({ open, onOpenChange }: Props) {
   const [screenCondition, setScreenCondition] = useState(5);
   const [frameCondition, setFrameCondition] = useState(5);
   const [backCondition, setBackCondition] = useState(5);
+  const [signatureDataUrl, setSignatureDataUrl] = useState<string | null>(null);
 
   const { data: org } = useQuery({
     queryKey: ["organization"],
@@ -109,6 +111,18 @@ export function CreateRepairDialog({ open, onOpenChange }: Props) {
         .filter(([, v]) => v)
         .map(([k]) => k === "Diagnostic impossible" ? `${k}: ${diagnosticImpossibleReason}` : k);
 
+      // Upload signature if present
+      let signatureUrl: string | null = null;
+      if (signatureDataUrl) {
+        const blob = await (await fetch(signatureDataUrl)).blob();
+        const path = `signatures/${orgId}/${ref}-${Date.now()}.png`;
+        const { error: uploadErr } = await supabase.storage.from("logos").upload(path, blob, { contentType: "image/png" });
+        if (!uploadErr) {
+          const { data: urlData } = supabase.storage.from("logos").getPublicUrl(path);
+          signatureUrl = urlData.publicUrl;
+        }
+      }
+
       const { error } = await supabase.from("repairs").insert({
         organization_id: orgId, reference: ref,
         client_id: form.client_id || null, device_id: form.device_id || null,
@@ -119,6 +133,7 @@ export function CreateRepairDialog({ open, onOpenChange }: Props) {
         screen_condition: screenCondition,
         frame_condition: frameCondition,
         back_condition: backCondition,
+        customer_signature_url: signatureUrl,
       } as any);
       if (error) throw error;
     },
@@ -131,6 +146,7 @@ export function CreateRepairDialog({ open, onOpenChange }: Props) {
       setScreenCondition(5);
       setFrameCondition(5);
       setBackCondition(5);
+      setSignatureDataUrl(null);
       onOpenChange(false);
     },
     onError: (e: Error) => toast({ title: "Erreur", description: e.message, variant: "destructive" }),
@@ -253,6 +269,23 @@ export function CreateRepairDialog({ open, onOpenChange }: Props) {
                 <Label className="text-xs text-muted-foreground">Prix estimé (€)</Label>
                 <Input type="number" step="0.01" value={form.estimated_price} onChange={e => setForm({ ...form, estimated_price: e.target.value })} placeholder="0.00" />
               </div>
+            </CardContent>
+          </Card>
+
+          {/* Signature client */}
+          <Card className="border-border/60">
+            <CardHeader className="pb-3 pt-4 px-4">
+              <CardTitle className="text-sm font-medium flex items-center gap-2">
+                <PenTool className="h-4 w-4 text-primary" />Signature du client
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="px-4 pb-4">
+              <SignaturePad
+                onSave={setSignatureDataUrl}
+                onClear={() => setSignatureDataUrl(null)}
+                savedSignature={signatureDataUrl}
+                height={160}
+              />
             </CardContent>
           </Card>
 

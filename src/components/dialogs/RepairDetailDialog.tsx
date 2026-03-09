@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
+import { PenTool } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
@@ -233,6 +234,18 @@ export function RepairDetailDialog({ open, onOpenChange, repair }: Props) {
               </label>
             </CardContent>
           </Card>
+
+          {/* Customer Signature */}
+          {(repair as any).customer_signature_url && (
+            <Card className="border-border/60">
+              <CardHeader className="pb-2 pt-3 px-4">
+                <CardTitle className="text-sm flex items-center gap-2"><PenTool className="h-4 w-4 text-primary" />Signature du client</CardTitle>
+              </CardHeader>
+              <CardContent className="px-4 pb-3">
+                <img src={(repair as any).customer_signature_url} alt="Signature client" className="max-h-[100px] border border-border rounded-lg p-2 bg-card" />
+              </CardContent>
+            </Card>
+          )}
 
           <Separator />
 
