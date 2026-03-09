@@ -94,8 +94,8 @@ const Repairs = () => {
                             <p className="text-sm font-medium mt-1">{repair.clients?.name ?? "—"}</p>
                             <p className="text-xs text-muted-foreground">{repair.devices ? `${repair.devices.brand} ${repair.devices.model}` : "—"}</p>
                             <p className="text-xs text-muted-foreground mt-1">{repair.issue}</p>
-                            {repair.technicians?.name && (
-                              <p className="text-xs text-primary mt-2">👤 {repair.technicians.name}</p>
+                            {repair.technician_id && (
+                              <p className="text-xs text-primary mt-2">👤 Technicien assigné</p>
                             )}
                           </CardContent>
                         </Card>
