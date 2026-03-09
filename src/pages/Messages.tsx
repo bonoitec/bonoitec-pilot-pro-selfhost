@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, forwardRef } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
@@ -20,7 +20,7 @@ interface ConversationSummary {
   unread_count: number;
 }
 
-export default function Messages() {
+const Messages = forwardRef<HTMLDivElement>(function Messages(_props, ref) {
   const [search, setSearch] = useState("");
   const [selectedRepairId, setSelectedRepairId] = useState<string | null>(null);
   const [selectedOrgId, setSelectedOrgId] = useState<string>("");
@@ -100,7 +100,7 @@ export default function Messages() {
   );
 
   return (
-    <div className="space-y-6 animate-fade-in">
+    <div ref={ref} className="space-y-6 animate-fade-in">
       <div>
         <h1 className="text-2xl font-bold">Messages</h1>
         <p className="text-muted-foreground text-sm">Conversations avec vos clients</p>
@@ -209,4 +209,6 @@ export default function Messages() {
       </div>
     </div>
   );
-}
+});
+
+export default Messages;
