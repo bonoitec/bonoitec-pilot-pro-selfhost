@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Cpu, Search, Smartphone, Laptop, Gamepad2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { CreateDeviceDialog } from "@/components/dialogs/CreateDeviceDialog";
 
 const typeIcons: Record<string, any> = {
   Smartphone: Smartphone,
@@ -18,11 +19,12 @@ export default function IMEIScanner() {
   const [imei, setImei] = useState("");
   const [result, setResult] = useState<any>(null);
   const [loading, setLoading] = useState(false);
+  const [showCreateDevice, setShowCreateDevice] = useState(false);
   const { toast } = useToast();
 
   const handleScan = async () => {
     if (!imei.trim() || imei.trim().length < 8) {
-      toast({ title: "IMEI invalide", description: "Entrez un IMEI ou numéro de série valide.", variant: "destructive" });
+      toast({ title: "IMEI invalide", description: "Entrez un IMEI ou numéro de série valide (min 8 caractères).", variant: "destructive" });
       return;
     }
     setLoading(true);
@@ -30,14 +32,12 @@ export default function IMEIScanner() {
 
     try {
       const { data: sessionData } = await supabase.auth.getSession();
-      const token = sessionData?.session?.access_token || import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+      const token = sessionData?.session?.access_token;
+      if (!token) throw new Error("Vous devez être connecté");
 
       const resp = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/ai-diagnostic`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
         body: JSON.stringify({
           messages: [{ role: "user", content: `Identifie cet IMEI/numéro de série : ${imei.trim()}` }],
           mode: "imei",
@@ -54,11 +54,10 @@ export default function IMEIScanner() {
       if (content) {
         try {
           const parsed = JSON.parse(content);
-          setResult(parsed);
+          setResult({ ...parsed, imei: imei.trim() });
         } catch {
-          // Try extracting JSON from markdown
           const jsonMatch = content.match(/\{[\s\S]*\}/);
-          if (jsonMatch) setResult(JSON.parse(jsonMatch[0]));
+          if (jsonMatch) setResult({ ...JSON.parse(jsonMatch[0]), imei: imei.trim() });
           else toast({ title: "Erreur", description: "Impossible d'identifier l'appareil.", variant: "destructive" });
         }
       }
@@ -93,7 +92,7 @@ export default function IMEIScanner() {
               className="font-mono"
             />
             <Button onClick={handleScan} disabled={loading}>
-              {loading ? <span className="animate-pulse">...</span> : <Search className="h-4 w-4" />}
+              {loading ? <span className="animate-pulse">...</span> : <><Search className="h-4 w-4 mr-1" />Scanner</>}
             </Button>
           </div>
         </CardContent>
@@ -118,39 +117,25 @@ export default function IMEIScanner() {
             </div>
 
             <div className="mt-4 grid grid-cols-2 gap-3">
-              {result.marque && (
-                <div className="p-3 bg-secondary/50 rounded-lg">
-                  <p className="text-xs text-muted-foreground">Marque</p>
-                  <p className="text-sm font-medium">{result.marque}</p>
-                </div>
-              )}
-              {result.modele && (
-                <div className="p-3 bg-secondary/50 rounded-lg">
-                  <p className="text-xs text-muted-foreground">Modèle</p>
-                  <p className="text-sm font-medium">{result.modele}</p>
-                </div>
-              )}
-              {result.capacite && (
-                <div className="p-3 bg-secondary/50 rounded-lg">
-                  <p className="text-xs text-muted-foreground">Capacité</p>
-                  <p className="text-sm font-medium">{result.capacite}</p>
-                </div>
-              )}
-              {result.annee && (
-                <div className="p-3 bg-secondary/50 rounded-lg">
-                  <p className="text-xs text-muted-foreground">Année</p>
-                  <p className="text-sm font-medium">{result.annee}</p>
-                </div>
-              )}
+              {result.marque && <div className="p-3 bg-secondary/50 rounded-lg"><p className="text-xs text-muted-foreground">Marque</p><p className="text-sm font-medium">{result.marque}</p></div>}
+              {result.modele && <div className="p-3 bg-secondary/50 rounded-lg"><p className="text-xs text-muted-foreground">Modèle</p><p className="text-sm font-medium">{result.modele}</p></div>}
+              {result.capacite && <div className="p-3 bg-secondary/50 rounded-lg"><p className="text-xs text-muted-foreground">Capacité</p><p className="text-sm font-medium">{result.capacite}</p></div>}
+              {result.annee && <div className="p-3 bg-secondary/50 rounded-lg"><p className="text-xs text-muted-foreground">Année</p><p className="text-sm font-medium">{result.annee}</p></div>}
+              <div className="p-3 bg-secondary/50 rounded-lg col-span-2"><p className="text-xs text-muted-foreground">IMEI / N° série</p><p className="text-sm font-medium font-mono">{result.imei}</p></div>
             </div>
 
-            <Button variant="outline" className="w-full mt-4" onClick={() => {
-              toast({ title: "Données copiées", description: "Les informations ont été copiées pour la fiche appareil." });
-            }}>
-              Utiliser pour la fiche appareil
+            <Button className="w-full mt-4" onClick={() => setShowCreateDevice(true)}>
+              Créer la fiche appareil
             </Button>
           </CardContent>
         </Card>
+      )}
+
+      {result && (
+        <CreateDeviceDialog
+          open={showCreateDevice}
+          onOpenChange={setShowCreateDevice}
+        />
       )}
     </div>
   );
