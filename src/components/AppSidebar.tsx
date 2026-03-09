@@ -1,46 +1,32 @@
 import {
-  LayoutDashboard,
-  Wrench,
-  Users,
-  Smartphone,
-  Package,
-  FileText,
-  Receipt,
-  UserCog,
-  BarChart3,
-  Bot,
-  Settings,
-  Zap,
-  BookOpen,
-  QrCode,
-  Cpu,
+  LayoutDashboard, Wrench, Users, Smartphone, Package,
+  FileText, Receipt, UserCog, BarChart3, Bot, Settings,
+  Zap, BookOpen, QrCode, Cpu, ShoppingBag, Bell, Cog,
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
 import {
-  Sidebar,
-  SidebarContent,
-  SidebarGroup,
-  SidebarGroupContent,
-  SidebarGroupLabel,
-  SidebarMenu,
-  SidebarMenuButton,
-  SidebarMenuItem,
-  SidebarHeader,
-  SidebarFooter,
-  useSidebar,
+  Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent,
+  SidebarGroupLabel, SidebarMenu, SidebarMenuButton, SidebarMenuItem,
+  SidebarHeader, SidebarFooter, useSidebar,
 } from "@/components/ui/sidebar";
 
 const mainItems = [
   { title: "Dashboard", url: "/", icon: LayoutDashboard },
   { title: "Réparations", url: "/repairs", icon: Wrench },
   { title: "Clients", url: "/clients", icon: Users },
-  { title: "Appareils", url: "/devices", icon: Smartphone },
-  { title: "Catalogue", url: "/device-catalog", icon: BookOpen },
-  { title: "Stock", url: "/stock", icon: Package },
   { title: "Devis", url: "/quotes", icon: FileText },
   { title: "Factures", url: "/invoices", icon: Receipt },
   { title: "Techniciens", url: "/technicians", icon: UserCog },
+];
+
+const shopItems = [
+  { title: "Services", url: "/services", icon: Cog },
+  { title: "Appareils", url: "/devices", icon: Smartphone },
+  { title: "Catalogue", url: "/device-catalog", icon: BookOpen },
+  { title: "Pièces détachées", url: "/stock", icon: Package },
+  { title: "Articles", url: "/articles", icon: ShoppingBag },
+  { title: "Alertes stock", url: "/stock-alerts", icon: Bell },
 ];
 
 const toolsItems = [
@@ -48,7 +34,7 @@ const toolsItems = [
   { title: "QR Dépôt", url: "/qr-deposit", icon: QrCode },
   { title: "Scanner IMEI", url: "/imei-scanner", icon: Cpu },
   { title: "Assistant IA", url: "/ai-assistant", icon: Bot },
-  { title: "Statistiques IA", url: "/statistics", icon: BarChart3 },
+  { title: "Statistiques", url: "/statistics", icon: BarChart3 },
 ];
 
 const bottomItems = [
@@ -108,6 +94,13 @@ export function AppSidebar() {
         <SidebarGroup>
           <SidebarGroupContent>
             {renderMenu(mainItems)}
+          </SidebarGroupContent>
+        </SidebarGroup>
+
+        <SidebarGroup>
+          {!collapsed && <SidebarGroupLabel className="text-sidebar-foreground/40 text-[10px] uppercase tracking-wider">Atelier</SidebarGroupLabel>}
+          <SidebarGroupContent>
+            {renderMenu(shopItems)}
           </SidebarGroupContent>
         </SidebarGroup>
 

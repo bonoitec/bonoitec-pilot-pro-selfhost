@@ -14,6 +14,59 @@ export type Database = {
   }
   public: {
     Tables: {
+      articles: {
+        Row: {
+          category: string
+          created_at: string
+          description: string | null
+          id: string
+          is_active: boolean
+          min_quantity: number
+          name: string
+          organization_id: string
+          price: number
+          quantity: number
+          sku: string | null
+          updated_at: string
+        }
+        Insert: {
+          category?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          min_quantity?: number
+          name: string
+          organization_id: string
+          price?: number
+          quantity?: number
+          sku?: string | null
+          updated_at?: string
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          min_quantity?: number
+          name?: string
+          organization_id?: string
+          price?: number
+          quantity?: number
+          sku?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "articles_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       clients: {
         Row: {
           address: string | null
@@ -197,6 +250,7 @@ export type Database = {
           buy_price: number
           category: string
           created_at: string
+          device_compatibility: string | null
           id: string
           min_quantity: number
           name: string
@@ -211,6 +265,7 @@ export type Database = {
           buy_price?: number
           category?: string
           created_at?: string
+          device_compatibility?: string | null
           id?: string
           min_quantity?: number
           name: string
@@ -225,6 +280,7 @@ export type Database = {
           buy_price?: number
           category?: string
           created_at?: string
+          device_compatibility?: string | null
           id?: string
           min_quantity?: number
           name?: string
@@ -710,6 +766,53 @@ export type Database = {
             columns: ["technician_id"]
             isOneToOne: false
             referencedRelation: "technicians"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      services: {
+        Row: {
+          compatible_categories: Json | null
+          created_at: string
+          default_price: number
+          description: string | null
+          estimated_time_minutes: number
+          id: string
+          is_active: boolean
+          name: string
+          organization_id: string
+          updated_at: string
+        }
+        Insert: {
+          compatible_categories?: Json | null
+          created_at?: string
+          default_price?: number
+          description?: string | null
+          estimated_time_minutes?: number
+          id?: string
+          is_active?: boolean
+          name: string
+          organization_id: string
+          updated_at?: string
+        }
+        Update: {
+          compatible_categories?: Json | null
+          created_at?: string
+          default_price?: number
+          description?: string | null
+          estimated_time_minutes?: number
+          id?: string
+          is_active?: boolean
+          name?: string
+          organization_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "services_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
             referencedColumns: ["id"]
           },
         ]

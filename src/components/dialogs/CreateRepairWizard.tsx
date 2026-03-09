@@ -90,6 +90,7 @@ export function CreateRepairWizard({ open, onOpenChange }: Props) {
   const [photos, setPhotos] = useState<{ file: File; preview: string; label: string }[]>([]);
 
   // Step 6 — Service
+  const [selectedServices, setSelectedServices] = useState<any[]>([]);
   const [repairType, setRepairType] = useState("");
   const [issue, setIssue] = useState("");
   const [estimatedPrice, setEstimatedPrice] = useState("");
@@ -148,6 +149,32 @@ export function CreateRepairWizard({ open, onOpenChange }: Props) {
     },
     enabled: open,
   });
+
+  const { data: dbServices = [] } = useQuery({
+    queryKey: ["services"],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("services").select("*").eq("is_active", true).order("name");
+      if (error) throw error;
+      return data;
+    },
+    enabled: open,
+  });
+
+  const toggleService = (svc: any) => {
+    setSelectedServices(prev => {
+      const exists = prev.find(s => s.id === svc.id);
+      if (exists) return prev.filter(s => s.id !== svc.id);
+      return [...prev, svc];
+    });
+    // Auto-calculate price from selected services
+    setTimeout(() => {
+      setSelectedServices(prev => {
+        const total = prev.reduce((sum, s) => sum + Number(s.default_price || 0), 0);
+        setEstimatedPrice(total > 0 ? String(total) : estimatedPrice);
+        return prev;
+      });
+    }, 0);
+  };
 
   const filteredClients = useMemo(() => {
     if (!clientSearch.trim()) return clients.slice(0, 8);
@@ -307,7 +334,7 @@ export function CreateRepairWizard({ open, onOpenChange }: Props) {
     setScreenCondition(5); setFrameCondition(5); setBackCondition(5);
     photos.forEach(p => URL.revokeObjectURL(p.preview));
     setPhotos([]);
-    setRepairType(""); setIssue(""); setEstimatedPrice("");
+    setRepairType(""); setIssue(""); setEstimatedPrice(""); setSelectedServices([]);
     setTechnicianId(""); setEstimatedTime(""); setPlannedDate("");
     setSignatureDataUrl(null); setCreatedRepair(null);
     onOpenChange(false);
@@ -315,15 +342,27 @@ export function CreateRepairWizard({ open, onOpenChange }: Props) {
 
   const handleGenerateQuote = async () => {
     if (!createdRepair || !org) return;
-    const price = estimatedPrice ? parseFloat(estimatedPrice) : 0;
     const vatRate = org.vat_rate ?? 20;
-    const totalHT = price;
-    const totalTTC = org.vat_enabled ? price * (1 + vatRate / 100) : price;
+
+    // Build lines from selected services or fallback to single line
+    let lines: { description: string; quantity: number; unit_price: number }[];
+    if (selectedServices.length > 0) {
+      lines = selectedServices.map(s => ({
+        description: s.name + (s.description ? ` — ${s.description}` : ""),
+        quantity: 1,
+        unit_price: Number(s.default_price) || 0,
+      }));
+    } else {
+      const price = estimatedPrice ? parseFloat(estimatedPrice) : 0;
+      lines = [{ description: `${repairType ? repairType + " — " : ""}${issue}`, quantity: 1, unit_price: price }];
+    }
+
+    const totalHT = lines.reduce((s, l) => s + l.quantity * l.unit_price, 0);
+    const totalTTC = org.vat_enabled ? totalHT * (1 + vatRate / 100) : totalHT;
 
     // Save quote to DB
     const { data: orgId } = await supabase.rpc("get_user_org_id");
     const qRef = (org.quote_prefix || "DEV-") + new Date().toISOString().slice(0, 10).replace(/-/g, "") + "-" + Math.random().toString(36).slice(2, 5).toUpperCase();
-    const lines = [{ description: `${repairType ? repairType + " — " : ""}${issue}`, quantity: 1, unit_price: price }];
 
     await supabase.from("quotes").insert({
       organization_id: orgId!, reference: qRef,
@@ -335,13 +374,31 @@ export function CreateRepairWizard({ open, onOpenChange }: Props) {
 
     qc.invalidateQueries({ queryKey: ["quotes"] });
 
-    // Generate PDF
+    // Build intake info for PDF
+    const intakeChecklist = Object.entries(checklist).filter(([, v]) => v).map(([k]) => k === "Diagnostic impossible" ? `${k}: ${diagnosticReason}` : k);
+    const photoUrls = (createdRepair.photos as string[]) || [];
+
+    // Generate PDF with full intake info
     await generatePDF(org as any, {
       type: "quote", reference: qRef,
       date: new Date().toLocaleDateString("fr-FR"),
       clientName: createdRepair.clients?.name,
       clientAddress: createdRepair.clients?.address,
+      clientPhone: createdRepair.clients?.phone,
+      clientEmail: createdRepair.clients?.email,
       lines, totalHT, totalTTC, vatRate,
+      intake: {
+        deviceBrand: createdRepair.devices?.brand || device.brand,
+        deviceModel: createdRepair.devices?.model || device.model,
+        serialNumber: device.serial_number || undefined,
+        deviceCategory: device.category,
+        checklist: intakeChecklist,
+        screenCondition,
+        frameCondition,
+        backCondition,
+        photoUrls,
+        signatureUrl: createdRepair.customer_signature_url,
+      },
     });
     toast({ title: "Devis généré et téléchargé" });
   };
@@ -555,6 +612,31 @@ export function CreateRepairWizard({ open, onOpenChange }: Props) {
           {/* Step 6: Service */}
           {step === 5 && (
             <div className="space-y-4">
+              {dbServices.length > 0 && (
+                <div>
+                  <Label className="text-xs mb-2 block">Services disponibles (cliquez pour sélectionner)</Label>
+                  <div className="grid grid-cols-2 gap-2 max-h-40 overflow-y-auto">
+                    {dbServices.map(svc => {
+                      const selected = selectedServices.find(s => s.id === svc.id);
+                      return (
+                        <button key={svc.id} type="button" onClick={() => toggleService(svc)}
+                          className={`text-left p-3 rounded-lg border transition-colors ${selected ? "border-primary bg-primary/5" : "border-border hover:bg-accent/30"}`}>
+                          <p className="text-sm font-medium">{svc.name}</p>
+                          <p className="text-xs text-muted-foreground">{Number(svc.default_price).toFixed(2)} € · {svc.estimated_time_minutes} min</p>
+                        </button>
+                      );
+                    })}
+                  </div>
+                  {selectedServices.length > 0 && (
+                    <div className="flex flex-wrap gap-1 mt-2">
+                      {selectedServices.map(s => (
+                        <Badge key={s.id} variant="secondary" className="text-xs">{s.name} — {Number(s.default_price).toFixed(2)} €</Badge>
+                      ))}
+                    </div>
+                  )}
+                  <div className="relative my-3"><div className="absolute inset-0 flex items-center"><span className="w-full border-t border-border" /></div><div className="relative flex justify-center text-xs"><span className="bg-background px-2 text-muted-foreground">ou saisie manuelle</span></div></div>
+                </div>
+              )}
               <div>
                 <Label className="text-xs">Type de réparation</Label>
                 <Select value={repairType} onValueChange={setRepairType}>
@@ -568,10 +650,10 @@ export function CreateRepairWizard({ open, onOpenChange }: Props) {
               </div>
               <div>
                 <Label className="text-xs">Description du problème *</Label>
-                <Textarea value={issue} onChange={e => setIssue(e.target.value)} placeholder="Décrivez le problème en détail..." rows={4} />
+                <Textarea value={issue} onChange={e => setIssue(e.target.value)} placeholder="Décrivez le problème en détail..." rows={3} />
               </div>
               <div>
-                <Label className="text-xs">Prix estimé (€)</Label>
+                <Label className="text-xs">Prix estimé (€){selectedServices.length > 0 ? " (calculé automatiquement)" : ""}</Label>
                 <Input type="number" step="0.01" value={estimatedPrice} onChange={e => setEstimatedPrice(e.target.value)} placeholder="0.00" />
               </div>
             </div>
