@@ -37,7 +37,7 @@ const Repairs = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("repairs")
-        .select("*, clients(name), devices(brand, model), technicians(name)")
+        .select("*, clients(name), devices(brand, model)")
         .order("created_at", { ascending: false });
       if (error) throw error;
       return data;
