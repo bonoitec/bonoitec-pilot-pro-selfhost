@@ -1,16 +1,23 @@
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Plus, Star, Wrench } from "lucide-react";
-
-const mockTechnicians = [
-  { id: 1, name: "Sophie Moreau", specialty: "Smartphones", repairs: 35, avgTime: "45 min", rating: 4.9, active: 3 },
-  { id: 2, name: "Marc Lefèvre", specialty: "Ordinateurs", repairs: 28, avgTime: "1h15", rating: 4.7, active: 2 },
-  { id: 3, name: "Lucas Garcia", specialty: "Consoles", repairs: 22, avgTime: "55 min", rating: 4.5, active: 1 },
-  { id: 4, name: "Emma Dubois", specialty: "Tablettes", repairs: 31, avgTime: "40 min", rating: 4.8, active: 2 },
-];
+import { Skeleton } from "@/components/ui/skeleton";
+import { Plus, Wrench } from "lucide-react";
 
 const Technicians = () => {
+  const { data: technicians = [], isLoading } = useQuery({
+    queryKey: ["technicians"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("technicians")
+        .select("*, repairs(id)")
+        .order("name");
+      if (error) throw error;
+      return data;
+    },
+  });
+
   return (
     <div className="space-y-6 animate-fade-in">
       <div className="flex items-center justify-between">
@@ -21,43 +28,40 @@ const Technicians = () => {
         <Button><Plus className="h-4 w-4 mr-2" />Ajouter un technicien</Button>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {mockTechnicians.map((tech) => (
-          <Card key={tech.id} className="hover:shadow-md transition-shadow">
-            <CardContent className="p-5">
-              <div className="flex items-start justify-between mb-3">
-                <div className="flex items-center gap-3">
-                  <div className="flex h-11 w-11 items-center justify-center rounded-full bg-primary/10 text-primary font-bold text-lg">
-                    {tech.name.split(" ").map((n) => n[0]).join("")}
+      {isLoading ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {[1, 2].map((i) => <Card key={i}><CardContent className="p-5"><Skeleton className="h-28 w-full" /></CardContent></Card>)}
+        </div>
+      ) : technicians.length === 0 ? (
+        <Card><CardContent className="p-8 text-center text-muted-foreground">Aucun technicien trouvé</CardContent></Card>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {technicians.map((tech) => (
+            <Card key={tech.id} className="hover:shadow-md transition-shadow">
+              <CardContent className="p-5">
+                <div className="flex items-start justify-between mb-3">
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-11 w-11 items-center justify-center rounded-full bg-primary/10 text-primary font-bold text-lg">
+                      {tech.name.split(" ").map((n: string) => n[0]).join("")}
+                    </div>
+                    <div>
+                      <h3 className="font-semibold">{tech.name}</h3>
+                      <p className="text-xs text-muted-foreground">{tech.specialty ?? "Général"}</p>
+                    </div>
                   </div>
-                  <div>
-                    <h3 className="font-semibold">{tech.name}</h3>
-                    <p className="text-xs text-muted-foreground">{tech.specialty}</p>
+                  <div className={`text-xs px-2 py-1 rounded-full ${tech.active ? "bg-success/10 text-success" : "bg-muted text-muted-foreground"}`}>
+                    {tech.active ? "Actif" : "Inactif"}
                   </div>
                 </div>
-                <div className="flex items-center gap-1 text-warning">
-                  <Star className="h-3.5 w-3.5 fill-current" />
-                  <span className="text-sm font-medium">{tech.rating}</span>
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <Wrench className="h-4 w-4" />
+                  <span>{tech.repairs?.length ?? 0} réparations assignées</span>
                 </div>
-              </div>
-              <div className="grid grid-cols-3 gap-3 text-center">
-                <div className="p-2 rounded-lg bg-secondary/50">
-                  <p className="text-lg font-bold">{tech.repairs}</p>
-                  <p className="text-xs text-muted-foreground">Ce mois</p>
-                </div>
-                <div className="p-2 rounded-lg bg-secondary/50">
-                  <p className="text-lg font-bold">{tech.avgTime}</p>
-                  <p className="text-xs text-muted-foreground">Temps moy.</p>
-                </div>
-                <div className="p-2 rounded-lg bg-secondary/50">
-                  <p className="text-lg font-bold">{tech.active}</p>
-                  <p className="text-xs text-muted-foreground">En cours</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      )}
     </div>
   );
 };
