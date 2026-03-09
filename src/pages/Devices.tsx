@@ -1,8 +1,11 @@
 import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Plus, Search, Smartphone, Laptop, Gamepad2, Bike } from "lucide-react";
 
 const typeIcons: Record<string, any> = {
@@ -13,29 +16,27 @@ const typeIcons: Record<string, any> = {
   Tablette: Smartphone,
 };
 
-const mockDevices = [
-  { id: 1, type: "Smartphone", brand: "Apple", model: "iPhone 14", serial: "IMEI: 354872093456721", client: "Jean Dupont", status: "En réparation", accessories: "Coque, chargeur" },
-  { id: 2, type: "Ordinateur", brand: "Apple", model: "MacBook Pro 2023", serial: "SN: C02ZL1TDMD6T", client: "Marie Martin", status: "En diagnostic", accessories: "Chargeur MagSafe" },
-  { id: 3, type: "Smartphone", brand: "Samsung", model: "Galaxy S23", serial: "IMEI: 358746092183456", client: "Pierre Duval", status: "Réparé", accessories: "Aucun" },
-  { id: 4, type: "Tablette", brand: "Apple", model: "iPad Air 5", serial: "SN: DLXG45HTFK12", client: "Claire Petit", status: "En attente", accessories: "Apple Pencil" },
-  { id: 5, type: "Console", brand: "Sony", model: "PS5", serial: "SN: CFI-1216A-2023", client: "Luc Bernard", status: "En diagnostic", accessories: "Manette" },
-];
-
-const statusColors: Record<string, string> = {
-  "En réparation": "bg-primary/10 text-primary",
-  "En diagnostic": "bg-warning/10 text-warning",
-  "Réparé": "bg-success/10 text-success",
-  "En attente": "bg-muted text-muted-foreground",
-};
-
 const Devices = () => {
   const [search, setSearch] = useState("");
-  const filtered = mockDevices.filter(
+
+  const { data: devices = [], isLoading } = useQuery({
+    queryKey: ["devices"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("devices")
+        .select("*, clients(name)")
+        .order("created_at", { ascending: false });
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  const filtered = devices.filter(
     (d) =>
       d.model.toLowerCase().includes(search.toLowerCase()) ||
       d.brand.toLowerCase().includes(search.toLowerCase()) ||
-      d.client.toLowerCase().includes(search.toLowerCase()) ||
-      d.serial.toLowerCase().includes(search.toLowerCase())
+      (d.clients?.name ?? "").toLowerCase().includes(search.toLowerCase()) ||
+      (d.serial_number ?? "").toLowerCase().includes(search.toLowerCase())
   );
 
   return (
@@ -43,7 +44,7 @@ const Devices = () => {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold">Appareils</h1>
-          <p className="text-muted-foreground text-sm">{mockDevices.length} appareils enregistrés</p>
+          <p className="text-muted-foreground text-sm">{devices.length} appareils enregistrés</p>
         </div>
         <Button><Plus className="h-4 w-4 mr-2" />Nouvel appareil</Button>
       </div>
@@ -53,31 +54,36 @@ const Devices = () => {
         <Input placeholder="Rechercher un appareil..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9" />
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {filtered.map((device) => {
-          const Icon = typeIcons[device.type] || Smartphone;
-          return (
-            <Card key={device.id} className="hover:shadow-md transition-shadow cursor-pointer">
-              <CardContent className="p-5">
-                <div className="flex items-start gap-3">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-secondary">
-                    <Icon className="h-5 w-5 text-primary" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center justify-between">
-                      <h3 className="font-semibold text-sm">{device.brand} {device.model}</h3>
-                      <Badge variant="secondary" className={statusColors[device.status]}>{device.status}</Badge>
+      {isLoading ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {[1, 2, 3].map((i) => <Card key={i}><CardContent className="p-5"><Skeleton className="h-24 w-full" /></CardContent></Card>)}
+        </div>
+      ) : filtered.length === 0 ? (
+        <Card><CardContent className="p-8 text-center text-muted-foreground">Aucun appareil trouvé</CardContent></Card>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {filtered.map((device) => {
+            const Icon = typeIcons[device.type] || Smartphone;
+            return (
+              <Card key={device.id} className="hover:shadow-md transition-shadow cursor-pointer">
+                <CardContent className="p-5">
+                  <div className="flex items-start gap-3">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-secondary">
+                      <Icon className="h-5 w-5 text-primary" />
                     </div>
-                    <p className="text-xs text-muted-foreground mt-0.5 font-mono">{device.serial}</p>
-                    <p className="text-xs text-muted-foreground mt-1">Client : {device.client}</p>
-                    <p className="text-xs text-muted-foreground">Accessoires : {device.accessories}</p>
+                    <div className="flex-1 min-w-0">
+                      <h3 className="font-semibold text-sm">{device.brand} {device.model}</h3>
+                      {device.serial_number && <p className="text-xs text-muted-foreground mt-0.5 font-mono">{device.serial_number}</p>}
+                      <p className="text-xs text-muted-foreground mt-1">Client : {device.clients?.name ?? "—"}</p>
+                      {device.accessories && <p className="text-xs text-muted-foreground">Accessoires : {device.accessories}</p>}
+                    </div>
                   </div>
-                </div>
-              </CardContent>
-            </Card>
-          );
-        })}
-      </div>
+                </CardContent>
+              </Card>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 };
