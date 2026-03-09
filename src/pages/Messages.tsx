@@ -209,4 +209,6 @@ const Messages = forwardRef<HTMLDivElement>(function Messages(_props, ref) {
       </div>
     </div>
   );
-}
+});
+
+export default Messages;
