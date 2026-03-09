@@ -50,7 +50,7 @@ const Invoices = () => {
                     <td className="p-3 font-mono text-xs">{inv.id}</td>
                     <td className="p-3">{inv.client}</td>
                     <td className="p-3 text-muted-foreground">{inv.description}</td>
-                    <td className="p-3 text-right text-muted-foreground">{inv.tva}</td>
+                    <td className="p-3 text-right text-muted-foreground">{(parseFloat(inv.total) - parseFloat(inv.tva.replace(',', '.'))).toFixed(2).replace('.', ',')} €</td>
                     <td className="p-3 text-right text-muted-foreground">{inv.tva}</td>
                     <td className="p-3 text-right font-medium">{inv.total}</td>
                     <td className="p-3 text-center">
