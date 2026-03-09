@@ -36,6 +36,7 @@ const mainItems = [
   { title: "Réparations", url: "/repairs", icon: Wrench },
   { title: "Clients", url: "/clients", icon: Users },
   { title: "Appareils", url: "/devices", icon: Smartphone },
+  { title: "Catalogue", url: "/device-catalog", icon: BookOpen },
   { title: "Stock", url: "/stock", icon: Package },
   { title: "Devis", url: "/quotes", icon: FileText },
   { title: "Factures", url: "/invoices", icon: Receipt },

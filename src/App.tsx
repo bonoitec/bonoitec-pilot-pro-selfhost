@@ -20,6 +20,7 @@ import SettingsPage from "./pages/SettingsPage";
 import RepairLibrary from "./pages/RepairLibrary";
 import QRDeposit from "./pages/QRDeposit";
 import IMEIScanner from "./pages/IMEIScanner";
+import DeviceCatalog from "./pages/DeviceCatalog";
 import RepairTracking from "./pages/RepairTracking";
 import DepositForm from "./pages/DepositForm";
 import Auth from "./pages/Auth";
@@ -55,6 +56,7 @@ const App = () => (
               <Route path="/repair-library" element={<RepairLibrary />} />
               <Route path="/qr-deposit" element={<QRDeposit />} />
               <Route path="/imei-scanner" element={<IMEIScanner />} />
+              <Route path="/device-catalog" element={<DeviceCatalog />} />
               <Route path="/settings" element={<SettingsPage />} />
             </Route>
             <Route path="*" element={<NotFound />} />

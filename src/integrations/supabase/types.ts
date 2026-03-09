@@ -90,6 +90,51 @@ export type Database = {
           },
         ]
       }
+      device_catalog: {
+        Row: {
+          brand: string
+          category: string
+          color_variants: Json | null
+          created_at: string
+          id: string
+          image_url: string | null
+          is_active: boolean
+          model: string
+          model_number: string | null
+          release_year: number | null
+          storage_variants: Json | null
+          updated_at: string
+        }
+        Insert: {
+          brand: string
+          category?: string
+          color_variants?: Json | null
+          created_at?: string
+          id?: string
+          image_url?: string | null
+          is_active?: boolean
+          model: string
+          model_number?: string | null
+          release_year?: number | null
+          storage_variants?: Json | null
+          updated_at?: string
+        }
+        Update: {
+          brand?: string
+          category?: string
+          color_variants?: Json | null
+          created_at?: string
+          id?: string
+          image_url?: string | null
+          is_active?: boolean
+          model?: string
+          model_number?: string | null
+          release_year?: number | null
+          storage_variants?: Json | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       devices: {
         Row: {
           accessories: string | null
