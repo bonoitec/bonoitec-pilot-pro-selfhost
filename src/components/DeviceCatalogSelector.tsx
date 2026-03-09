@@ -34,7 +34,7 @@ const categoryIcons: Record<string, any> = {
 
 const ALL_CATEGORIES = ["Smartphone", "Tablette", "Ordinateur", "Console", "Montre connectée"];
 
-export function DeviceCatalogSelector({ onSelect, defaultBrand, defaultModel }: DeviceCatalogSelectorProps) {
+export const DeviceCatalogSelector = forwardRef<HTMLDivElement, DeviceCatalogSelectorProps>(function DeviceCatalogSelector({ onSelect, defaultBrand, defaultModel }, ref) {
   const [search, setSearch] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string>("");
   const [selectedBrand, setSelectedBrand] = useState<string>(defaultBrand || "");
