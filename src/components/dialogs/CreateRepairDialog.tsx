@@ -55,6 +55,7 @@ export function CreateRepairDialog({ open, onOpenChange }: Props) {
   const [screenCondition, setScreenCondition] = useState(5);
   const [frameCondition, setFrameCondition] = useState(5);
   const [backCondition, setBackCondition] = useState(5);
+  const [signatureDataUrl, setSignatureDataUrl] = useState<string | null>(null);
 
   const { data: org } = useQuery({
     queryKey: ["organization"],
