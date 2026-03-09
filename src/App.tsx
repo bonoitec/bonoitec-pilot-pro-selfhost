@@ -3,6 +3,8 @@ import { BrowserRouter, Route, Routes } from "react-router-dom";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { AuthProvider } from "@/contexts/AuthContext";
+import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { AppLayout } from "@/components/AppLayout";
 import Index from "./pages/Index";
 import Repairs from "./pages/Repairs";
@@ -20,6 +22,7 @@ import QRDeposit from "./pages/QRDeposit";
 import IMEIScanner from "./pages/IMEIScanner";
 import RepairTracking from "./pages/RepairTracking";
 import DepositForm from "./pages/DepositForm";
+import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -30,30 +33,33 @@ const App = () => (
       <Toaster />
       <Sonner />
       <BrowserRouter>
-        <Routes>
-          {/* Public pages (no sidebar) */}
-          <Route path="/repair/:code" element={<RepairTracking />} />
-          <Route path="/deposit/:code" element={<DepositForm />} />
+        <AuthProvider>
+          <Routes>
+            {/* Public pages */}
+            <Route path="/auth" element={<Auth />} />
+            <Route path="/repair/:code" element={<RepairTracking />} />
+            <Route path="/deposit/:code" element={<DepositForm />} />
 
-          {/* App pages with sidebar */}
-          <Route element={<AppLayout />}>
-            <Route path="/" element={<Index />} />
-            <Route path="/repairs" element={<Repairs />} />
-            <Route path="/clients" element={<Clients />} />
-            <Route path="/devices" element={<Devices />} />
-            <Route path="/stock" element={<Stock />} />
-            <Route path="/quotes" element={<Quotes />} />
-            <Route path="/invoices" element={<Invoices />} />
-            <Route path="/technicians" element={<Technicians />} />
-            <Route path="/statistics" element={<Statistics />} />
-            <Route path="/ai-assistant" element={<AIAssistant />} />
-            <Route path="/repair-library" element={<RepairLibrary />} />
-            <Route path="/qr-deposit" element={<QRDeposit />} />
-            <Route path="/imei-scanner" element={<IMEIScanner />} />
-            <Route path="/settings" element={<SettingsPage />} />
-          </Route>
-          <Route path="*" element={<NotFound />} />
-        </Routes>
+            {/* Protected app pages */}
+            <Route element={<ProtectedRoute><AppLayout /></ProtectedRoute>}>
+              <Route path="/" element={<Index />} />
+              <Route path="/repairs" element={<Repairs />} />
+              <Route path="/clients" element={<Clients />} />
+              <Route path="/devices" element={<Devices />} />
+              <Route path="/stock" element={<Stock />} />
+              <Route path="/quotes" element={<Quotes />} />
+              <Route path="/invoices" element={<Invoices />} />
+              <Route path="/technicians" element={<Technicians />} />
+              <Route path="/statistics" element={<Statistics />} />
+              <Route path="/ai-assistant" element={<AIAssistant />} />
+              <Route path="/repair-library" element={<RepairLibrary />} />
+              <Route path="/qr-deposit" element={<QRDeposit />} />
+              <Route path="/imei-scanner" element={<IMEIScanner />} />
+              <Route path="/settings" element={<SettingsPage />} />
+            </Route>
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </AuthProvider>
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>
