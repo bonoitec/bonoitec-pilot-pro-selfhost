@@ -247,4 +247,4 @@ export const DeviceCatalogSelector = forwardRef<HTMLDivElement, DeviceCatalogSel
       </ScrollArea>
     </div>
   );
-}
+});

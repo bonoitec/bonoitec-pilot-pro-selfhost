@@ -146,4 +146,4 @@ const deviceTypes = ["Smartphone", "Tablette", "Ordinateur", "Console", "Montre 
       </DialogContent>
     </Dialog>
   );
-}
+});
