@@ -15,6 +15,11 @@ import Technicians from "./pages/Technicians";
 import Statistics from "./pages/Statistics";
 import AIAssistant from "./pages/AIAssistant";
 import SettingsPage from "./pages/SettingsPage";
+import RepairLibrary from "./pages/RepairLibrary";
+import QRDeposit from "./pages/QRDeposit";
+import IMEIScanner from "./pages/IMEIScanner";
+import RepairTracking from "./pages/RepairTracking";
+import DepositForm from "./pages/DepositForm";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -26,6 +31,11 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <Routes>
+          {/* Public pages (no sidebar) */}
+          <Route path="/repair/:code" element={<RepairTracking />} />
+          <Route path="/deposit/:code" element={<DepositForm />} />
+
+          {/* App pages with sidebar */}
           <Route element={<AppLayout />}>
             <Route path="/" element={<Index />} />
             <Route path="/repairs" element={<Repairs />} />
@@ -37,6 +47,9 @@ const App = () => (
             <Route path="/technicians" element={<Technicians />} />
             <Route path="/statistics" element={<Statistics />} />
             <Route path="/ai-assistant" element={<AIAssistant />} />
+            <Route path="/repair-library" element={<RepairLibrary />} />
+            <Route path="/qr-deposit" element={<QRDeposit />} />
+            <Route path="/imei-scanner" element={<IMEIScanner />} />
             <Route path="/settings" element={<SettingsPage />} />
           </Route>
           <Route path="*" element={<NotFound />} />

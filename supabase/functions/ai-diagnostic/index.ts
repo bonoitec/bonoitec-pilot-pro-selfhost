@@ -1,0 +1,111 @@
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
+};
+
+serve(async (req) => {
+  if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
+
+  try {
+    const { messages, mode } = await req.json();
+    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
+    if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
+
+    let systemPrompt = "";
+
+    if (mode === "diagnostic") {
+      systemPrompt = `Tu es un expert en réparation d'appareils électroniques (smartphones, ordinateurs, consoles, tablettes).
+Quand on te décrit un problème, tu dois répondre en JSON structuré avec:
+- causes_possibles: tableau de causes probables (max 5)
+- pieces_a_verifier: tableau de pièces à vérifier
+- solution_probable: la solution la plus probable
+- difficulte: "facile", "moyenne", "difficile" ou "expert"
+- temps_estime: temps estimé en minutes
+- prix_estime: fourchette de prix en euros (ex: "45-89 €")
+- conseils: conseils supplémentaires pour le technicien
+
+Réponds UNIQUEMENT en JSON valide, sans markdown ni backticks.`;
+    } else if (mode === "imei") {
+      systemPrompt = `Tu es un expert en identification d'appareils électroniques.
+Quand on te donne un numéro IMEI ou de série, identifie l'appareil et retourne en JSON:
+- marque: la marque (Apple, Samsung, etc.)
+- modele: le modèle exact
+- capacite: la capacité de stockage si identifiable
+- couleur: la couleur si identifiable
+- annee: l'année de sortie
+- type: "Smartphone", "Tablette", "Ordinateur", etc.
+
+Si tu ne peux pas identifier l'appareil exactement, fais ta meilleure estimation basée sur le format du numéro.
+Réponds UNIQUEMENT en JSON valide, sans markdown ni backticks.`;
+    } else if (mode === "business-insights") {
+      systemPrompt = `Tu es un consultant business spécialisé dans les ateliers de réparation électronique.
+Analyse les données fournies et génère des conseils business actionables en français.
+Retourne en JSON:
+- conseils: tableau d'objets avec { emoji, titre, description, impact }
+- tendances: tableau de tendances observées
+- opportunites: tableau d'opportunités de croissance
+
+Réponds UNIQUEMENT en JSON valide, sans markdown ni backticks.`;
+    } else {
+      systemPrompt = `Tu es un assistant IA spécialisé pour les ateliers de réparation d'appareils électroniques (BonoitecPilot).
+Tu aides les techniciens avec les diagnostics, les prix, les pièces et les conseils de réparation.
+Réponds en français, de manière claire et concise. Utilise le format markdown pour la mise en forme.`;
+    }
+
+    const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${LOVABLE_API_KEY}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        model: "google/gemini-3-flash-preview",
+        messages: [
+          { role: "system", content: systemPrompt },
+          ...messages,
+        ],
+        stream: mode === "chat",
+      }),
+    });
+
+    if (!response.ok) {
+      if (response.status === 429) {
+        return new Response(JSON.stringify({ error: "Trop de requêtes. Réessayez dans quelques secondes." }), {
+          status: 429,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      if (response.status === 402) {
+        return new Response(JSON.stringify({ error: "Crédits IA épuisés. Ajoutez des crédits dans les paramètres." }), {
+          status: 402,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      const t = await response.text();
+      console.error("AI gateway error:", response.status, t);
+      return new Response(JSON.stringify({ error: "Erreur du service IA" }), {
+        status: 500,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    if (mode === "chat") {
+      return new Response(response.body, {
+        headers: { ...corsHeaders, "Content-Type": "text/event-stream" },
+      });
+    }
+
+    const data = await response.json();
+    return new Response(JSON.stringify(data), {
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  } catch (e) {
+    console.error("ai-diagnostic error:", e);
+    return new Response(JSON.stringify({ error: e instanceof Error ? e.message : "Erreur inconnue" }), {
+      status: 500,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
+});

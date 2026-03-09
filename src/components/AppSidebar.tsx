@@ -11,6 +11,9 @@ import {
   Bot,
   Settings,
   Zap,
+  BookOpen,
+  QrCode,
+  Cpu,
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
@@ -19,6 +22,7 @@ import {
   SidebarContent,
   SidebarGroup,
   SidebarGroupContent,
+  SidebarGroupLabel,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
@@ -36,11 +40,17 @@ const mainItems = [
   { title: "Devis", url: "/quotes", icon: FileText },
   { title: "Factures", url: "/invoices", icon: Receipt },
   { title: "Techniciens", url: "/technicians", icon: UserCog },
-  { title: "Statistiques", url: "/statistics", icon: BarChart3 },
+];
+
+const toolsItems = [
+  { title: "Bibliothèque", url: "/repair-library", icon: BookOpen },
+  { title: "QR Dépôt", url: "/qr-deposit", icon: QrCode },
+  { title: "Scanner IMEI", url: "/imei-scanner", icon: Cpu },
+  { title: "Assistant IA", url: "/ai-assistant", icon: Bot },
+  { title: "Statistiques IA", url: "/statistics", icon: BarChart3 },
 ];
 
 const bottomItems = [
-  { title: "Assistant IA", url: "/ai-assistant", icon: Bot },
   { title: "Paramètres", url: "/settings", icon: Settings },
 ];
 
@@ -52,6 +62,26 @@ export function AppSidebar() {
 
   const isActive = (path: string) =>
     path === "/" ? currentPath === "/" : currentPath.startsWith(path);
+
+  const renderMenu = (items: typeof mainItems) => (
+    <SidebarMenu>
+      {items.map((item) => (
+        <SidebarMenuItem key={item.title}>
+          <SidebarMenuButton asChild isActive={isActive(item.url)} tooltip={item.title}>
+            <NavLink
+              to={item.url}
+              end={item.url === "/"}
+              className="transition-colors"
+              activeClassName="bg-sidebar-accent text-sidebar-accent-foreground font-medium"
+            >
+              <item.icon className="h-4 w-4" />
+              {!collapsed && <span>{item.title}</span>}
+            </NavLink>
+          </SidebarMenuButton>
+        </SidebarMenuItem>
+      ))}
+    </SidebarMenu>
+  );
 
   return (
     <Sidebar collapsible="icon" className="border-r-0">
@@ -76,52 +106,20 @@ export function AppSidebar() {
       <SidebarContent className="px-2">
         <SidebarGroup>
           <SidebarGroupContent>
-            <SidebarMenu>
-              {mainItems.map((item) => (
-                <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton
-                    asChild
-                    isActive={isActive(item.url)}
-                    tooltip={item.title}
-                  >
-                    <NavLink
-                      to={item.url}
-                      end={item.url === "/"}
-                      className="transition-colors"
-                      activeClassName="bg-sidebar-accent text-sidebar-accent-foreground font-medium"
-                    >
-                      <item.icon className="h-4 w-4" />
-                      {!collapsed && <span>{item.title}</span>}
-                    </NavLink>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
-            </SidebarMenu>
+            {renderMenu(mainItems)}
+          </SidebarGroupContent>
+        </SidebarGroup>
+
+        <SidebarGroup>
+          {!collapsed && <SidebarGroupLabel className="text-sidebar-foreground/40 text-[10px] uppercase tracking-wider">Outils IA</SidebarGroupLabel>}
+          <SidebarGroupContent>
+            {renderMenu(toolsItems)}
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
 
       <SidebarFooter className="px-2 pb-4">
-        <SidebarMenu>
-          {bottomItems.map((item) => (
-            <SidebarMenuItem key={item.title}>
-              <SidebarMenuButton
-                asChild
-                isActive={isActive(item.url)}
-                tooltip={item.title}
-              >
-                <NavLink
-                  to={item.url}
-                  className="transition-colors"
-                  activeClassName="bg-sidebar-accent text-sidebar-accent-foreground font-medium"
-                >
-                  <item.icon className="h-4 w-4" />
-                  {!collapsed && <span>{item.title}</span>}
-                </NavLink>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-          ))}
-        </SidebarMenu>
+        {renderMenu(bottomItems)}
       </SidebarFooter>
     </Sidebar>
   );

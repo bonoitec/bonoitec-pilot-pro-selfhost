@@ -58,6 +58,38 @@ export type Database = {
           },
         ]
       }
+      deposit_codes: {
+        Row: {
+          active: boolean
+          code: string
+          created_at: string
+          id: string
+          organization_id: string
+        }
+        Insert: {
+          active?: boolean
+          code?: string
+          created_at?: string
+          id?: string
+          organization_id: string
+        }
+        Update: {
+          active?: boolean
+          code?: string
+          created_at?: string
+          id?: string
+          organization_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "deposit_codes_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       devices: {
         Row: {
           accessories: string | null
@@ -423,12 +455,75 @@ export type Database = {
           },
         ]
       }
+      repair_templates: {
+        Row: {
+          avg_price: number | null
+          avg_time_minutes: number
+          created_at: string
+          created_by: string | null
+          device_brand: string | null
+          device_model: string | null
+          device_type: string
+          difficulty: string
+          id: string
+          is_public: boolean
+          organization_id: string | null
+          parts_needed: Json | null
+          repair_type: string
+          tips: string | null
+          updated_at: string
+        }
+        Insert: {
+          avg_price?: number | null
+          avg_time_minutes?: number
+          created_at?: string
+          created_by?: string | null
+          device_brand?: string | null
+          device_model?: string | null
+          device_type: string
+          difficulty?: string
+          id?: string
+          is_public?: boolean
+          organization_id?: string | null
+          parts_needed?: Json | null
+          repair_type: string
+          tips?: string | null
+          updated_at?: string
+        }
+        Update: {
+          avg_price?: number | null
+          avg_time_minutes?: number
+          created_at?: string
+          created_by?: string | null
+          device_brand?: string | null
+          device_model?: string | null
+          device_type?: string
+          difficulty?: string
+          id?: string
+          is_public?: boolean
+          organization_id?: string | null
+          parts_needed?: Json | null
+          repair_type?: string
+          tips?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "repair_templates_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       repairs: {
         Row: {
           client_id: string | null
           created_at: string
           device_id: string | null
           diagnostic: string | null
+          estimated_completion: string | null
           estimated_price: number | null
           final_price: number | null
           id: string
@@ -436,9 +531,12 @@ export type Database = {
           issue: string
           organization_id: string
           parts_used: Json | null
+          photos: Json | null
           reference: string
           status: Database["public"]["Enums"]["repair_status"]
           technician_id: string | null
+          technician_message: string | null
+          tracking_code: string | null
           updated_at: string
         }
         Insert: {
@@ -446,6 +544,7 @@ export type Database = {
           created_at?: string
           device_id?: string | null
           diagnostic?: string | null
+          estimated_completion?: string | null
           estimated_price?: number | null
           final_price?: number | null
           id?: string
@@ -453,9 +552,12 @@ export type Database = {
           issue: string
           organization_id: string
           parts_used?: Json | null
+          photos?: Json | null
           reference: string
           status?: Database["public"]["Enums"]["repair_status"]
           technician_id?: string | null
+          technician_message?: string | null
+          tracking_code?: string | null
           updated_at?: string
         }
         Update: {
@@ -463,6 +565,7 @@ export type Database = {
           created_at?: string
           device_id?: string | null
           diagnostic?: string | null
+          estimated_completion?: string | null
           estimated_price?: number | null
           final_price?: number | null
           id?: string
@@ -470,9 +573,12 @@ export type Database = {
           issue?: string
           organization_id?: string
           parts_used?: Json | null
+          photos?: Json | null
           reference?: string
           status?: Database["public"]["Enums"]["repair_status"]
           technician_id?: string | null
+          technician_message?: string | null
+          tracking_code?: string | null
           updated_at?: string
         }
         Relationships: [
@@ -570,6 +676,18 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      create_deposit_repair: {
+        Args: {
+          _client_name: string
+          _client_phone: string
+          _deposit_code: string
+          _device_brand: string
+          _device_model: string
+          _device_type: string
+          _issue: string
+        }
+        Returns: Json
+      }
       get_user_org_id: { Args: never; Returns: string }
       has_role: {
         Args: {
