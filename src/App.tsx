@@ -3,8 +3,19 @@ import { BrowserRouter, Route, Routes } from "react-router-dom";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import Index from "./pages/Index.tsx";
-import NotFound from "./pages/NotFound.tsx";
+import { AppLayout } from "@/components/AppLayout";
+import Index from "./pages/Index";
+import Repairs from "./pages/Repairs";
+import Clients from "./pages/Clients";
+import Devices from "./pages/Devices";
+import Stock from "./pages/Stock";
+import Quotes from "./pages/Quotes";
+import Invoices from "./pages/Invoices";
+import Technicians from "./pages/Technicians";
+import Statistics from "./pages/Statistics";
+import AIAssistant from "./pages/AIAssistant";
+import SettingsPage from "./pages/SettingsPage";
+import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
 
@@ -15,8 +26,19 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <Routes>
-          <Route path="/" element={<Index />} />
-          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+          <Route element={<AppLayout />}>
+            <Route path="/" element={<Index />} />
+            <Route path="/repairs" element={<Repairs />} />
+            <Route path="/clients" element={<Clients />} />
+            <Route path="/devices" element={<Devices />} />
+            <Route path="/stock" element={<Stock />} />
+            <Route path="/quotes" element={<Quotes />} />
+            <Route path="/invoices" element={<Invoices />} />
+            <Route path="/technicians" element={<Technicians />} />
+            <Route path="/statistics" element={<Statistics />} />
+            <Route path="/ai-assistant" element={<AIAssistant />} />
+            <Route path="/settings" element={<SettingsPage />} />
+          </Route>
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
