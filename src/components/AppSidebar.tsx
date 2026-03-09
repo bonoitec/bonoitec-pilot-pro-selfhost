@@ -2,6 +2,7 @@ import {
   LayoutDashboard, Wrench, Users, Smartphone, Package,
   FileText, Receipt, UserCog, BarChart3, Bot, Settings,
   Zap, BookOpen, QrCode, Cpu, ShoppingBag, Bell, Cog,
+  MessageSquare,
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
@@ -14,6 +15,7 @@ import {
 const mainItems = [
   { title: "Dashboard", url: "/", icon: LayoutDashboard },
   { title: "Réparations", url: "/repairs", icon: Wrench },
+  { title: "Messages", url: "/messages", icon: MessageSquare },
   { title: "Clients", url: "/clients", icon: Users },
   { title: "Devis", url: "/quotes", icon: FileText },
   { title: "Factures", url: "/invoices", icon: Receipt },
