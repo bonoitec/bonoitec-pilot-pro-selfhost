@@ -17,6 +17,7 @@ export function AppLayout() {
               <Input
                 placeholder="Rechercher client, réparation, appareil..."
                 className="pl-9 h-9 bg-secondary/50 border-0 focus-visible:ring-1"
+                maxLength={200}
               />
             </div>
           </header>
