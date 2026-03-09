@@ -150,6 +150,32 @@ export function CreateRepairWizard({ open, onOpenChange }: Props) {
     enabled: open,
   });
 
+  const { data: dbServices = [] } = useQuery({
+    queryKey: ["services"],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("services").select("*").eq("is_active", true).order("name");
+      if (error) throw error;
+      return data;
+    },
+    enabled: open,
+  });
+
+  const toggleService = (svc: any) => {
+    setSelectedServices(prev => {
+      const exists = prev.find(s => s.id === svc.id);
+      if (exists) return prev.filter(s => s.id !== svc.id);
+      return [...prev, svc];
+    });
+    // Auto-calculate price from selected services
+    setTimeout(() => {
+      setSelectedServices(prev => {
+        const total = prev.reduce((sum, s) => sum + Number(s.default_price || 0), 0);
+        setEstimatedPrice(total > 0 ? String(total) : estimatedPrice);
+        return prev;
+      });
+    }, 0);
+  };
+
   const filteredClients = useMemo(() => {
     if (!clientSearch.trim()) return clients.slice(0, 8);
     const q = clientSearch.toLowerCase();
