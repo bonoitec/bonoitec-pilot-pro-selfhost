@@ -8,6 +8,7 @@ import {
 } from "recharts";
 import { BarChart3, Lightbulb, TrendingUp, RefreshCw } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
 const repairTrends = [
   { month: "Jan", ecran: 18, batterie: 12, connecteur: 8, autre: 5 },
