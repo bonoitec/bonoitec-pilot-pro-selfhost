@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Plus, Search, LayoutGrid, List, Timer } from "lucide-react";
-import { CreateRepairDialog } from "@/components/dialogs/CreateRepairDialog";
+import { CreateRepairWizard } from "@/components/dialogs/CreateRepairWizard";
 import { RepairDetailDialog } from "@/components/dialogs/RepairDetailDialog";
 import { DragDropContext, Droppable, Draggable, DropResult } from "@hello-pangea/dnd";
 import { useToast } from "@/hooks/use-toast";
@@ -204,7 +204,7 @@ const Repairs = () => {
         )}
       </Tabs>
 
-      <CreateRepairDialog open={showCreate} onOpenChange={setShowCreate} />
+      <CreateRepairWizard open={showCreate} onOpenChange={setShowCreate} />
       <RepairDetailDialog open={!!selectedRepair} onOpenChange={(o) => !o && setSelectedRepair(null)} repair={selectedRepair} />
     </div>
   );

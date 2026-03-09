@@ -1,9 +1,12 @@
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Wrench, Clock, CheckCircle2, DollarSign, AlertTriangle, TrendingUp } from "lucide-react";
+import { Wrench, Clock, CheckCircle2, DollarSign, AlertTriangle, TrendingUp, Plus } from "lucide-react";
+import { CreateRepairWizard } from "@/components/dialogs/CreateRepairWizard";
 
 const statusLabels: Record<string, string> = {
   nouveau: "Nouveau",
@@ -24,6 +27,7 @@ const statusColors: Record<string, string> = {
 };
 
 const Index = () => {
+  const [showWizard, setShowWizard] = useState(false);
   const { data: repairs = [], isLoading: loadingRepairs } = useQuery({
     queryKey: ["dashboard-repairs"],
     queryFn: async () => {
@@ -60,9 +64,14 @@ const Index = () => {
 
   return (
     <div className="space-y-6 animate-fade-in">
-      <div>
-        <h1 className="text-2xl font-bold">Dashboard</h1>
-        <p className="text-muted-foreground text-sm">Vue d'ensemble de votre atelier</p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold">Dashboard</h1>
+          <p className="text-muted-foreground text-sm">Vue d'ensemble de votre atelier</p>
+        </div>
+        <Button onClick={() => setShowWizard(true)} size="lg">
+          <Plus className="h-4 w-4 mr-2" />Créer une réparation
+        </Button>
       </div>
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -108,6 +117,7 @@ const Index = () => {
           )}
         </CardContent>
       </Card>
+      <CreateRepairWizard open={showWizard} onOpenChange={setShowWizard} />
     </div>
   );
 };
