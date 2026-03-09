@@ -101,7 +101,7 @@ const Index = () => {
                       {repair.clients?.name ?? "—"} — {repair.devices ? `${repair.devices.brand} ${repair.devices.model}` : "—"} — {repair.issue}
                     </p>
                   </div>
-                  <span className="text-xs text-muted-foreground ml-2 shrink-0">{repair.technicians?.name ?? "—"}</span>
+                  <span className="text-xs text-muted-foreground ml-2 shrink-0">{repair.technician_id ? "Assigné" : "—"}</span>
                 </div>
               ))}
             </div>

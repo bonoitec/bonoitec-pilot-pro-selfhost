@@ -135,7 +135,7 @@ const Repairs = () => {
                               <td className="p-3">
                                 <Badge variant="outline" className={`text-xs ${statusColors[repair.status]}`}>{statusLabels[repair.status]}</Badge>
                               </td>
-                              <td className="p-3">{repair.technicians?.name ?? "—"}</td>
+                              <td className="p-3">{repair.technician_id ? "Assigné" : "—"}</td>
                               <td className="p-3 text-right font-medium">{repair.final_price ? `${repair.final_price} €` : repair.estimated_price ? `~${repair.estimated_price} €` : "—"}</td>
                             </tr>
                           ))}
