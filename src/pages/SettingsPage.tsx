@@ -47,6 +47,7 @@ const SettingsPage = () => {
         website: (org as any).website || "", invoice_footer: (org as any).invoice_footer || "",
         google_review_url: (org as any).google_review_url || "",
         vat_enabled: (org as any).vat_enabled ?? true, logo_url: org.logo_url || "",
+        intake_checklist_items: (org as any).intake_checklist_items ?? ["Alimentation / charge", "Écran", "Boutons", "Caméra", "Son", "Réseau", "Face ID / empreinte", "Autres problèmes"],
       });
     }
   }, [org]);
