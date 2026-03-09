@@ -72,6 +72,7 @@ const SettingsPage = () => {
         google_review_url: form.google_review_url.trim() || null,
         vat_enabled: form.vat_enabled,
         logo_url: form.logo_url || null,
+        intake_checklist_items: form.intake_checklist_items,
       } as any).eq("id", org.id);
       if (error) throw error;
     },
