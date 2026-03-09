@@ -1,8 +1,13 @@
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
-  PieChart, Pie, Cell, LineChart, Line,
+  PieChart, Pie, Cell,
 } from "recharts";
+import { BarChart3, Lightbulb, TrendingUp, RefreshCw } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 
 const repairTrends = [
   { month: "Jan", ecran: 18, batterie: 12, connecteur: 8, autre: 5 },
@@ -30,13 +35,112 @@ const topParts = [
   { name: "Pâte thermique", count: 15 },
 ];
 
-const Statistics = () => {
+// Default AI insights
+const defaultInsights = [
+  { emoji: "💡", titre: "Réparations batterie en hausse", description: "Les réparations de batterie ont augmenté de 25% ce trimestre. Envisagez de stocker plus de batteries iPhone et Samsung.", impact: "Revenus potentiels +15%" },
+  { emoji: "📈", titre: "Écrans iPhone = votre meilleur profit", description: "Les remplacements d'écran iPhone représentent 40% de votre marge. Maintenez un stock élevé.", impact: "Marge actuelle : 49%" },
+  { emoji: "⚡", titre: "Optimisez le temps de diagnostic", description: "Le temps moyen de diagnostic est de 22 minutes. Utilisez la bibliothèque de réparations pour réduire à 15 min.", impact: "Gain de productivité +30%" },
+  { emoji: "🔄", titre: "Fidélisation clients", description: "23% de vos clients reviennent pour une 2ème réparation. Proposez des forfaits de protection.", impact: "Rétention +10%" },
+];
+
+export default function Statistics() {
+  const [insights, setInsights] = useState(defaultInsights);
+  const [loadingInsights, setLoadingInsights] = useState(false);
+  const { toast } = useToast();
+
+  const refreshInsights = async () => {
+    setLoadingInsights(true);
+    try {
+      const resp = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/ai-diagnostic`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+        },
+        body: JSON.stringify({
+          messages: [{
+            role: "user",
+            content: `Voici les données de mon atelier de réparation:
+- Réparations ce mois: écrans (24), batteries (20), connecteurs (11), autres (6)
+- Appareils: iPhone (42%), Samsung (28%), MacBook (12%), iPad (10%), Autre (8%)
+- Pièces les plus vendues: Écran iPhone 14 (32), Batterie iPhone 13 (28), Écran Samsung S23 (22)
+- CA mensuel: 28 450€
+- Temps diagnostic moyen: 22 min
+- Taux de retour client: 23%
+Génère 4 conseils business actionables.`,
+          }],
+          mode: "business-insights",
+        }),
+      });
+
+      if (resp.ok) {
+        const data = await resp.json();
+        const content = data.choices?.[0]?.message?.content;
+        if (content) {
+          try {
+            const parsed = JSON.parse(content);
+            if (parsed.conseils) setInsights(parsed.conseils);
+          } catch {
+            const jsonMatch = content.match(/\{[\s\S]*\}/);
+            if (jsonMatch) {
+              const parsed = JSON.parse(jsonMatch[0]);
+              if (parsed.conseils) setInsights(parsed.conseils);
+            }
+          }
+        }
+      }
+    } catch (e: any) {
+      toast({ title: "Erreur IA", description: e.message, variant: "destructive" });
+    } finally {
+      setLoadingInsights(false);
+    }
+  };
+
   return (
     <div className="space-y-6 animate-fade-in">
       <div>
-        <h1 className="text-2xl font-bold">Statistiques</h1>
-        <p className="text-muted-foreground text-sm">Analyse des performances de votre atelier</p>
+        <h1 className="text-2xl font-bold flex items-center gap-2">
+          <BarChart3 className="h-6 w-6 text-primary" />
+          Statistiques IA
+        </h1>
+        <p className="text-muted-foreground text-sm">Analyse des performances avec conseils intelligents</p>
       </div>
+
+      {/* AI Insights Section */}
+      <Card className="border-primary/20 bg-primary/[0.02]">
+        <CardHeader className="pb-3">
+          <div className="flex items-center justify-between">
+            <CardTitle className="text-base flex items-center gap-2">
+              <Lightbulb className="h-5 w-5 text-warning" />
+              Conseils IA
+            </CardTitle>
+            <Button variant="ghost" size="sm" onClick={refreshInsights} disabled={loadingInsights}>
+              <RefreshCw className={`h-4 w-4 mr-1 ${loadingInsights ? "animate-spin" : ""}`} />
+              {loadingInsights ? "Analyse..." : "Actualiser"}
+            </Button>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            {insights.map((insight, i) => (
+              <div key={i} className="p-4 rounded-lg bg-card border">
+                <div className="flex items-start gap-3">
+                  <span className="text-2xl">{insight.emoji}</span>
+                  <div>
+                    <h4 className="text-sm font-semibold">{insight.titre}</h4>
+                    <p className="text-xs text-muted-foreground mt-1">{insight.description}</p>
+                    {insight.impact && (
+                      <Badge variant="secondary" className="mt-2 bg-success/10 text-success text-xs">
+                        <TrendingUp className="h-3 w-3 mr-1" />{insight.impact}
+                      </Badge>
+                    )}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <Card>
@@ -103,6 +207,4 @@ const Statistics = () => {
       </div>
     </div>
   );
-};
-
-export default Statistics;
+}
