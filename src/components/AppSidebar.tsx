@@ -1,0 +1,128 @@
+import {
+  LayoutDashboard,
+  Wrench,
+  Users,
+  Smartphone,
+  Package,
+  FileText,
+  Receipt,
+  UserCog,
+  BarChart3,
+  Bot,
+  Settings,
+  Zap,
+} from "lucide-react";
+import { NavLink } from "@/components/NavLink";
+import { useLocation } from "react-router-dom";
+import {
+  Sidebar,
+  SidebarContent,
+  SidebarGroup,
+  SidebarGroupContent,
+  SidebarMenu,
+  SidebarMenuButton,
+  SidebarMenuItem,
+  SidebarHeader,
+  SidebarFooter,
+  useSidebar,
+} from "@/components/ui/sidebar";
+
+const mainItems = [
+  { title: "Dashboard", url: "/", icon: LayoutDashboard },
+  { title: "Réparations", url: "/repairs", icon: Wrench },
+  { title: "Clients", url: "/clients", icon: Users },
+  { title: "Appareils", url: "/devices", icon: Smartphone },
+  { title: "Stock", url: "/stock", icon: Package },
+  { title: "Devis", url: "/quotes", icon: FileText },
+  { title: "Factures", url: "/invoices", icon: Receipt },
+  { title: "Techniciens", url: "/technicians", icon: UserCog },
+  { title: "Statistiques", url: "/statistics", icon: BarChart3 },
+];
+
+const bottomItems = [
+  { title: "Assistant IA", url: "/ai-assistant", icon: Bot },
+  { title: "Paramètres", url: "/settings", icon: Settings },
+];
+
+export function AppSidebar() {
+  const { state } = useSidebar();
+  const collapsed = state === "collapsed";
+  const location = useLocation();
+  const currentPath = location.pathname;
+
+  const isActive = (path: string) =>
+    path === "/" ? currentPath === "/" : currentPath.startsWith(path);
+
+  return (
+    <Sidebar collapsible="icon" className="border-r-0">
+      <SidebarHeader className="p-4">
+        <div className="flex items-center gap-2.5">
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary text-primary-foreground">
+            <Zap className="h-5 w-5" />
+          </div>
+          {!collapsed && (
+            <div className="flex flex-col">
+              <span className="text-sm font-bold text-sidebar-primary-foreground tracking-tight">
+                BonoitecPilot
+              </span>
+              <span className="text-[10px] text-sidebar-foreground/60 leading-none">
+                Le cockpit intelligent
+              </span>
+            </div>
+          )}
+        </div>
+      </SidebarHeader>
+
+      <SidebarContent className="px-2">
+        <SidebarGroup>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              {mainItems.map((item) => (
+                <SidebarMenuItem key={item.title}>
+                  <SidebarMenuButton
+                    asChild
+                    isActive={isActive(item.url)}
+                    tooltip={item.title}
+                  >
+                    <NavLink
+                      to={item.url}
+                      end={item.url === "/"}
+                      className="transition-colors"
+                      activeClassName="bg-sidebar-accent text-sidebar-accent-foreground font-medium"
+                    >
+                      <item.icon className="h-4 w-4" />
+                      {!collapsed && <span>{item.title}</span>}
+                    </NavLink>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              ))}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+      </SidebarContent>
+
+      <SidebarFooter className="px-2 pb-4">
+        <SidebarMenu>
+          {bottomItems.map((item) => (
+            <SidebarMenuItem key={item.title}>
+              <SidebarMenuButton
+                asChild
+                isActive={isActive(item.url)}
+                tooltip={item.title}
+              >
+                <NavLink
+                  to={item.url}
+                  className="transition-colors"
+                  activeClassName="bg-sidebar-accent text-sidebar-accent-foreground font-medium"
+                >
+                  <item.icon className="h-4 w-4" />
+                  {!collapsed && <span>{item.title}</span>}
+                </NavLink>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          ))}
+        </SidebarMenu>
+      </SidebarFooter>
+    </Sidebar>
+  );
+}
