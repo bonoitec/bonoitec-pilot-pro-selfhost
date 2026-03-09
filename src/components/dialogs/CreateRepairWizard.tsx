@@ -90,6 +90,7 @@ export function CreateRepairWizard({ open, onOpenChange }: Props) {
   const [photos, setPhotos] = useState<{ file: File; preview: string; label: string }[]>([]);
 
   // Step 6 — Service
+  const [selectedServices, setSelectedServices] = useState<any[]>([]);
   const [repairType, setRepairType] = useState("");
   const [issue, setIssue] = useState("");
   const [estimatedPrice, setEstimatedPrice] = useState("");
