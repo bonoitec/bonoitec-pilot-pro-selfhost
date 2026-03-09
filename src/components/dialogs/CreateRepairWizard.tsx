@@ -612,6 +612,31 @@ export function CreateRepairWizard({ open, onOpenChange }: Props) {
           {/* Step 6: Service */}
           {step === 5 && (
             <div className="space-y-4">
+              {dbServices.length > 0 && (
+                <div>
+                  <Label className="text-xs mb-2 block">Services disponibles (cliquez pour sélectionner)</Label>
+                  <div className="grid grid-cols-2 gap-2 max-h-40 overflow-y-auto">
+                    {dbServices.map(svc => {
+                      const selected = selectedServices.find(s => s.id === svc.id);
+                      return (
+                        <button key={svc.id} type="button" onClick={() => toggleService(svc)}
+                          className={`text-left p-3 rounded-lg border transition-colors ${selected ? "border-primary bg-primary/5" : "border-border hover:bg-accent/30"}`}>
+                          <p className="text-sm font-medium">{svc.name}</p>
+                          <p className="text-xs text-muted-foreground">{Number(svc.default_price).toFixed(2)} € · {svc.estimated_time_minutes} min</p>
+                        </button>
+                      );
+                    })}
+                  </div>
+                  {selectedServices.length > 0 && (
+                    <div className="flex flex-wrap gap-1 mt-2">
+                      {selectedServices.map(s => (
+                        <Badge key={s.id} variant="secondary" className="text-xs">{s.name} — {Number(s.default_price).toFixed(2)} €</Badge>
+                      ))}
+                    </div>
+                  )}
+                  <div className="relative my-3"><div className="absolute inset-0 flex items-center"><span className="w-full border-t border-border" /></div><div className="relative flex justify-center text-xs"><span className="bg-background px-2 text-muted-foreground">ou saisie manuelle</span></div></div>
+                </div>
+              )}
               <div>
                 <Label className="text-xs">Type de réparation</Label>
                 <Select value={repairType} onValueChange={setRepairType}>
@@ -625,10 +650,10 @@ export function CreateRepairWizard({ open, onOpenChange }: Props) {
               </div>
               <div>
                 <Label className="text-xs">Description du problème *</Label>
-                <Textarea value={issue} onChange={e => setIssue(e.target.value)} placeholder="Décrivez le problème en détail..." rows={4} />
+                <Textarea value={issue} onChange={e => setIssue(e.target.value)} placeholder="Décrivez le problème en détail..." rows={3} />
               </div>
               <div>
-                <Label className="text-xs">Prix estimé (€)</Label>
+                <Label className="text-xs">Prix estimé (€){selectedServices.length > 0 ? " (calculé automatiquement)" : ""}</Label>
                 <Input type="number" step="0.01" value={estimatedPrice} onChange={e => setEstimatedPrice(e.target.value)} placeholder="0.00" />
               </div>
             </div>
