@@ -100,7 +100,7 @@ const Messages = forwardRef<HTMLDivElement>(function Messages(_props, ref) {
   );
 
   return (
-    <div className="space-y-6 animate-fade-in">
+    <div ref={ref} className="space-y-6 animate-fade-in">
       <div>
         <h1 className="text-2xl font-bold">Messages</h1>
         <p className="text-muted-foreground text-sm">Conversations avec vos clients</p>
