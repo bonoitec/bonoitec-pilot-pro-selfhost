@@ -272,6 +272,23 @@ export function CreateRepairDialog({ open, onOpenChange }: Props) {
             </CardContent>
           </Card>
 
+          {/* Signature client */}
+          <Card className="border-border/60">
+            <CardHeader className="pb-3 pt-4 px-4">
+              <CardTitle className="text-sm font-medium flex items-center gap-2">
+                <PenTool className="h-4 w-4 text-primary" />Signature du client
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="px-4 pb-4">
+              <SignaturePad
+                onSave={setSignatureDataUrl}
+                onClear={() => setSignatureDataUrl(null)}
+                savedSignature={signatureDataUrl}
+                height={160}
+              />
+            </CardContent>
+          </Card>
+
           {/* Notes */}
           <Card className="border-border/60">
             <CardHeader className="pb-3 pt-4 px-4">
