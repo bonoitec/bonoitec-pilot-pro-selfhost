@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Zap, Clock, CheckCircle2, Search as SearchIcon, Package, Wrench } from "lucide-react";
+import { CustomerChat } from "@/components/messaging/CustomerChat";
 
 const statusConfig: Record<string, { label: string; color: string; emoji: string; icon: any }> = {
   nouveau: { label: "Reçu", color: "bg-muted text-muted-foreground", emoji: "⚪", icon: Clock },
@@ -22,21 +23,24 @@ export default function RepairTracking() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  useEffect(() => {
+  const fetchRepair = async () => {
     if (!code) return;
-    const fetchRepair = async () => {
-      const { data, error: err } = await supabase.rpc("get_repair_by_tracking_code", {
-        _code: code.toUpperCase(),
-      });
+    const { data, error: err } = await supabase.rpc("get_repair_by_tracking_code", {
+      _code: code.toUpperCase(),
+    });
+    if (err || !data) {
+      setError("Réparation introuvable. Vérifiez votre code de suivi.");
+    } else {
+      setRepair(data);
+    }
+    setLoading(false);
+  };
 
-      if (err || !data) {
-        setError("Réparation introuvable. Vérifiez votre code de suivi.");
-      } else {
-        setRepair(data);
-      }
-      setLoading(false);
-    };
+  // Initial fetch + polling for real-time updates
+  useEffect(() => {
     fetchRepair();
+    const interval = setInterval(fetchRepair, 10000);
+    return () => clearInterval(interval);
   }, [code]);
 
   if (loading) {
@@ -159,6 +163,9 @@ export default function RepairTracking() {
             </CardContent>
           </Card>
         )}
+
+        {/* Customer messaging */}
+        {code && <CustomerChat trackingCode={code} />}
       </div>
     </div>
   );
