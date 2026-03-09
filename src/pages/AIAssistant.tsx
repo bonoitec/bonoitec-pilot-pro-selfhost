@@ -5,10 +5,9 @@ import { Input } from "@/components/ui/input";
 import { Bot, Send, Zap, Wrench, DollarSign, FileText, Cpu } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import ReactMarkdown from "react-markdown";
+import { supabase } from "@/integrations/supabase/client";
 
 type Msg = { role: "user" | "assistant"; content: string };
-
-const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/ai-diagnostic`;
 
 const suggestions = [
   { icon: Wrench, label: "Diagnostic IA", example: "iPhone qui ne charge plus, quelles causes possibles ?" },
@@ -49,11 +48,14 @@ export default function AIAssistant() {
     };
 
     try {
-      const resp = await fetch(CHAT_URL, {
+      const { data: sessionData } = await supabase.auth.getSession();
+      const token = sessionData?.session?.access_token || import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+      
+      const resp = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/ai-diagnostic`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({ messages: allMessages, mode: "chat" }),
       });
