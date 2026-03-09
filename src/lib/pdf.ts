@@ -25,18 +25,34 @@ interface Line {
   unit_price: number;
 }
 
+interface IntakeInfo {
+  deviceBrand?: string;
+  deviceModel?: string;
+  serialNumber?: string;
+  deviceCategory?: string;
+  checklist?: string[];
+  screenCondition?: number;
+  frameCondition?: number;
+  backCondition?: number;
+  photoUrls?: string[];
+  signatureUrl?: string | null;
+}
+
 interface DocData {
   type: "invoice" | "quote";
   reference: string;
   date: string;
   clientName?: string;
   clientAddress?: string;
+  clientPhone?: string;
+  clientEmail?: string;
   lines: Line[];
   totalHT: number;
   totalTTC: number;
   vatRate: number;
   paymentMethod?: string;
   notes?: string;
+  intake?: IntakeInfo;
 }
 
 async function loadImage(url: string): Promise<string | null> {
@@ -52,6 +68,11 @@ async function loadImage(url: string): Promise<string | null> {
   } catch {
     return null;
   }
+}
+
+function starText(rating: number | undefined): string {
+  if (!rating) return "—";
+  return "★".repeat(rating) + "☆".repeat(5 - rating) + ` (${rating}/5)`;
 }
 
 export async function generatePDF(org: OrgInfo, data: DocData) {
@@ -99,19 +120,71 @@ export async function generatePDF(org: OrgInfo, data: DocData) {
   doc.text(`N° ${data.reference}`, 140, 33);
   doc.text(`Date: ${data.date}`, 140, 39);
 
-  // Client
+  // Client block
   const clientY = Math.max(y + 10, 60);
   doc.setFillColor(245, 245, 250);
-  doc.rect(120, clientY - 5, 75, 25, "F");
+  doc.rect(120, clientY - 5, 75, 35, "F");
   doc.setFontSize(9);
   doc.setFont("helvetica", "bold");
   doc.text("Client", 125, clientY);
   doc.setFont("helvetica", "normal");
   doc.text(data.clientName || "—", 125, clientY + 6);
-  if (data.clientAddress) doc.text(data.clientAddress, 125, clientY + 12);
+  if (data.clientAddress) doc.text(data.clientAddress, 125, clientY + 12, { maxWidth: 65 });
+  let clientInfoY = clientY + 18;
+  if (data.clientPhone) { doc.text(`Tél: ${data.clientPhone}`, 125, clientInfoY); clientInfoY += 4; }
+  if (data.clientEmail) { doc.text(data.clientEmail, 125, clientInfoY); clientInfoY += 4; }
+
+  // Device info block (for quotes with intake)
+  let currentY = clientY + 40;
+  const intake = data.intake;
+
+  if (intake && (intake.deviceBrand || intake.deviceModel)) {
+    doc.setFillColor(240, 245, 255);
+    doc.rect(20, currentY - 4, 170, 20, "F");
+    doc.setFontSize(9);
+    doc.setFont("helvetica", "bold");
+    doc.text("Appareil", 25, currentY + 2);
+    doc.setFont("helvetica", "normal");
+    const deviceLine = [intake.deviceCategory, intake.deviceBrand, intake.deviceModel].filter(Boolean).join(" — ");
+    doc.text(deviceLine, 25, currentY + 8);
+    if (intake.serialNumber) doc.text(`IMEI / N° série: ${intake.serialNumber}`, 25, currentY + 14);
+    currentY += 25;
+  }
+
+  // Device condition ratings
+  if (intake && (intake.screenCondition || intake.frameCondition || intake.backCondition)) {
+    doc.setFontSize(9);
+    doc.setFont("helvetica", "bold");
+    doc.text("État de l'appareil", 25, currentY);
+    doc.setFont("helvetica", "normal");
+    currentY += 6;
+    if (intake.screenCondition) { doc.text(`Écran: ${starText(intake.screenCondition)}`, 25, currentY); currentY += 5; }
+    if (intake.frameCondition) { doc.text(`Châssis: ${starText(intake.frameCondition)}`, 25, currentY); currentY += 5; }
+    if (intake.backCondition) { doc.text(`Vitre arrière: ${starText(intake.backCondition)}`, 25, currentY); currentY += 5; }
+    currentY += 3;
+  }
+
+  // Checklist
+  if (intake?.checklist && intake.checklist.length > 0) {
+    doc.setFontSize(9);
+    doc.setFont("helvetica", "bold");
+    doc.text("Checklist d'intake", 25, currentY);
+    doc.setFont("helvetica", "normal");
+    currentY += 5;
+    intake.checklist.forEach(item => {
+      doc.text(`✓ ${item}`, 28, currentY);
+      currentY += 4;
+    });
+    currentY += 3;
+  }
+
+  // Check if we need a new page before the table
+  if (currentY > 230) {
+    doc.addPage();
+    currentY = 20;
+  }
 
   // Lines table
-  const tableY = clientY + 35;
   const tableData = data.lines.map(l => [
     l.description,
     l.quantity.toString(),
@@ -120,7 +193,7 @@ export async function generatePDF(org: OrgInfo, data: DocData) {
   ]);
 
   autoTable(doc, {
-    startY: tableY,
+    startY: currentY,
     head: [["Description", "Qté", "Prix unitaire HT", "Total HT"]],
     body: tableData,
     styles: { fontSize: 9, cellPadding: 4 },
@@ -172,37 +245,79 @@ export async function generatePDF(org: OrgInfo, data: DocData) {
     notesEndY += 12;
   }
 
+  // Customer signature
+  if (intake?.signatureUrl) {
+    const sigY = notesEndY + 5;
+    if (sigY < 250) {
+      doc.setFontSize(8);
+      doc.setFont("helvetica", "bold");
+      doc.text("Signature client :", 20, sigY);
+      const sigImg = await loadImage(intake.signatureUrl);
+      if (sigImg) {
+        doc.addImage(sigImg, "PNG", 20, sigY + 2, 50, 20);
+      }
+      notesEndY = sigY + 25;
+    }
+  }
+
+  // Device photos on a new page if available
+  if (intake?.photoUrls && intake.photoUrls.length > 0) {
+    doc.addPage();
+    doc.setFontSize(12);
+    doc.setFont("helvetica", "bold");
+    doc.text("Photos de l'appareil", 20, 20);
+    let photoY = 30;
+    for (const url of intake.photoUrls.slice(0, 6)) {
+      const imgData = await loadImage(url);
+      if (imgData && photoY < 240) {
+        doc.addImage(imgData, "JPEG", 20, photoY, 60, 45);
+        photoY += 50;
+      }
+    }
+  }
+
   // Google Review QR Code
   if (org.google_review_url && isInvoice) {
+    const pageCount = doc.getNumberOfPages();
+    doc.setPage(pageCount);
     const qrY = notesEndY + 5;
-    // Use a simple text prompt since we can't embed QR in jsPDF easily without a lib
-    doc.setFontSize(8);
-    doc.setFont("helvetica", "normal");
-    doc.text("⭐ Laissez-nous un avis Google :", 20, qrY);
-    doc.setTextColor(37, 99, 235);
-    doc.textWithLink(org.google_review_url, 20, qrY + 5, { url: org.google_review_url });
-    doc.setTextColor(0);
+    if (qrY < 270) {
+      doc.setFontSize(8);
+      doc.setFont("helvetica", "normal");
+      doc.text("⭐ Laissez-nous un avis Google :", 20, qrY);
+      doc.setTextColor(37, 99, 235);
+      doc.textWithLink(org.google_review_url, 20, qrY + 5, { url: org.google_review_url });
+      doc.setTextColor(0);
+    }
   }
 
   // Custom footer
   if (org.invoice_footer) {
+    const pageCount = doc.getNumberOfPages();
+    for (let i = 1; i <= pageCount; i++) {
+      doc.setPage(i);
+      const pageH = doc.internal.pageSize.getHeight();
+      doc.setFontSize(7);
+      doc.setFont("helvetica", "normal");
+      doc.setTextColor(100);
+      const footerLines = doc.splitTextToSize(org.invoice_footer, 170);
+      doc.text(footerLines, 20, pageH - 25);
+      doc.setTextColor(0);
+    }
+  }
+
+  // Standard footer on all pages
+  const pageCount = doc.getNumberOfPages();
+  for (let i = 1; i <= pageCount; i++) {
+    doc.setPage(i);
     const pageH = doc.internal.pageSize.getHeight();
     doc.setFontSize(7);
     doc.setFont("helvetica", "normal");
-    doc.setTextColor(100);
-    const footerLines = doc.splitTextToSize(org.invoice_footer, 170);
-    const footerStartY = pageH - 25;
-    doc.text(footerLines, 20, footerStartY);
+    doc.setTextColor(150);
+    const footerParts = [org.name, org.siret ? `SIRET: ${org.siret}` : "", org.vat_number ? `TVA: ${org.vat_number}` : "", fullAddress].filter(Boolean);
+    doc.text(footerParts.join(" — "), 105, pageH - 8, { align: "center" });
     doc.setTextColor(0);
   }
-
-  // Standard footer
-  const pageH = doc.internal.pageSize.getHeight();
-  doc.setFontSize(7);
-  doc.setFont("helvetica", "normal");
-  doc.setTextColor(150);
-  const footerParts = [org.name, org.siret ? `SIRET: ${org.siret}` : "", org.vat_number ? `TVA: ${org.vat_number}` : "", fullAddress].filter(Boolean);
-  doc.text(footerParts.join(" — "), 105, pageH - 8, { align: "center" });
 
   doc.save(`${data.reference}.pdf`);
 }
