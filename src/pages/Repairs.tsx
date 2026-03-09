@@ -7,19 +7,15 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Plus, Search, LayoutGrid, List, Calendar } from "lucide-react";
+import { Plus, Search, LayoutGrid, List } from "lucide-react";
+import { CreateRepairDialog } from "@/components/dialogs/CreateRepairDialog";
+import { RepairDetailDialog } from "@/components/dialogs/RepairDetailDialog";
 
 const statusLabels: Record<string, string> = {
-  nouveau: "Nouveau",
-  diagnostic: "Diagnostic",
-  en_cours: "En cours",
-  en_attente_piece: "En attente de pièce",
-  termine: "Terminé",
-  pret_a_recuperer: "Prêt à récupérer",
+  nouveau: "Nouveau", diagnostic: "Diagnostic", en_cours: "En cours",
+  en_attente_piece: "Attente pièce", termine: "Terminé", pret_a_recuperer: "Prêt",
 };
-
 const statusOrder = ["nouveau", "diagnostic", "en_cours", "en_attente_piece", "termine", "pret_a_recuperer"];
-
 const statusColors: Record<string, string> = {
   nouveau: "bg-info/10 text-info border-info/20",
   diagnostic: "bg-warning/10 text-warning border-warning/20",
@@ -31,6 +27,8 @@ const statusColors: Record<string, string> = {
 
 const Repairs = () => {
   const [search, setSearch] = useState("");
+  const [showCreate, setShowCreate] = useState(false);
+  const [selectedRepair, setSelectedRepair] = useState<any>(null);
 
   const { data: repairs = [], isLoading } = useQuery({
     queryKey: ["repairs"],
@@ -58,7 +56,7 @@ const Repairs = () => {
           <h1 className="text-2xl font-bold">Réparations</h1>
           <p className="text-muted-foreground text-sm">Gérez toutes vos interventions</p>
         </div>
-        <Button><Plus className="h-4 w-4 mr-2" />Nouvelle réparation</Button>
+        <Button onClick={() => setShowCreate(true)}><Plus className="h-4 w-4 mr-2" />Nouvelle réparation</Button>
       </div>
 
       <Tabs defaultValue="kanban">
@@ -88,15 +86,12 @@ const Repairs = () => {
                         <span className="text-xs text-muted-foreground">{items.length}</span>
                       </div>
                       {items.map((repair) => (
-                        <Card key={repair.id} className="cursor-pointer hover:shadow-md transition-shadow">
+                        <Card key={repair.id} className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => setSelectedRepair(repair)}>
                           <CardContent className="p-3">
                             <p className="text-xs font-mono text-muted-foreground">{repair.reference}</p>
                             <p className="text-sm font-medium mt-1">{repair.clients?.name ?? "—"}</p>
                             <p className="text-xs text-muted-foreground">{repair.devices ? `${repair.devices.brand} ${repair.devices.model}` : "—"}</p>
-                            <p className="text-xs text-muted-foreground mt-1">{repair.issue}</p>
-                            {repair.technician_id && (
-                              <p className="text-xs text-primary mt-2">👤 Technicien assigné</p>
-                            )}
+                            <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{repair.issue}</p>
                           </CardContent>
                         </Card>
                       ))}
@@ -121,21 +116,17 @@ const Repairs = () => {
                             <th className="text-left p-3 font-medium">Appareil</th>
                             <th className="text-left p-3 font-medium">Problème</th>
                             <th className="text-left p-3 font-medium">Statut</th>
-                            <th className="text-left p-3 font-medium">Technicien</th>
                             <th className="text-right p-3 font-medium">Prix</th>
                           </tr>
                         </thead>
                         <tbody>
                           {filtered.map((repair) => (
-                            <tr key={repair.id} className="border-b hover:bg-muted/20 transition-colors cursor-pointer">
+                            <tr key={repair.id} className="border-b hover:bg-muted/20 transition-colors cursor-pointer" onClick={() => setSelectedRepair(repair)}>
                               <td className="p-3 font-mono text-xs">{repair.reference}</td>
                               <td className="p-3">{repair.clients?.name ?? "—"}</td>
                               <td className="p-3 text-muted-foreground">{repair.devices ? `${repair.devices.brand} ${repair.devices.model}` : "—"}</td>
-                              <td className="p-3 text-muted-foreground">{repair.issue}</td>
-                              <td className="p-3">
-                                <Badge variant="outline" className={`text-xs ${statusColors[repair.status]}`}>{statusLabels[repair.status]}</Badge>
-                              </td>
-                              <td className="p-3">{repair.technician_id ? "Assigné" : "—"}</td>
+                              <td className="p-3 text-muted-foreground max-w-[200px] truncate">{repair.issue}</td>
+                              <td className="p-3"><Badge variant="outline" className={`text-xs ${statusColors[repair.status]}`}>{statusLabels[repair.status]}</Badge></td>
                               <td className="p-3 text-right font-medium">{repair.final_price ? `${repair.final_price} €` : repair.estimated_price ? `~${repair.estimated_price} €` : "—"}</td>
                             </tr>
                           ))}
@@ -149,6 +140,9 @@ const Repairs = () => {
           </>
         )}
       </Tabs>
+
+      <CreateRepairDialog open={showCreate} onOpenChange={setShowCreate} />
+      <RepairDetailDialog open={!!selectedRepair} onOpenChange={(o) => !o && setSelectedRepair(null)} repair={selectedRepair} />
     </div>
   );
 };

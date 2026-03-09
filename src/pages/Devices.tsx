@@ -4,9 +4,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Plus, Search, Smartphone, Laptop, Gamepad2, Bike } from "lucide-react";
+import { CreateDeviceDialog } from "@/components/dialogs/CreateDeviceDialog";
 
 const typeIcons: Record<string, any> = {
   Smartphone: Smartphone,
@@ -18,14 +18,12 @@ const typeIcons: Record<string, any> = {
 
 const Devices = () => {
   const [search, setSearch] = useState("");
+  const [showCreate, setShowCreate] = useState(false);
 
   const { data: devices = [], isLoading } = useQuery({
     queryKey: ["devices"],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("devices")
-        .select("*, clients(name)")
-        .order("created_at", { ascending: false });
+      const { data, error } = await supabase.from("devices").select("*, clients(name)").order("created_at", { ascending: false });
       if (error) throw error;
       return data;
     },
@@ -46,7 +44,7 @@ const Devices = () => {
           <h1 className="text-2xl font-bold">Appareils</h1>
           <p className="text-muted-foreground text-sm">{devices.length} appareils enregistrés</p>
         </div>
-        <Button><Plus className="h-4 w-4 mr-2" />Nouvel appareil</Button>
+        <Button onClick={() => setShowCreate(true)}><Plus className="h-4 w-4 mr-2" />Nouvel appareil</Button>
       </div>
 
       <div className="relative w-72">
@@ -84,6 +82,8 @@ const Devices = () => {
           })}
         </div>
       )}
+
+      <CreateDeviceDialog open={showCreate} onOpenChange={setShowCreate} />
     </div>
   );
 };

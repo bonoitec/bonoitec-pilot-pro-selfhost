@@ -6,10 +6,12 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Plus, Search, Download, Phone, Mail } from "lucide-react";
+import { Plus, Search, Phone, Mail } from "lucide-react";
+import { CreateClientDialog } from "@/components/dialogs/CreateClientDialog";
 
 const Clients = () => {
   const [search, setSearch] = useState("");
+  const [showCreate, setShowCreate] = useState(false);
 
   const { data: clients = [], isLoading } = useQuery({
     queryKey: ["clients"],
@@ -37,10 +39,7 @@ const Clients = () => {
           <h1 className="text-2xl font-bold">Clients</h1>
           <p className="text-muted-foreground text-sm">{clients.length} clients enregistrés</p>
         </div>
-        <div className="flex gap-2">
-          <Button variant="outline"><Download className="h-4 w-4 mr-2" />Exporter</Button>
-          <Button><Plus className="h-4 w-4 mr-2" />Nouveau client</Button>
-        </div>
+        <Button onClick={() => setShowCreate(true)}><Plus className="h-4 w-4 mr-2" />Nouveau client</Button>
       </div>
 
       <div className="relative w-72">
@@ -50,9 +49,7 @@ const Clients = () => {
 
       {isLoading ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {[1, 2, 3].map((i) => (
-            <Card key={i}><CardContent className="p-5"><Skeleton className="h-24 w-full" /></CardContent></Card>
-          ))}
+          {[1, 2, 3].map((i) => <Card key={i}><CardContent className="p-5"><Skeleton className="h-24 w-full" /></CardContent></Card>)}
         </div>
       ) : filtered.length === 0 ? (
         <Card><CardContent className="p-8 text-center text-muted-foreground">Aucun client trouvé</CardContent></Card>
@@ -77,6 +74,8 @@ const Clients = () => {
           ))}
         </div>
       )}
+
+      <CreateClientDialog open={showCreate} onOpenChange={setShowCreate} />
     </div>
   );
 };

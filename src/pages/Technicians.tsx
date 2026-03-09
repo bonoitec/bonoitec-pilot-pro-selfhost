@@ -1,18 +1,19 @@
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Plus, Wrench } from "lucide-react";
+import { CreateTechnicianDialog } from "@/components/dialogs/CreateTechnicianDialog";
 
 const Technicians = () => {
+  const [showCreate, setShowCreate] = useState(false);
+
   const { data: technicians = [], isLoading } = useQuery({
     queryKey: ["technicians"],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("technicians")
-        .select("*, repairs(id)")
-        .order("name");
+      const { data, error } = await supabase.from("technicians").select("*, repairs(id)").order("name");
       if (error) throw error;
       return data;
     },
@@ -25,7 +26,7 @@ const Technicians = () => {
           <h1 className="text-2xl font-bold">Techniciens</h1>
           <p className="text-muted-foreground text-sm">Équipe de réparation</p>
         </div>
-        <Button><Plus className="h-4 w-4 mr-2" />Ajouter un technicien</Button>
+        <Button onClick={() => setShowCreate(true)}><Plus className="h-4 w-4 mr-2" />Ajouter un technicien</Button>
       </div>
 
       {isLoading ? (
@@ -62,6 +63,8 @@ const Technicians = () => {
           ))}
         </div>
       )}
+
+      <CreateTechnicianDialog open={showCreate} onOpenChange={setShowCreate} />
     </div>
   );
 };

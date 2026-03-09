@@ -1,20 +1,19 @@
-import { useQuery } from "@tanstack/react-query";
+import { useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Plus, Download, Eye } from "lucide-react";
+import { Plus, Download, Eye, CheckCircle2 } from "lucide-react";
 import { format } from "date-fns";
+import { CreateInvoiceDialog } from "@/components/dialogs/CreateInvoiceDialog";
+import { useToast } from "@/hooks/use-toast";
+import { generatePDF } from "@/lib/pdf";
 
 const statusLabels: Record<string, string> = {
-  brouillon: "Brouillon",
-  envoyee: "Envoyée",
-  payee: "Payée",
-  partiel: "Partiel",
-  annulee: "Annulée",
+  brouillon: "Brouillon", envoyee: "Envoyée", payee: "Payée", partiel: "Partiel", annulee: "Annulée",
 };
-
 const statusColors: Record<string, string> = {
   brouillon: "bg-muted text-muted-foreground",
   envoyee: "bg-info/10 text-info",
@@ -22,27 +21,54 @@ const statusColors: Record<string, string> = {
   partiel: "bg-warning/10 text-warning",
   annulee: "bg-destructive/10 text-destructive",
 };
-
 const paymentLabels: Record<string, string> = {
-  cb: "CB",
-  especes: "Espèces",
-  virement: "Virement",
-  cheque: "Chèque",
-  autre: "Autre",
+  cb: "CB", especes: "Espèces", virement: "Virement", cheque: "Chèque", autre: "Autre",
 };
 
 const Invoices = () => {
+  const [showCreate, setShowCreate] = useState(false);
+  const { toast } = useToast();
+  const qc = useQueryClient();
+
   const { data: invoices = [], isLoading } = useQuery({
     queryKey: ["invoices"],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("invoices")
-        .select("*, clients(name)")
+        .select("*, clients(name, address)")
         .order("created_at", { ascending: false });
       if (error) throw error;
       return data;
     },
   });
+
+  const markPaid = useMutation({
+    mutationFn: async (id: string) => {
+      const inv = invoices.find(i => i.id === id);
+      if (!inv) return;
+      const { error } = await supabase.from("invoices").update({
+        status: "payee" as any,
+        paid_amount: Number(inv.total_ttc),
+        paid_at: new Date().toISOString(),
+      }).eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => { toast({ title: "Facture marquée payée" }); qc.invalidateQueries({ queryKey: ["invoices"] }); },
+  });
+
+  const downloadPDF = async (inv: any) => {
+    const { data: org } = await supabase.from("organizations").select("*").single();
+    if (!org) return;
+    const lines = Array.isArray(inv.lines) ? inv.lines : [];
+    await generatePDF(org, {
+      type: "invoice", reference: inv.reference,
+      date: format(new Date(inv.created_at), "dd/MM/yyyy"),
+      clientName: inv.clients?.name, clientAddress: inv.clients?.address,
+      lines, totalHT: Number(inv.total_ht), totalTTC: Number(inv.total_ttc), vatRate: Number(inv.vat_rate),
+      paymentMethod: inv.payment_method ? paymentLabels[inv.payment_method] || inv.payment_method : undefined,
+      notes: inv.notes,
+    });
+  };
 
   return (
     <div className="space-y-6 animate-fade-in">
@@ -51,7 +77,7 @@ const Invoices = () => {
           <h1 className="text-2xl font-bold">Factures</h1>
           <p className="text-muted-foreground text-sm">Suivi de facturation et paiements</p>
         </div>
-        <Button><Plus className="h-4 w-4 mr-2" />Nouvelle facture</Button>
+        <Button onClick={() => setShowCreate(true)}><Plus className="h-4 w-4 mr-2" />Nouvelle facture</Button>
       </div>
 
       {isLoading ? (
@@ -89,8 +115,14 @@ const Invoices = () => {
                       <td className="p-3 text-center text-xs text-muted-foreground">{format(new Date(inv.created_at), "dd/MM/yyyy")}</td>
                       <td className="p-3 text-center">
                         <div className="flex justify-center gap-1">
-                          <Button variant="ghost" size="icon" className="h-8 w-8"><Eye className="h-3.5 w-3.5" /></Button>
-                          <Button variant="ghost" size="icon" className="h-8 w-8"><Download className="h-3.5 w-3.5" /></Button>
+                          {inv.status !== "payee" && (
+                            <Button variant="ghost" size="icon" className="h-8 w-8" title="Marquer payée" onClick={() => markPaid.mutate(inv.id)}>
+                              <CheckCircle2 className="h-3.5 w-3.5 text-success" />
+                            </Button>
+                          )}
+                          <Button variant="ghost" size="icon" className="h-8 w-8" title="Télécharger PDF" onClick={() => downloadPDF(inv)}>
+                            <Download className="h-3.5 w-3.5" />
+                          </Button>
                         </div>
                       </td>
                     </tr>
@@ -101,6 +133,8 @@ const Invoices = () => {
           </CardContent>
         </Card>
       )}
+
+      <CreateInvoiceDialog open={showCreate} onOpenChange={setShowCreate} />
     </div>
   );
 };
