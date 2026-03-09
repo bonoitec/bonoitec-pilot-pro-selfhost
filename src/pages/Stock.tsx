@@ -7,28 +7,24 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Plus, Search, AlertTriangle } from "lucide-react";
+import { CreateStockDialog } from "@/components/dialogs/CreateStockDialog";
 
 const Stock = () => {
   const [search, setSearch] = useState("");
+  const [showCreate, setShowCreate] = useState(false);
 
   const { data: parts = [], isLoading } = useQuery({
     queryKey: ["inventory"],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("inventory")
-        .select("*")
-        .order("name");
+      const { data, error } = await supabase.from("inventory").select("*").order("name");
       if (error) throw error;
       return data;
     },
   });
 
   const filtered = parts.filter(
-    (p) =>
-      p.name.toLowerCase().includes(search.toLowerCase()) ||
-      p.category.toLowerCase().includes(search.toLowerCase())
+    (p) => p.name.toLowerCase().includes(search.toLowerCase()) || p.category.toLowerCase().includes(search.toLowerCase())
   );
-
   const lowStock = parts.filter((p) => p.quantity <= p.min_quantity);
 
   return (
@@ -38,7 +34,7 @@ const Stock = () => {
           <h1 className="text-2xl font-bold">Stock</h1>
           <p className="text-muted-foreground text-sm">Inventaire des pièces détachées</p>
         </div>
-        <Button><Plus className="h-4 w-4 mr-2" />Ajouter une pièce</Button>
+        <Button onClick={() => setShowCreate(true)}><Plus className="h-4 w-4 mr-2" />Ajouter une pièce</Button>
       </div>
 
       {lowStock.length > 0 && (
@@ -105,6 +101,8 @@ const Stock = () => {
           </CardContent>
         </Card>
       )}
+
+      <CreateStockDialog open={showCreate} onOpenChange={setShowCreate} />
     </div>
   );
 };
