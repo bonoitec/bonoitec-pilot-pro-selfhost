@@ -9,7 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
-import { Upload, Building2, FileText, Globe, Star } from "lucide-react";
+import { Upload, Building2, FileText, Globe, Star, ClipboardCheck, Plus, X } from "lucide-react";
 
 const SettingsPage = () => {
   const { toast } = useToast();
@@ -32,6 +32,7 @@ const SettingsPage = () => {
     postal_code: "", city: "", country: "France", legal_status: "",
     vat_number: "", ape_code: "", website: "", invoice_footer: "",
     google_review_url: "", vat_enabled: true, logo_url: "",
+    intake_checklist_items: [] as string[],
   });
 
   useEffect(() => {
@@ -46,6 +47,7 @@ const SettingsPage = () => {
         website: (org as any).website || "", invoice_footer: (org as any).invoice_footer || "",
         google_review_url: (org as any).google_review_url || "",
         vat_enabled: (org as any).vat_enabled ?? true, logo_url: org.logo_url || "",
+        intake_checklist_items: (org as any).intake_checklist_items ?? ["Alimentation / charge", "Écran", "Boutons", "Caméra", "Son", "Réseau", "Face ID / empreinte", "Autres problèmes"],
       });
     }
   }, [org]);
@@ -70,6 +72,7 @@ const SettingsPage = () => {
         google_review_url: form.google_review_url.trim() || null,
         vat_enabled: form.vat_enabled,
         logo_url: form.logo_url || null,
+        intake_checklist_items: form.intake_checklist_items,
       } as any).eq("id", org.id);
       if (error) throw error;
     },
@@ -204,7 +207,41 @@ const SettingsPage = () => {
         </CardContent>
       </Card>
 
-      {/* Google Review */}
+      {/* Intake Checklist */}
+      <Card>
+        <CardHeader>
+          <div className="flex items-center gap-2">
+            <ClipboardCheck className="h-4 w-4 text-primary" />
+            <CardTitle className="text-base">Checklist d'intake</CardTitle>
+          </div>
+          <CardDescription>Personnalisez les points de contrôle lors de la prise en charge d'un appareil</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          {form.intake_checklist_items.map((item, i) => (
+            <div key={i} className="flex items-center gap-2">
+              <Input
+                value={item}
+                onChange={e => {
+                  const items = [...form.intake_checklist_items];
+                  items[i] = e.target.value;
+                  setForm(f => ({ ...f, intake_checklist_items: items }));
+                }}
+                className="flex-1"
+              />
+              <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => {
+                setForm(f => ({ ...f, intake_checklist_items: f.intake_checklist_items.filter((_, idx) => idx !== i) }));
+              }}>
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+          ))}
+          <Button variant="outline" size="sm" onClick={() => setForm(f => ({ ...f, intake_checklist_items: [...f.intake_checklist_items, ""] }))}>
+            <Plus className="h-3 w-3 mr-2" />Ajouter un point
+          </Button>
+        </CardContent>
+      </Card>
+
+
       <Card>
         <CardHeader>
           <div className="flex items-center gap-2">

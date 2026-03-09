@@ -344,6 +344,7 @@ export type Database = {
           email: string | null
           google_review_url: string | null
           id: string
+          intake_checklist_items: Json | null
           invoice_footer: string | null
           invoice_prefix: string
           legal_status: string | null
@@ -368,6 +369,7 @@ export type Database = {
           email?: string | null
           google_review_url?: string | null
           id?: string
+          intake_checklist_items?: Json | null
           invoice_footer?: string | null
           invoice_prefix?: string
           legal_status?: string | null
@@ -392,6 +394,7 @@ export type Database = {
           email?: string | null
           google_review_url?: string | null
           id?: string
+          intake_checklist_items?: Json | null
           invoice_footer?: string | null
           invoice_prefix?: string
           legal_status?: string | null
@@ -594,20 +597,28 @@ export type Database = {
       }
       repairs: {
         Row: {
+          back_condition: number | null
           client_id: string | null
           created_at: string
+          customer_signature_url: string | null
           device_id: string | null
           diagnostic: string | null
           estimated_completion: string | null
           estimated_price: number | null
           final_price: number | null
+          frame_condition: number | null
           id: string
+          intake_checklist: Json | null
           internal_notes: string | null
           issue: string
           organization_id: string
           parts_used: Json | null
+          payment_method: string | null
           photos: Json | null
           reference: string
+          repair_ended_at: string | null
+          repair_started_at: string | null
+          screen_condition: number | null
           status: Database["public"]["Enums"]["repair_status"]
           technician_id: string | null
           technician_message: string | null
@@ -615,20 +626,28 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          back_condition?: number | null
           client_id?: string | null
           created_at?: string
+          customer_signature_url?: string | null
           device_id?: string | null
           diagnostic?: string | null
           estimated_completion?: string | null
           estimated_price?: number | null
           final_price?: number | null
+          frame_condition?: number | null
           id?: string
+          intake_checklist?: Json | null
           internal_notes?: string | null
           issue: string
           organization_id: string
           parts_used?: Json | null
+          payment_method?: string | null
           photos?: Json | null
           reference: string
+          repair_ended_at?: string | null
+          repair_started_at?: string | null
+          screen_condition?: number | null
           status?: Database["public"]["Enums"]["repair_status"]
           technician_id?: string | null
           technician_message?: string | null
@@ -636,20 +655,28 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          back_condition?: number | null
           client_id?: string | null
           created_at?: string
+          customer_signature_url?: string | null
           device_id?: string | null
           diagnostic?: string | null
           estimated_completion?: string | null
           estimated_price?: number | null
           final_price?: number | null
+          frame_condition?: number | null
           id?: string
+          intake_checklist?: Json | null
           internal_notes?: string | null
           issue?: string
           organization_id?: string
           parts_used?: Json | null
+          payment_method?: string | null
           photos?: Json | null
           reference?: string
+          repair_ended_at?: string | null
+          repair_started_at?: string | null
+          screen_condition?: number | null
           status?: Database["public"]["Enums"]["repair_status"]
           technician_id?: string | null
           technician_message?: string | null
