@@ -26,6 +26,7 @@ import DepositForm from "./pages/DepositForm";
 import Services from "./pages/Services";
 import Articles from "./pages/Articles";
 import StockAlerts from "./pages/StockAlerts";
+import Messages from "./pages/Messages";
 import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
 
