@@ -676,6 +676,18 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      create_deposit_repair: {
+        Args: {
+          _client_name: string
+          _client_phone: string
+          _deposit_code: string
+          _device_brand: string
+          _device_model: string
+          _device_type: string
+          _issue: string
+        }
+        Returns: Json
+      }
       get_user_org_id: { Args: never; Returns: string }
       has_role: {
         Args: {
