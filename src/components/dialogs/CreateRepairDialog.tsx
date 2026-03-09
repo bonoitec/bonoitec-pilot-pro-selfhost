@@ -8,12 +8,38 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
-import { User, Smartphone, AlertCircle, Settings, StickyNote } from "lucide-react";
+import { User, Smartphone, AlertCircle, Settings, StickyNote, ClipboardCheck, Star } from "lucide-react";
 
 interface Props {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+}
+
+const defaultChecklist = [
+  "Alimentation / charge", "Écran", "Boutons", "Caméra",
+  "Son", "Réseau", "Face ID / empreinte", "Autres problèmes",
+];
+
+function StarRating({ value, onChange, label }: { value: number; onChange: (v: number) => void; label: string }) {
+  return (
+    <div className="flex items-center gap-3">
+      <span className="text-xs text-muted-foreground w-28">{label}</span>
+      <div className="flex gap-0.5">
+        {[1, 2, 3, 4, 5].map(s => (
+          <button
+            key={s}
+            type="button"
+            onClick={() => onChange(s)}
+            className={`h-6 w-6 transition-colors ${s <= value ? "text-warning" : "text-muted-foreground/30"}`}
+          >
+            <Star className="h-5 w-5 fill-current" />
+          </button>
+        ))}
+      </div>
+    </div>
+  );
 }
 
 export function CreateRepairDialog({ open, onOpenChange }: Props) {
@@ -23,6 +49,23 @@ export function CreateRepairDialog({ open, onOpenChange }: Props) {
     client_id: "", device_id: "", technician_id: "",
     issue: "", estimated_price: "", internal_notes: "",
   });
+  const [checklist, setChecklist] = useState<Record<string, boolean>>({});
+  const [diagnosticImpossibleReason, setDiagnosticImpossibleReason] = useState("");
+  const [screenCondition, setScreenCondition] = useState(5);
+  const [frameCondition, setFrameCondition] = useState(5);
+  const [backCondition, setBackCondition] = useState(5);
+
+  const { data: org } = useQuery({
+    queryKey: ["organization"],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("organizations").select("*").single();
+      if (error) throw error;
+      return data;
+    },
+    enabled: open,
+  });
+
+  const checklistItems: string[] = (org as any)?.intake_checklist_items ?? defaultChecklist;
 
   const { data: clients = [] } = useQuery({
     queryKey: ["clients"],
@@ -61,13 +104,22 @@ export function CreateRepairDialog({ open, onOpenChange }: Props) {
       const { data: orgId } = await supabase.rpc("get_user_org_id");
       if (!orgId) throw new Error("Organisation introuvable");
       const ref = "REP-" + new Date().toISOString().slice(0, 10).replace(/-/g, "") + "-" + Math.random().toString(36).slice(2, 6);
+
+      const intakeChecklist = Object.entries(checklist)
+        .filter(([, v]) => v)
+        .map(([k]) => k === "Diagnostic impossible" ? `${k}: ${diagnosticImpossibleReason}` : k);
+
       const { error } = await supabase.from("repairs").insert({
         organization_id: orgId, reference: ref,
         client_id: form.client_id || null, device_id: form.device_id || null,
         technician_id: form.technician_id || null, issue: form.issue.trim(),
         estimated_price: form.estimated_price ? parseFloat(form.estimated_price) : null,
         internal_notes: form.internal_notes.trim() || null, status: "nouveau",
-      });
+        intake_checklist: intakeChecklist,
+        screen_condition: screenCondition,
+        frame_condition: frameCondition,
+        back_condition: backCondition,
+      } as any);
       if (error) throw error;
     },
     onSuccess: () => {
@@ -75,6 +127,10 @@ export function CreateRepairDialog({ open, onOpenChange }: Props) {
       qc.invalidateQueries({ queryKey: ["repairs"] });
       qc.invalidateQueries({ queryKey: ["dashboard-repairs"] });
       setForm({ client_id: "", device_id: "", technician_id: "", issue: "", estimated_price: "", internal_notes: "" });
+      setChecklist({});
+      setScreenCondition(5);
+      setFrameCondition(5);
+      setBackCondition(5);
       onOpenChange(false);
     },
     onError: (e: Error) => toast({ title: "Erreur", description: e.message, variant: "destructive" }),
@@ -114,6 +170,50 @@ export function CreateRepairDialog({ open, onOpenChange }: Props) {
                 <SelectTrigger><SelectValue placeholder="Sélectionner un appareil" /></SelectTrigger>
                 <SelectContent>{devices.map(d => <SelectItem key={d.id} value={d.id}>{d.brand} {d.model}</SelectItem>)}</SelectContent>
               </Select>
+            </CardContent>
+          </Card>
+
+          {/* Intake Checklist */}
+          <Card className="border-border/60">
+            <CardHeader className="pb-3 pt-4 px-4">
+              <CardTitle className="text-sm font-medium flex items-center gap-2">
+                <ClipboardCheck className="h-4 w-4 text-primary" />Checklist d'intake
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="px-4 pb-4 space-y-2">
+              {[...checklistItems, "Diagnostic impossible"].map(item => (
+                <div key={item} className="flex items-center gap-2">
+                  <Checkbox
+                    id={`check-${item}`}
+                    checked={!!checklist[item]}
+                    onCheckedChange={(v) => setChecklist(c => ({ ...c, [item]: !!v }))}
+                  />
+                  <label htmlFor={`check-${item}`} className="text-sm cursor-pointer">{item}</label>
+                </div>
+              ))}
+              {checklist["Diagnostic impossible"] && (
+                <Textarea
+                  value={diagnosticImpossibleReason}
+                  onChange={e => setDiagnosticImpossibleReason(e.target.value)}
+                  placeholder="Précisez pourquoi le diagnostic est impossible..."
+                  rows={2}
+                  className="mt-2"
+                />
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Device Condition */}
+          <Card className="border-border/60">
+            <CardHeader className="pb-3 pt-4 px-4">
+              <CardTitle className="text-sm font-medium flex items-center gap-2">
+                <Star className="h-4 w-4 text-warning" />État de l'appareil
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="px-4 pb-4 space-y-3">
+              <StarRating value={screenCondition} onChange={setScreenCondition} label="Écran" />
+              <StarRating value={frameCondition} onChange={setFrameCondition} label="Châssis" />
+              <StarRating value={backCondition} onChange={setBackCondition} label="Vitre arrière" />
             </CardContent>
           </Card>
 
