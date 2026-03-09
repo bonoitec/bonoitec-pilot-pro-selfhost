@@ -390,6 +390,104 @@ export type Database = {
           },
         ]
       }
+      notification_logs: {
+        Row: {
+          body: string
+          channel: string
+          created_at: string
+          error_message: string | null
+          id: string
+          organization_id: string
+          recipient: string
+          repair_id: string
+          status: string
+          subject: string | null
+        }
+        Insert: {
+          body: string
+          channel: string
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          organization_id: string
+          recipient: string
+          repair_id: string
+          status?: string
+          subject?: string | null
+        }
+        Update: {
+          body?: string
+          channel?: string
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          organization_id?: string
+          recipient?: string
+          repair_id?: string
+          status?: string
+          subject?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notification_logs_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "notification_logs_repair_id_fkey"
+            columns: ["repair_id"]
+            isOneToOne: false
+            referencedRelation: "repairs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      notification_templates: {
+        Row: {
+          body: string
+          channel: string
+          created_at: string
+          id: string
+          is_active: boolean
+          organization_id: string
+          status_trigger: string
+          subject: string | null
+          updated_at: string
+        }
+        Insert: {
+          body: string
+          channel?: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          organization_id: string
+          status_trigger: string
+          subject?: string | null
+          updated_at?: string
+        }
+        Update: {
+          body?: string
+          channel?: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          organization_id?: string
+          status_trigger?: string
+          subject?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notification_templates_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       organizations: {
         Row: {
           address: string | null
@@ -582,6 +680,57 @@ export type Database = {
           },
           {
             foreignKeyName: "quotes_repair_id_fkey"
+            columns: ["repair_id"]
+            isOneToOne: false
+            referencedRelation: "repairs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      repair_messages: {
+        Row: {
+          channel: string
+          content: string
+          created_at: string
+          id: string
+          is_read: boolean
+          organization_id: string
+          repair_id: string
+          sender_name: string | null
+          sender_type: string
+        }
+        Insert: {
+          channel?: string
+          content: string
+          created_at?: string
+          id?: string
+          is_read?: boolean
+          organization_id: string
+          repair_id: string
+          sender_name?: string | null
+          sender_type: string
+        }
+        Update: {
+          channel?: string
+          content?: string
+          created_at?: string
+          id?: string
+          is_read?: boolean
+          organization_id?: string
+          repair_id?: string
+          sender_name?: string | null
+          sender_type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "repair_messages_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "repair_messages_repair_id_fkey"
             columns: ["repair_id"]
             isOneToOne: false
             referencedRelation: "repairs"
@@ -901,6 +1050,10 @@ export type Database = {
         Returns: Json
       }
       get_repair_by_tracking_code: { Args: { _code: string }; Returns: Json }
+      get_repair_messages_by_tracking: {
+        Args: { _tracking_code: string }
+        Returns: Json
+      }
       get_user_org_id: { Args: never; Returns: string }
       has_role: {
         Args: {
@@ -908,6 +1061,14 @@ export type Database = {
           _user_id: string
         }
         Returns: boolean
+      }
+      send_customer_message: {
+        Args: {
+          _content: string
+          _sender_name?: string
+          _tracking_code: string
+        }
+        Returns: Json
       }
       validate_deposit_code: { Args: { _code: string }; Returns: boolean }
     }
