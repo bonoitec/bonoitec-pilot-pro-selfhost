@@ -20,7 +20,9 @@ interface Props {
   defaultSerialNumber?: string;
 }
 
-const deviceTypes = ["Smartphone", "Tablette", "Ordinateur", "Console", "Montre connectée", "Autreconst CreateDeviceDialog = forwardRef<HTMLDivElement, Props>(function CreateDeviceDialog({ open, onOpenChange, defaultClientId, defaultBrand, defaultModel, defaultType, defaultSerialNumber }, refber }: Props) {
+const deviceTypes = ["Smartphone", "Tablette", "Ordinateur", "Console", "Montre connectée", "Autre"];
+
+export const CreateDeviceDialog = forwardRef<HTMLDivElement, Props>(function CreateDeviceDialog({ open, onOpenChange, defaultClientId, defaultBrand, defaultModel, defaultType, defaultSerialNumber }, ref) {
   const { toast } = useToast();
   const qc = useQueryClient();
   const [tab, setTab] = useState<string>("catalog");
