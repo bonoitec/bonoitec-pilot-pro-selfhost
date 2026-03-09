@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
@@ -12,22 +12,38 @@ interface Props {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   defaultClientId?: string;
+  defaultBrand?: string;
+  defaultModel?: string;
+  defaultType?: string;
+  defaultSerialNumber?: string;
 }
 
 const deviceTypes = ["Smartphone", "Tablette", "Ordinateur", "Console", "Autre"];
 
-export function CreateDeviceDialog({ open, onOpenChange, defaultClientId }: Props) {
+export function CreateDeviceDialog({ open, onOpenChange, defaultClientId, defaultBrand, defaultModel, defaultType, defaultSerialNumber }: Props) {
   const { toast } = useToast();
   const qc = useQueryClient();
   const [form, setForm] = useState({
     client_id: defaultClientId || "",
-    type: "Smartphone",
-    brand: "",
-    model: "",
-    serial_number: "",
+    type: defaultType || "Smartphone",
+    brand: defaultBrand || "",
+    model: defaultModel || "",
+    serial_number: defaultSerialNumber || "",
     condition: "",
     accessories: "",
   });
+
+  // Update form when defaults change (e.g. from IMEI scanner)
+  useEffect(() => {
+    setForm(prev => ({
+      ...prev,
+      brand: defaultBrand || prev.brand,
+      model: defaultModel || prev.model,
+      type: defaultType || prev.type,
+      serial_number: defaultSerialNumber || prev.serial_number,
+      client_id: defaultClientId || prev.client_id,
+    }));
+  }, [defaultBrand, defaultModel, defaultType, defaultSerialNumber, defaultClientId]);
 
   const { data: clients = [] } = useQuery({
     queryKey: ["clients"],
