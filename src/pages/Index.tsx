@@ -27,6 +27,7 @@ const statusColors: Record<string, string> = {
 };
 
 const Index = () => {
+  const [showWizard, setShowWizard] = useState(false);
   const { data: repairs = [], isLoading: loadingRepairs } = useQuery({
     queryKey: ["dashboard-repairs"],
     queryFn: async () => {
