@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, forwardRef } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
@@ -22,7 +22,7 @@ interface Props {
 
 const deviceTypes = ["Smartphone", "Tablette", "Ordinateur", "Console", "Montre connectée", "Autre"];
 
-export function CreateDeviceDialog({ open, onOpenChange, defaultClientId, defaultBrand, defaultModel, defaultType, defaultSerialNumber }: Props) {
+export const CreateDeviceDialog = forwardRef<HTMLDivElement, Props>(function CreateDeviceDialog({ open, onOpenChange, defaultClientId, defaultBrand, defaultModel, defaultType, defaultSerialNumber }, ref) {
   const { toast } = useToast();
   const qc = useQueryClient();
   const [tab, setTab] = useState<string>("catalog");
@@ -148,4 +148,4 @@ export function CreateDeviceDialog({ open, onOpenChange, defaultClientId, defaul
       </DialogContent>
     </Dialog>
   );
-}
+});

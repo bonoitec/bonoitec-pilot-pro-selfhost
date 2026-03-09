@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, forwardRef } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Input } from "@/components/ui/input";
@@ -34,7 +34,7 @@ const categoryIcons: Record<string, any> = {
 
 const ALL_CATEGORIES = ["Smartphone", "Tablette", "Ordinateur", "Console", "Montre connectée"];
 
-export function DeviceCatalogSelector({ onSelect, defaultBrand, defaultModel }: DeviceCatalogSelectorProps) {
+export const DeviceCatalogSelector = forwardRef<HTMLDivElement, DeviceCatalogSelectorProps>(function DeviceCatalogSelector({ onSelect, defaultBrand, defaultModel }, ref) {
   const [search, setSearch] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string>("");
   const [selectedBrand, setSelectedBrand] = useState<string>(defaultBrand || "");
@@ -247,4 +247,4 @@ export function DeviceCatalogSelector({ onSelect, defaultBrand, defaultModel }: 
       </ScrollArea>
     </div>
   );
-}
+});
