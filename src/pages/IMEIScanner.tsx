@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Cpu, Search, Smartphone, Laptop, Gamepad2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
 const typeIcons: Record<string, any> = {
   Smartphone: Smartphone,
