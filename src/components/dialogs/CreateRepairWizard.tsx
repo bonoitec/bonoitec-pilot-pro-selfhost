@@ -342,15 +342,27 @@ export function CreateRepairWizard({ open, onOpenChange }: Props) {
 
   const handleGenerateQuote = async () => {
     if (!createdRepair || !org) return;
-    const price = estimatedPrice ? parseFloat(estimatedPrice) : 0;
     const vatRate = org.vat_rate ?? 20;
-    const totalHT = price;
-    const totalTTC = org.vat_enabled ? price * (1 + vatRate / 100) : price;
+
+    // Build lines from selected services or fallback to single line
+    let lines: { description: string; quantity: number; unit_price: number }[];
+    if (selectedServices.length > 0) {
+      lines = selectedServices.map(s => ({
+        description: s.name + (s.description ? ` — ${s.description}` : ""),
+        quantity: 1,
+        unit_price: Number(s.default_price) || 0,
+      }));
+    } else {
+      const price = estimatedPrice ? parseFloat(estimatedPrice) : 0;
+      lines = [{ description: `${repairType ? repairType + " — " : ""}${issue}`, quantity: 1, unit_price: price }];
+    }
+
+    const totalHT = lines.reduce((s, l) => s + l.quantity * l.unit_price, 0);
+    const totalTTC = org.vat_enabled ? totalHT * (1 + vatRate / 100) : totalHT;
 
     // Save quote to DB
     const { data: orgId } = await supabase.rpc("get_user_org_id");
     const qRef = (org.quote_prefix || "DEV-") + new Date().toISOString().slice(0, 10).replace(/-/g, "") + "-" + Math.random().toString(36).slice(2, 5).toUpperCase();
-    const lines = [{ description: `${repairType ? repairType + " — " : ""}${issue}`, quantity: 1, unit_price: price }];
 
     await supabase.from("quotes").insert({
       organization_id: orgId!, reference: qRef,
@@ -362,13 +374,31 @@ export function CreateRepairWizard({ open, onOpenChange }: Props) {
 
     qc.invalidateQueries({ queryKey: ["quotes"] });
 
-    // Generate PDF
+    // Build intake info for PDF
+    const intakeChecklist = Object.entries(checklist).filter(([, v]) => v).map(([k]) => k === "Diagnostic impossible" ? `${k}: ${diagnosticReason}` : k);
+    const photoUrls = (createdRepair.photos as string[]) || [];
+
+    // Generate PDF with full intake info
     await generatePDF(org as any, {
       type: "quote", reference: qRef,
       date: new Date().toLocaleDateString("fr-FR"),
       clientName: createdRepair.clients?.name,
       clientAddress: createdRepair.clients?.address,
+      clientPhone: createdRepair.clients?.phone,
+      clientEmail: createdRepair.clients?.email,
       lines, totalHT, totalTTC, vatRate,
+      intake: {
+        deviceBrand: createdRepair.devices?.brand || device.brand,
+        deviceModel: createdRepair.devices?.model || device.model,
+        serialNumber: device.serial_number || undefined,
+        deviceCategory: device.category,
+        checklist: intakeChecklist,
+        screenCondition,
+        frameCondition,
+        backCondition,
+        photoUrls,
+        signatureUrl: createdRepair.customer_signature_url,
+      },
     });
     toast({ title: "Devis généré et téléchargé" });
   };
