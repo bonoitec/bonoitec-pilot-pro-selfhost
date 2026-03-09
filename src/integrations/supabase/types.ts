@@ -337,45 +337,75 @@ export type Database = {
       organizations: {
         Row: {
           address: string | null
+          ape_code: string | null
+          city: string | null
+          country: string | null
           created_at: string
           email: string | null
+          google_review_url: string | null
           id: string
+          invoice_footer: string | null
           invoice_prefix: string
+          legal_status: string | null
           logo_url: string | null
           name: string
           phone: string | null
+          postal_code: string | null
           quote_prefix: string
           siret: string | null
           updated_at: string
+          vat_enabled: boolean
+          vat_number: string | null
           vat_rate: number
+          website: string | null
         }
         Insert: {
           address?: string | null
+          ape_code?: string | null
+          city?: string | null
+          country?: string | null
           created_at?: string
           email?: string | null
+          google_review_url?: string | null
           id?: string
+          invoice_footer?: string | null
           invoice_prefix?: string
+          legal_status?: string | null
           logo_url?: string | null
           name: string
           phone?: string | null
+          postal_code?: string | null
           quote_prefix?: string
           siret?: string | null
           updated_at?: string
+          vat_enabled?: boolean
+          vat_number?: string | null
           vat_rate?: number
+          website?: string | null
         }
         Update: {
           address?: string | null
+          ape_code?: string | null
+          city?: string | null
+          country?: string | null
           created_at?: string
           email?: string | null
+          google_review_url?: string | null
           id?: string
+          invoice_footer?: string | null
           invoice_prefix?: string
+          legal_status?: string | null
           logo_url?: string | null
           name?: string
           phone?: string | null
+          postal_code?: string | null
           quote_prefix?: string
           siret?: string | null
           updated_at?: string
+          vat_enabled?: boolean
+          vat_number?: string | null
           vat_rate?: number
+          website?: string | null
         }
         Relationships: []
       }

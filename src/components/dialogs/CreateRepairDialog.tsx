@@ -7,7 +7,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
+import { User, Smartphone, AlertCircle, Settings, StickyNote } from "lucide-react";
 
 interface Props {
   open: boolean;
@@ -18,12 +20,8 @@ export function CreateRepairDialog({ open, onOpenChange }: Props) {
   const { toast } = useToast();
   const qc = useQueryClient();
   const [form, setForm] = useState({
-    client_id: "",
-    device_id: "",
-    technician_id: "",
-    issue: "",
-    estimated_price: "",
-    internal_notes: "",
+    client_id: "", device_id: "", technician_id: "",
+    issue: "", estimated_price: "", internal_notes: "",
   });
 
   const { data: clients = [] } = useQuery({
@@ -64,15 +62,11 @@ export function CreateRepairDialog({ open, onOpenChange }: Props) {
       if (!orgId) throw new Error("Organisation introuvable");
       const ref = "REP-" + new Date().toISOString().slice(0, 10).replace(/-/g, "") + "-" + Math.random().toString(36).slice(2, 6);
       const { error } = await supabase.from("repairs").insert({
-        organization_id: orgId,
-        reference: ref,
-        client_id: form.client_id || null,
-        device_id: form.device_id || null,
-        technician_id: form.technician_id || null,
-        issue: form.issue.trim(),
+        organization_id: orgId, reference: ref,
+        client_id: form.client_id || null, device_id: form.device_id || null,
+        technician_id: form.technician_id || null, issue: form.issue.trim(),
         estimated_price: form.estimated_price ? parseFloat(form.estimated_price) : null,
-        internal_notes: form.internal_notes.trim() || null,
-        status: "nouveau",
+        internal_notes: form.internal_notes.trim() || null, status: "nouveau",
       });
       if (error) throw error;
     },
@@ -88,35 +82,99 @@ export function CreateRepairDialog({ open, onOpenChange }: Props) {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-lg">
-        <DialogHeader><DialogTitle>Nouvelle réparation</DialogTitle></DialogHeader>
-        <div className="space-y-3 max-h-[60vh] overflow-y-auto pr-1">
-          <div>
-            <Label>Client</Label>
-            <Select value={form.client_id} onValueChange={v => setForm({ ...form, client_id: v, device_id: "" })}>
-              <SelectTrigger><SelectValue placeholder="Sélectionner un client" /></SelectTrigger>
-              <SelectContent>{clients.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}</SelectContent>
-            </Select>
-          </div>
-          <div>
-            <Label>Appareil</Label>
-            <Select value={form.device_id} onValueChange={v => setForm({ ...form, device_id: v })}>
-              <SelectTrigger><SelectValue placeholder="Sélectionner un appareil" /></SelectTrigger>
-              <SelectContent>{devices.map(d => <SelectItem key={d.id} value={d.id}>{d.brand} {d.model}</SelectItem>)}</SelectContent>
-            </Select>
-          </div>
-          <div>
-            <Label>Technicien</Label>
-            <Select value={form.technician_id} onValueChange={v => setForm({ ...form, technician_id: v })}>
-              <SelectTrigger><SelectValue placeholder="Assigner un technicien" /></SelectTrigger>
-              <SelectContent>{technicians.map(t => <SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>)}</SelectContent>
-            </Select>
-          </div>
-          <div><Label>Problème décrit *</Label><Textarea value={form.issue} onChange={e => setForm({ ...form, issue: e.target.value })} placeholder="Description du problème..." rows={3} /></div>
-          <div><Label>Prix estimé (€)</Label><Input type="number" step="0.01" value={form.estimated_price} onChange={e => setForm({ ...form, estimated_price: e.target.value })} placeholder="0.00" /></div>
-          <div><Label>Notes internes</Label><Textarea value={form.internal_notes} onChange={e => setForm({ ...form, internal_notes: e.target.value })} placeholder="Notes pour l'équipe..." rows={2} /></div>
+      <DialogContent className="sm:max-w-2xl max-h-[85vh]">
+        <DialogHeader>
+          <DialogTitle className="text-lg">Nouvelle réparation</DialogTitle>
+        </DialogHeader>
+        <div className="space-y-4 overflow-y-auto pr-1 pb-2" style={{ maxHeight: "calc(85vh - 140px)" }}>
+          {/* Client */}
+          <Card className="border-border/60">
+            <CardHeader className="pb-3 pt-4 px-4">
+              <CardTitle className="text-sm font-medium flex items-center gap-2">
+                <User className="h-4 w-4 text-primary" />Client
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="px-4 pb-4">
+              <Select value={form.client_id} onValueChange={v => setForm({ ...form, client_id: v, device_id: "" })}>
+                <SelectTrigger><SelectValue placeholder="Sélectionner un client" /></SelectTrigger>
+                <SelectContent>{clients.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}</SelectContent>
+              </Select>
+            </CardContent>
+          </Card>
+
+          {/* Device */}
+          <Card className="border-border/60">
+            <CardHeader className="pb-3 pt-4 px-4">
+              <CardTitle className="text-sm font-medium flex items-center gap-2">
+                <Smartphone className="h-4 w-4 text-primary" />Appareil
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="px-4 pb-4">
+              <Select value={form.device_id} onValueChange={v => setForm({ ...form, device_id: v })}>
+                <SelectTrigger><SelectValue placeholder="Sélectionner un appareil" /></SelectTrigger>
+                <SelectContent>{devices.map(d => <SelectItem key={d.id} value={d.id}>{d.brand} {d.model}</SelectItem>)}</SelectContent>
+              </Select>
+            </CardContent>
+          </Card>
+
+          {/* Issue */}
+          <Card className="border-border/60">
+            <CardHeader className="pb-3 pt-4 px-4">
+              <CardTitle className="text-sm font-medium flex items-center gap-2">
+                <AlertCircle className="h-4 w-4 text-destructive" />Problème décrit *
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="px-4 pb-4">
+              <Textarea
+                value={form.issue}
+                onChange={e => setForm({ ...form, issue: e.target.value })}
+                placeholder="Description détaillée du problème..."
+                rows={3}
+              />
+            </CardContent>
+          </Card>
+
+          {/* Repair details */}
+          <Card className="border-border/60">
+            <CardHeader className="pb-3 pt-4 px-4">
+              <CardTitle className="text-sm font-medium flex items-center gap-2">
+                <Settings className="h-4 w-4 text-primary" />Détails de la réparation
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="px-4 pb-4 space-y-3">
+              <div>
+                <Label className="text-xs text-muted-foreground">Technicien</Label>
+                <Select value={form.technician_id} onValueChange={v => setForm({ ...form, technician_id: v })}>
+                  <SelectTrigger><SelectValue placeholder="Assigner un technicien" /></SelectTrigger>
+                  <SelectContent>{technicians.map(t => <SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>)}</SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label className="text-xs text-muted-foreground">Prix estimé (€)</Label>
+                <Input type="number" step="0.01" value={form.estimated_price} onChange={e => setForm({ ...form, estimated_price: e.target.value })} placeholder="0.00" />
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Notes */}
+          <Card className="border-border/60">
+            <CardHeader className="pb-3 pt-4 px-4">
+              <CardTitle className="text-sm font-medium flex items-center gap-2">
+                <StickyNote className="h-4 w-4 text-muted-foreground" />Notes internes
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="px-4 pb-4">
+              <Textarea
+                value={form.internal_notes}
+                onChange={e => setForm({ ...form, internal_notes: e.target.value })}
+                placeholder="Notes visibles uniquement par l'équipe..."
+                rows={2}
+              />
+            </CardContent>
+          </Card>
         </div>
-        <DialogFooter>
+
+        <DialogFooter className="gap-2">
           <Button variant="outline" onClick={() => onOpenChange(false)}>Annuler</Button>
           <Button onClick={() => mutation.mutate()} disabled={!form.issue.trim() || mutation.isPending}>
             {mutation.isPending ? "Création..." : "Créer la réparation"}
