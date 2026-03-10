@@ -5,11 +5,12 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Plus, Download, Eye, CheckCircle2 } from "lucide-react";
+import { Plus, Download, CheckCircle2, Mail } from "lucide-react";
 import { format } from "date-fns";
 import { CreateInvoiceDialog } from "@/components/dialogs/CreateInvoiceDialog";
 import { useToast } from "@/hooks/use-toast";
 import { generatePDF } from "@/lib/pdf";
+import { sendTransactionalEmail } from "@/lib/email";
 
 const statusLabels: Record<string, string> = {
   brouillon: "Brouillon", envoyee: "Envoyée", payee: "Payée", partiel: "Partiel", annulee: "Annulée",
@@ -35,7 +36,7 @@ const Invoices = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("invoices")
-        .select("*, clients(name, address)")
+        .select("*, clients(name, address, email)")
         .order("created_at", { ascending: false });
       if (error) throw error;
       return data;
@@ -54,6 +55,36 @@ const Invoices = () => {
       if (error) throw error;
     },
     onSuccess: () => { toast({ title: "Facture marquée payée" }); qc.invalidateQueries({ queryKey: ["invoices"] }); },
+  });
+
+  const emailMutation = useMutation({
+    mutationFn: async (inv: any) => {
+      const email = inv.clients?.email;
+      if (!email) throw new Error("Ce client n'a pas d'adresse email.");
+      const { data: orgId } = await supabase.rpc("get_user_org_id");
+      if (!orgId) throw new Error("Organisation introuvable");
+      await sendTransactionalEmail({
+        template: "invoice_sent",
+        to: email,
+        data: {
+          clientName: inv.clients?.name || "",
+          reference: inv.reference,
+          totalHT: Number(inv.total_ht).toFixed(2),
+          totalTTC: Number(inv.total_ttc).toFixed(2),
+          paymentMethod: inv.payment_method ? paymentLabels[inv.payment_method] || inv.payment_method : "",
+        },
+        organizationId: orgId,
+      });
+      // Mark as sent if still draft
+      if (inv.status === "brouillon") {
+        await supabase.from("invoices").update({ status: "envoyee" as any }).eq("id", inv.id);
+      }
+    },
+    onSuccess: () => {
+      toast({ title: "Facture envoyée par email", description: "Le client a reçu la facture par email." });
+      qc.invalidateQueries({ queryKey: ["invoices"] });
+    },
+    onError: (e: Error) => toast({ title: "Erreur d'envoi", description: e.message, variant: "destructive" }),
   });
 
   const downloadPDF = async (inv: any) => {
@@ -115,6 +146,18 @@ const Invoices = () => {
                       <td className="p-3 text-center text-xs text-muted-foreground">{format(new Date(inv.created_at), "dd/MM/yyyy")}</td>
                       <td className="p-3 text-center">
                         <div className="flex justify-center gap-1">
+                          {inv.clients?.email && (
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-8 w-8"
+                              title="Envoyer par email"
+                              onClick={() => emailMutation.mutate(inv)}
+                              disabled={emailMutation.isPending}
+                            >
+                              <Mail className="h-3.5 w-3.5 text-primary" />
+                            </Button>
+                          )}
                           {inv.status !== "payee" && (
                             <Button variant="ghost" size="icon" className="h-8 w-8" title="Marquer payée" onClick={() => markPaid.mutate(inv.id)}>
                               <CheckCircle2 className="h-3.5 w-3.5 text-success" />
