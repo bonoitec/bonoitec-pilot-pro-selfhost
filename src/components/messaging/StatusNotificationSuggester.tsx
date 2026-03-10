@@ -109,8 +109,9 @@ export function StatusNotificationSuggester({ repair, newStatus, onDismiss }: Pr
           <div className="flex items-center gap-2">
             <MessageSquare className="h-4 w-4 text-primary" />
             <span className="text-sm font-medium">Notification suggérée</span>
-            <Badge variant="outline" className="text-[10px]">
-              {repair.clients?.email ? "Email" : repair.clients?.phone ? "SMS" : "Interne"}
+            <Badge variant="outline" className={`text-[10px] ${repair.clients?.email ? 'border-primary/40 text-primary' : ''}`}>
+              {repair.clients?.email ? <><Mail className="h-3 w-3 mr-1 inline" />Email</> : repair.clients?.phone ? "SMS" : "Interne"}
+            </Badge>
             </Badge>
           </div>
           <Button variant="ghost" size="icon" className="h-6 w-6" onClick={onDismiss}>
