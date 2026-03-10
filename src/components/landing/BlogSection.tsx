@@ -30,7 +30,7 @@ const articles = [
   },
 ];
 
-const BlogSection = ({ expanded = false }: { expanded?: boolean }) => {
+const BlogSection = forwardRef<HTMLElement, { expanded?: boolean }>(({ expanded = false }, forwardedRef) => {
   const ref = useRef(null);
   const isInView = useInView(ref, { once: true, margin: "-80px" });
 
