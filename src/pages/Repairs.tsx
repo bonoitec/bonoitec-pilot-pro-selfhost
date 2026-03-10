@@ -28,6 +28,7 @@ const Repairs = () => {
   const [search, setSearch] = useState("");
   const [showCreate, setShowCreate] = useState(false);
   const [selectedRepair, setSelectedRepair] = useState<any>(null);
+  const [restitutionRepair, setRestitutionRepair] = useState<any>(null);
   const { toast } = useToast();
   const qc = useQueryClient();
 
