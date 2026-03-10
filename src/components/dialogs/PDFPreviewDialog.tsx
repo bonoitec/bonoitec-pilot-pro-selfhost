@@ -29,6 +29,7 @@ export function PDFPreviewDialog({ open, onOpenChange, pdfUrl, loading, referenc
               Aperçu — {reference}
             </DialogTitle>
           </div>
+          <DialogDescription className="sr-only">Aperçu du document {reference}</DialogDescription>
         </DialogHeader>
 
         <div className="flex-1 min-h-0 bg-muted/30">

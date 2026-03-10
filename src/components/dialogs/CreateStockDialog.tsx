@@ -51,7 +51,10 @@ export function CreateStockDialog({ open, onOpenChange }: Props) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
-        <DialogHeader><DialogTitle>Ajouter une pièce</DialogTitle></DialogHeader>
+        <DialogHeader>
+          <DialogTitle>Ajouter une pièce</DialogTitle>
+          <DialogDescription>Ajoutez une pièce détachée à votre inventaire.</DialogDescription>
+        </DialogHeader>
         <div className="space-y-3">
           <div><Label>Nom *</Label><Input value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} placeholder="Écran iPhone 15..." /></div>
           <div>

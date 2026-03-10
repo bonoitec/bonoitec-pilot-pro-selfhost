@@ -18,10 +18,12 @@ const Clients = () => {
   const highlightRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (highlightId && highlightRef.current) {
-      highlightRef.current.scrollIntoView({ behavior: "smooth", block: "center" });
+    if (highlightId && highlightRef.current && !isLoading) {
+      setTimeout(() => {
+        highlightRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+      }, 100);
     }
-  }, [highlightId]);
+  }, [highlightId, isLoading]);
 
   const { data: clients = [], isLoading } = useQuery({
     queryKey: ["clients"],
