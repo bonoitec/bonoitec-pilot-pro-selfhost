@@ -258,6 +258,7 @@ const Repairs = () => {
 
       <CreateRepairWizard open={showCreate} onOpenChange={setShowCreate} />
       <RepairDetailDialog open={!!selectedRepair} onOpenChange={(o) => !o && setSelectedRepair(null)} repair={selectedRepair} />
+      <RestitutionDialog open={!!restitutionRepair} onOpenChange={(o) => !o && setRestitutionRepair(null)} repair={restitutionRepair} />
     </div>
   );
 };
