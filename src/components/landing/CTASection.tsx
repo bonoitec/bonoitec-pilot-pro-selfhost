@@ -15,9 +15,13 @@ const CTASection = forwardRef<HTMLElement>((_, forwardedRef) => {
           initial={{ opacity: 0, y: 20 }}
           animate={isInView ? { opacity: 1, y: 0 } : {}}
           transition={{ duration: 0.5 }}
-          className="relative overflow-hidden rounded-2xl sm:rounded-3xl bg-gradient-to-br from-primary to-[hsl(280,80%,50%)] p-8 sm:p-12 lg:p-20 text-center"
+          className="relative overflow-hidden rounded-3xl gradient-primary p-8 sm:p-12 lg:p-20 text-center"
         >
-          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,hsl(0,0%,100%,0.1),transparent_60%)]" />
+          {/* Premium overlay effects */}
+          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,hsl(0,0%,100%,0.12),transparent_60%)]" />
+          <div className="absolute bottom-0 left-0 w-96 h-96 bg-primary-deep/30 rounded-full blur-[100px]" />
+          <div className="absolute top-0 right-0 w-64 h-64 bg-primary-glow/20 rounded-full blur-[80px]" />
+
           <div className="relative space-y-8 max-w-2xl mx-auto">
             <h2 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold font-display text-primary-foreground leading-tight">
               Prêt à simplifier la gestion de votre atelier ?
@@ -38,14 +42,14 @@ const CTASection = forwardRef<HTMLElement>((_, forwardedRef) => {
               <Button
                 size="lg"
                 asChild
-                className="rounded-full px-10 h-14 text-base font-bold bg-white/20 text-primary-foreground border-2 border-white/40 hover:bg-white/30 hover:border-white/60 backdrop-blur-sm shadow-lg hover:shadow-xl hover:scale-[1.03] active:scale-[0.97] transition-all duration-200"
+                className="rounded-full px-10 h-14 text-base font-bold bg-white/15 text-primary-foreground border-2 border-white/30 hover:bg-white/25 hover:border-white/50 backdrop-blur-sm shadow-lg hover:shadow-xl hover:scale-[1.03] active:scale-[0.97] transition-all duration-200"
               >
                 <Link to="/contact">
                   <CalendarDays className="h-5 w-5 mr-2" /> Planifier une démo
                 </Link>
               </Button>
             </div>
-            <p className="text-primary-foreground/60 text-sm pt-2">
+            <p className="text-primary-foreground/50 text-sm pt-2">
               Essai gratuit 30 jours · Sans carte bancaire · Sans engagement
             </p>
           </div>

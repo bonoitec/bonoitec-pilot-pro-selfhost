@@ -27,15 +27,16 @@ const SupportSection = ({ expanded = false }: { expanded?: boolean }) => {
   const displayed = expanded ? supportCategories : supportCategories.slice(0, 6);
 
   return (
-    <section className="landing-section bg-muted/20" ref={ref}>
-      <div className="landing-container">
+    <section className="landing-section relative" ref={ref}>
+      <div className="absolute inset-0 bg-gradient-to-b from-transparent via-muted/20 to-transparent" />
+      <div className="landing-container relative">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={isInView ? { opacity: 1, y: 0 } : {}}
           transition={{ duration: 0.5 }}
           className="text-center max-w-2xl mx-auto mb-16"
         >
-          <div className="inline-flex items-center gap-2 rounded-full bg-primary/10 border border-primary/20 px-4 py-1.5 text-xs font-semibold text-primary mb-6">
+          <div className="inline-flex items-center gap-2 rounded-full gradient-primary-subtle border border-primary/20 px-4 py-1.5 text-xs font-semibold text-primary mb-6">
             Support
           </div>
           <h2 className="text-3xl sm:text-4xl font-bold font-display mb-4">
@@ -56,9 +57,9 @@ const SupportSection = ({ expanded = false }: { expanded?: boolean }) => {
             >
               <Link
                 to={`/support/${cat.slug}`}
-                className="landing-card p-5 flex items-center gap-4 group block"
+                className="landing-card p-5 flex items-center gap-4 group block hover-lift"
               >
-                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-accent text-accent-foreground group-hover:bg-primary group-hover:text-primary-foreground transition-colors duration-300 shrink-0">
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl gradient-primary-subtle text-primary group-hover:gradient-primary group-hover:text-primary-foreground transition-all duration-300 shrink-0 shadow-sm group-hover:shadow-md group-hover:shadow-primary/20">
                   <cat.icon className="h-5 w-5" />
                 </div>
                 <span className="font-medium text-sm group-hover:text-primary transition-colors">{cat.title}</span>

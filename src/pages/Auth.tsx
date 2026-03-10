@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
+import { ThemeToggle } from "@/components/ThemeToggle";
 import heroDashboard from "@/assets/hero-dashboard.png";
 
 const Auth = () => {
@@ -96,7 +97,7 @@ const Auth = () => {
       <Input
         id={id} type={show ? "text" : "password"} placeholder={placeholder} value={value}
         onChange={(e) => onChange(e.target.value)} required
-        className={`pr-10 h-[42px] text-sm bg-background border-border/50 focus:border-primary transition-colors ${error ? "border-destructive" : ""}`}
+        className={`pr-10 h-[42px] text-sm ${error ? "border-destructive" : ""}`}
       />
       <button type="button" onClick={onToggle} tabIndex={-1}
         className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground/60 hover:text-foreground transition-colors">
@@ -106,33 +107,34 @@ const Auth = () => {
   );
 
   const inputClass = (err?: string) =>
-    `h-[42px] text-sm bg-background border-border/50 focus:border-primary transition-colors ${err ? "border-destructive" : ""}`;
+    `h-[42px] text-sm ${err ? "border-destructive" : ""}`;
 
   return (
     <div className="min-h-screen bg-background flex justify-center">
       <div className="flex w-full max-w-[1200px]">
       {/* LEFT — Visual panel */}
-      <div className="hidden lg:flex lg:w-[50%] relative overflow-hidden bg-gradient-to-br from-primary/[0.04] via-background to-accent/30">
+      <div className="hidden lg:flex lg:w-[50%] relative overflow-hidden">
+        {/* Premium gradient background */}
+        <div className="absolute inset-0 gradient-primary opacity-[0.04]" />
         <div className="absolute inset-0">
-          <div className="absolute top-[-20%] left-[-10%] w-[600px] h-[600px] bg-primary/[0.06] rounded-full blur-[100px]" />
-          <div className="absolute bottom-[-15%] right-[-5%] w-[500px] h-[500px] bg-accent/40 rounded-full blur-[100px]" />
+          <div className="absolute top-[-20%] left-[-10%] w-[600px] h-[600px] bg-primary/8 rounded-full blur-[100px]" />
+          <div className="absolute bottom-[-15%] right-[-5%] w-[500px] h-[500px] bg-primary-glow/8 rounded-full blur-[100px]" />
+          <div className="absolute inset-0 bg-dots opacity-20" />
         </div>
 
         <div className="relative z-10 flex flex-col justify-between w-full p-12 xl:p-16">
-          {/* Logo */}
           <Link to="/" className="inline-flex items-center gap-2.5 w-fit">
-            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary text-primary-foreground">
+            <div className="flex h-9 w-9 items-center justify-center rounded-xl gradient-primary text-primary-foreground shadow-lg shadow-primary/25">
               <Zap className="h-4.5 w-4.5" />
             </div>
-            <span className="text-lg font-bold tracking-tight text-foreground">BonoitecPilot</span>
+            <span className="text-lg font-bold tracking-tight font-display text-foreground">BonoitecPilot</span>
           </Link>
 
-          {/* Center content */}
           <div className="max-w-md space-y-8 -mt-8">
             <div className="space-y-4">
-              <h1 className="text-[2.5rem] leading-[1.15] font-extrabold tracking-tight text-foreground">
+              <h1 className="text-[2.5rem] leading-[1.15] font-extrabold tracking-tight text-foreground font-display">
                 Votre atelier,<br />
-                <span className="text-primary">simplifié.</span>
+                <span className="gradient-text">simplifié.</span>
               </h1>
               <p className="text-[15px] text-muted-foreground leading-relaxed max-w-sm">
                 Gérez vos réparations, devis, clients et stock depuis une seule plateforme intuitive.
@@ -142,7 +144,7 @@ const Auth = () => {
             <div className="space-y-2.5">
               {["Devis et factures automatisés", "Suivi des réparations en temps réel", "Gestion de stock intégrée", "Essai gratuit 30 jours"].map((item) => (
                 <div key={item} className="flex items-center gap-2.5">
-                  <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
+                  <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full gradient-primary-subtle text-primary">
                     <Check className="h-3 w-3" />
                   </div>
                   <span className="text-sm text-foreground/80">{item}</span>
@@ -150,14 +152,12 @@ const Auth = () => {
               ))}
             </div>
 
-            {/* Dashboard preview */}
-            <div className="rounded-xl border border-border/30 bg-card/40 backdrop-blur-sm shadow-2xl shadow-primary/[0.04] overflow-hidden">
+            <div className="rounded-2xl border border-border/30 bg-card/40 backdrop-blur-sm shadow-premium-lg overflow-hidden">
               <img src={heroDashboard} alt="Interface BonoitecPilot" className="w-full h-auto" loading="lazy" />
             </div>
           </div>
 
-          {/* Bottom trust */}
-          <p className="text-xs text-muted-foreground/60">
+          <p className="text-xs text-muted-foreground/50">
             Accès complet · Sans carte bancaire · Annulation libre
           </p>
         </div>
@@ -165,20 +165,24 @@ const Auth = () => {
 
       {/* RIGHT — Auth form */}
       <div className="flex-1 flex flex-col items-center justify-center px-5 py-8 sm:px-8 lg:px-16">
+        {/* Theme toggle */}
+        <div className="absolute top-4 right-4">
+          <ThemeToggle />
+        </div>
+
         {/* Mobile header */}
         <div className="lg:hidden flex flex-col items-center gap-1 mb-10">
           <Link to="/" className="inline-flex items-center gap-2">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
+            <div className="flex h-8 w-8 items-center justify-center rounded-xl gradient-primary text-primary-foreground shadow-md shadow-primary/20">
               <Zap className="h-4 w-4" />
             </div>
-            <span className="text-lg font-bold tracking-tight text-foreground">BonoitecPilot</span>
+            <span className="text-lg font-bold tracking-tight font-display text-foreground">BonoitecPilot</span>
           </Link>
         </div>
 
         <div className="w-full max-w-[400px]">
-          {/* Heading */}
           <div className="mb-8">
-            <h2 className="text-2xl font-bold tracking-tight text-foreground">
+            <h2 className="text-2xl font-bold tracking-tight text-foreground font-display">
               {activeTab === "signup" ? "Créez votre espace" : "Bon retour"}
             </h2>
             <p className="text-sm text-muted-foreground mt-1.5">
@@ -189,14 +193,14 @@ const Auth = () => {
           </div>
 
           {/* Tabs */}
-          <div className="flex rounded-lg bg-muted/60 p-0.5 mb-6 border border-border/30">
+          <div className="flex rounded-xl bg-muted/50 p-1 mb-6 border border-border/30">
             {(["signup", "login"] as const).map((tab) => (
               <button
                 key={tab}
                 onClick={() => { setActiveTab(tab); setErrors({}); }}
-                className={`flex-1 text-[13px] font-semibold py-2 rounded-md transition-all duration-200 ${
+                className={`flex-1 text-[13px] font-semibold py-2.5 rounded-lg transition-all duration-300 ${
                   activeTab === tab
-                    ? "bg-background text-foreground shadow-sm"
+                    ? "gradient-primary text-primary-foreground shadow-sm"
                     : "text-muted-foreground hover:text-foreground"
                 }`}
               >
@@ -208,7 +212,7 @@ const Auth = () => {
           {/* Google */}
           <Button
             variant="outline"
-            className="w-full h-[42px] gap-2.5 border-border/50 hover:bg-accent/40 text-sm font-medium"
+            className="w-full h-[42px] gap-2.5 text-sm font-medium rounded-xl"
             onClick={handleGoogleLogin}
             disabled={loading}
           >
@@ -222,8 +226,8 @@ const Auth = () => {
           </Button>
 
           <div className="relative my-5">
-            <Separator className="bg-border/40" />
-            <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-background px-3 text-[11px] text-muted-foreground/60 uppercase tracking-wider">
+            <Separator className="bg-border/30" />
+            <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-background px-3 text-[11px] text-muted-foreground/50 uppercase tracking-wider">
               ou
             </span>
           </div>
@@ -286,7 +290,7 @@ const Auth = () => {
                   {errors.confirmPassword && <p className="text-[11px] text-destructive">{errors.confirmPassword}</p>}
                 </div>
 
-                <Button type="submit" className="w-full h-[42px] text-sm font-semibold mt-1" disabled={loading}>
+                <Button type="submit" variant="premium" className="w-full h-[42px] text-sm font-semibold mt-1 rounded-xl" disabled={loading}>
                   {loading && <Loader2 className="h-4 w-4 animate-spin" />}
                   Créer mon compte
                 </Button>
@@ -340,7 +344,7 @@ const Auth = () => {
                   <label htmlFor="remember" className="text-[11px] text-muted-foreground cursor-pointer select-none">Se souvenir de moi</label>
                 </div>
 
-                <Button type="submit" className="w-full h-[42px] text-sm font-semibold mt-1" disabled={loading}>
+                <Button type="submit" variant="premium" className="w-full h-[42px] text-sm font-semibold mt-1 rounded-xl" disabled={loading}>
                   {loading && <Loader2 className="h-4 w-4 animate-spin" />}
                   Se connecter
                 </Button>
@@ -348,8 +352,7 @@ const Auth = () => {
             )}
           </AnimatePresence>
 
-          {/* Legal */}
-          <p className="text-[10px] text-muted-foreground/50 text-center mt-6 leading-relaxed">
+          <p className="text-[10px] text-muted-foreground/40 text-center mt-6 leading-relaxed">
             En continuant, vous acceptez les{" "}
             <a href="/cgu" className="text-muted-foreground hover:text-foreground transition-colors underline underline-offset-2">CGU</a>
             {" "}et la{" "}

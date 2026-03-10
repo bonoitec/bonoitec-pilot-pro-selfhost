@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { ArrowRight, CheckCircle2, Play } from "lucide-react";
+import { ArrowRight, CheckCircle2, Play, Sparkles } from "lucide-react";
 import { motion } from "framer-motion";
 import heroDashboard from "@/assets/hero-dashboard.png";
 
@@ -13,25 +13,35 @@ const trustBadges = [
 
 const HeroSection = () => (
   <section className="relative overflow-hidden">
-    <div className="absolute inset-0 bg-gradient-to-b from-accent/40 via-background to-background" />
-    <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-primary/5 rounded-full blur-[120px] -translate-y-1/2 translate-x-1/3" />
+    {/* Premium gradient background */}
+    <div className="absolute inset-0">
+      <div className="absolute inset-0 bg-gradient-to-b from-accent/50 via-background to-background" />
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[1000px] h-[600px] bg-gradient-to-b from-primary/8 via-primary-glow/5 to-transparent rounded-full blur-[100px]" />
+      <div className="absolute top-40 right-0 w-[400px] h-[400px] bg-primary-glow/5 rounded-full blur-[80px]" />
+      <div className="absolute inset-0 bg-dots opacity-30" />
+    </div>
 
-    <div className="landing-container relative pt-16 md:pt-24 pb-16 md:pb-20">
+    <div className="landing-container relative pt-20 md:pt-28 pb-16 md:pb-24">
       <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 0, y: 24 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
+          transition={{ duration: 0.7, ease: "easeOut" }}
           className="space-y-8"
         >
-          <div className="inline-flex items-center gap-2 rounded-full bg-primary/10 border border-primary/20 px-4 py-1.5 text-xs font-semibold text-primary">
-            <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.5, delay: 0.2 }}
+            className="inline-flex items-center gap-2 rounded-full gradient-primary-subtle border border-primary/20 px-4 py-1.5 text-xs font-semibold text-primary"
+          >
+            <Sparkles className="w-3.5 h-3.5" />
             Le logiciel de gestion pensé pour les réparateurs
-          </div>
+          </motion.div>
 
-          <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight font-display leading-[1.1]">
+          <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight font-display leading-[1.08]">
             Toute la gestion de votre atelier dans{" "}
-            <span className="landing-gradient-text">une seule plateforme</span>
+            <span className="gradient-text">une seule plateforme</span>
           </h1>
 
           <p className="text-lg text-muted-foreground max-w-lg leading-relaxed">
@@ -40,7 +50,7 @@ const HeroSection = () => (
           </p>
 
           <div className="flex flex-col sm:flex-row flex-wrap items-start sm:items-center gap-4">
-            <Button size="lg" asChild className="rounded-full px-10 h-14 text-base font-bold shadow-xl hover:shadow-2xl hover:scale-[1.03] active:scale-[0.97] transition-all duration-200">
+            <Button variant="premium" size="lg" asChild className="rounded-full px-10 h-14 text-base font-bold">
               <Link to="/auth">
                 Commencer gratuitement <ArrowRight className="h-5 w-5 ml-2" />
               </Link>
@@ -65,18 +75,20 @@ const HeroSection = () => (
         <motion.div
           initial={{ opacity: 0, y: 40, scale: 0.95 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
-          transition={{ duration: 0.8, delay: 0.3, ease: "easeOut" }}
+          transition={{ duration: 0.9, delay: 0.3, ease: "easeOut" }}
           className="relative"
         >
-          <div className="relative rounded-2xl overflow-hidden shadow-2xl border border-border/60">
+          <div className="relative rounded-2xl overflow-hidden shadow-premium-lg border border-border/40">
+            <div className="absolute inset-0 gradient-border rounded-2xl" />
             <img
               src={heroDashboard}
               alt="Tableau de bord BonoitecPilot — gestion d'atelier de réparation"
-              className="w-full h-auto"
+              className="w-full h-auto relative z-10"
               loading="eager"
             />
           </div>
-          <div className="absolute -inset-4 -z-10 bg-gradient-to-r from-primary/10 via-transparent to-[hsl(280,80%,55%)]/10 blur-3xl rounded-3xl" />
+          {/* Glow behind dashboard */}
+          <div className="absolute -inset-6 -z-10 bg-gradient-to-r from-primary/15 via-primary-glow/10 to-primary/15 blur-3xl rounded-3xl animate-glow-pulse" />
         </motion.div>
       </div>
     </div>

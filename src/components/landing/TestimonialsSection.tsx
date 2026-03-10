@@ -1,6 +1,6 @@
 import { motion, useInView } from "framer-motion";
 import { useRef } from "react";
-import { Star } from "lucide-react";
+import { Star, Quote } from "lucide-react";
 
 const testimonials = [
   {
@@ -34,15 +34,18 @@ const TestimonialsSection = () => {
   const isInView = useInView(ref, { once: true, margin: "-80px" });
 
   return (
-    <section className="landing-section bg-muted/20" ref={ref}>
-      <div className="landing-container">
+    <section className="landing-section relative" ref={ref}>
+      {/* Subtle background */}
+      <div className="absolute inset-0 bg-gradient-to-b from-transparent via-muted/20 to-transparent" />
+
+      <div className="landing-container relative">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={isInView ? { opacity: 1, y: 0 } : {}}
           transition={{ duration: 0.5 }}
           className="text-center max-w-2xl mx-auto mb-16"
         >
-          <div className="inline-flex items-center gap-2 rounded-full bg-primary/10 border border-primary/20 px-4 py-1.5 text-xs font-semibold text-primary mb-6">
+          <div className="inline-flex items-center gap-2 rounded-full gradient-primary-subtle border border-primary/20 px-4 py-1.5 text-xs font-semibold text-primary mb-6">
             Témoignages
           </div>
           <h2 className="text-3xl sm:text-4xl font-bold font-display mb-4">
@@ -60,16 +63,17 @@ const TestimonialsSection = () => {
               initial={{ opacity: 0, y: 20 }}
               animate={isInView ? { opacity: 1, y: 0 } : {}}
               transition={{ duration: 0.4, delay: i * 0.08 }}
-              className="landing-card p-7 flex flex-col"
+              className="landing-card p-7 flex flex-col hover-lift relative"
             >
+              <Quote className="absolute top-5 right-5 h-8 w-8 text-primary/8" />
               <div className="flex gap-0.5 mb-4">
                 {Array.from({ length: t.rating }).map((_, si) => (
                   <Star key={si} className="h-4 w-4 fill-warning text-warning" />
                 ))}
               </div>
               <p className="text-sm leading-relaxed flex-1 mb-6">"{t.text}"</p>
-              <div className="flex items-center gap-3 pt-4 border-t border-border/60">
-                <div className="h-10 w-10 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold text-sm font-display">
+              <div className="flex items-center gap-3 pt-4 border-t border-border/40">
+                <div className="h-10 w-10 rounded-full gradient-primary-subtle text-primary flex items-center justify-center font-bold text-sm font-display">
                   {t.name.charAt(0)}
                 </div>
                 <div>

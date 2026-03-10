@@ -38,7 +38,7 @@ const FeaturesSection = ({ expanded = false }: { expanded?: boolean }) => {
           transition={{ duration: 0.5 }}
           className="text-center max-w-2xl mx-auto mb-16"
         >
-          <div className="inline-flex items-center gap-2 rounded-full bg-primary/10 border border-primary/20 px-4 py-1.5 text-xs font-semibold text-primary mb-6">
+          <div className="inline-flex items-center gap-2 rounded-full gradient-primary-subtle border border-primary/20 px-4 py-1.5 text-xs font-semibold text-primary mb-6">
             Fonctionnalités
           </div>
           <h2 className="text-3xl sm:text-4xl font-bold font-display mb-4">
@@ -56,18 +56,18 @@ const FeaturesSection = ({ expanded = false }: { expanded?: boolean }) => {
               initial={{ opacity: 0, y: 20 }}
               animate={isInView ? { opacity: 1, y: 0 } : {}}
               transition={{ duration: 0.4, delay: i * 0.06 }}
-              className="landing-card p-7 group cursor-default"
+              className="landing-card p-7 group cursor-default hover-lift"
             >
               {f.illustration ? (
                 <div className="h-20 w-20 mb-4 flex items-center justify-center">
                   <img src={f.illustration} alt={f.title} className="h-full w-full object-contain" loading="lazy" />
                 </div>
               ) : (
-                <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-accent text-accent-foreground mb-4 group-hover:bg-primary group-hover:text-primary-foreground transition-colors duration-300">
+                <div className="flex h-12 w-12 items-center justify-center rounded-2xl gradient-primary-subtle text-primary mb-4 group-hover:gradient-primary group-hover:text-primary-foreground transition-all duration-500 shadow-sm">
                   <f.icon className="h-5 w-5" />
                 </div>
               )}
-              <h3 className="font-semibold font-display mb-2">{f.title}</h3>
+              <h3 className="font-semibold font-display mb-2 text-lg">{f.title}</h3>
               <p className="text-sm text-muted-foreground leading-relaxed">{f.desc}</p>
             </motion.div>
           ))}

@@ -43,7 +43,7 @@ const BlogSection = forwardRef<HTMLElement, { expanded?: boolean }>(({ expanded 
           transition={{ duration: 0.5 }}
           className="text-center max-w-2xl mx-auto mb-16"
         >
-          <div className="inline-flex items-center gap-2 rounded-full bg-primary/10 border border-primary/20 px-4 py-1.5 text-xs font-semibold text-primary mb-6">
+          <div className="inline-flex items-center gap-2 rounded-full gradient-primary-subtle border border-primary/20 px-4 py-1.5 text-xs font-semibold text-primary mb-6">
             Blog
           </div>
           <h2 className="text-3xl sm:text-4xl font-bold font-display mb-4">
@@ -61,18 +61,18 @@ const BlogSection = forwardRef<HTMLElement, { expanded?: boolean }>(({ expanded 
               initial={{ opacity: 0, y: 20 }}
               animate={isInView ? { opacity: 1, y: 0 } : {}}
               transition={{ duration: 0.4, delay: i * 0.08 }}
-              className="landing-card overflow-hidden group"
+              className="landing-card overflow-hidden group hover-lift"
             >
               <div className="h-48 overflow-hidden">
                 <img
                   src={a.image}
                   alt={a.title}
-                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
                   loading="lazy"
                 />
               </div>
               <div className="p-6 space-y-3">
-                <span className="text-xs font-semibold text-primary">{a.category}</span>
+                <span className="text-xs font-bold text-primary gradient-text">{a.category}</span>
                 <h3 className="font-semibold font-display leading-snug group-hover:text-primary transition-colors">
                   {a.title}
                 </h3>

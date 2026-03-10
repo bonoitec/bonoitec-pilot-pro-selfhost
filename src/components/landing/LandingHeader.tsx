@@ -3,6 +3,7 @@ import { Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Menu, X, Zap } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
+import { ThemeToggle } from "@/components/ThemeToggle";
 
 const navLinks = [
   { label: "Fonctionnalités", href: "/fonctionnalites" },
@@ -27,15 +28,15 @@ const LandingHeader = () => {
 
   return (
     <header
-      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
+      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${
         scrolled
-          ? "bg-background/80 backdrop-blur-2xl border-b border-border/50 shadow-sm"
+          ? "bg-background/70 backdrop-blur-2xl border-b border-border/40 shadow-premium"
           : "bg-transparent"
       }`}
     >
       <div className="landing-container flex items-center justify-between h-16 lg:h-18">
         <Link to="/" className="flex items-center gap-2.5 group">
-          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-md group-hover:shadow-lg transition-shadow">
+          <div className="flex h-9 w-9 items-center justify-center rounded-xl gradient-primary text-primary-foreground shadow-lg shadow-primary/25 group-hover:shadow-xl group-hover:shadow-primary/30 transition-all duration-300">
             <Zap className="h-5 w-5" />
           </div>
           <span className="text-xl font-bold tracking-tight font-display text-foreground">BonoitecPilot</span>
@@ -46,30 +47,43 @@ const LandingHeader = () => {
             <Link
               key={link.href}
               to={link.href}
-              className={`text-sm font-medium transition-colors hover:text-primary ${
-                location.pathname === link.href ? "text-primary" : "text-muted-foreground"
+              className={`text-sm font-medium transition-all duration-200 hover:text-primary relative ${
+                location.pathname === link.href
+                  ? "text-primary"
+                  : "text-muted-foreground"
               }`}
             >
               {link.label}
+              {location.pathname === link.href && (
+                <motion.div
+                  layoutId="nav-indicator"
+                  className="absolute -bottom-1 left-0 right-0 h-0.5 gradient-primary rounded-full"
+                  transition={{ type: "spring", stiffness: 500, damping: 30 }}
+                />
+              )}
             </Link>
           ))}
         </nav>
 
-        <div className="hidden md:flex items-center gap-3">
-          <Button variant="ghost" asChild className="text-sm font-semibold text-foreground hover:text-primary">
+        <div className="hidden md:flex items-center gap-2">
+          <ThemeToggle />
+          <Button variant="ghost" asChild className="text-sm font-semibold text-foreground hover:text-primary rounded-xl">
             <Link to="/login">Se connecter</Link>
           </Button>
-          <Button asChild className="rounded-full px-6 font-bold shadow-md hover:shadow-lg hover:scale-[1.02] active:scale-[0.98] transition-all duration-200">
+          <Button variant="premium" asChild className="rounded-full px-6 font-bold">
             <Link to="/auth">Essai gratuit</Link>
           </Button>
         </div>
 
-        <button
-          className="md:hidden p-2 rounded-lg hover:bg-muted transition-colors"
-          onClick={() => setMobileOpen(!mobileOpen)}
-        >
-          {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-        </button>
+        <div className="flex md:hidden items-center gap-1">
+          <ThemeToggle />
+          <button
+            className="p-2 rounded-xl hover:bg-muted transition-colors"
+            onClick={() => setMobileOpen(!mobileOpen)}
+          >
+            {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+          </button>
+        </div>
       </div>
 
       <AnimatePresence>
@@ -78,23 +92,23 @@ const LandingHeader = () => {
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: "auto" }}
             exit={{ opacity: 0, height: 0 }}
-            className="md:hidden border-t border-border/50 bg-background/95 backdrop-blur-2xl"
+            className="md:hidden border-t border-border/40 bg-background/95 backdrop-blur-2xl"
           >
             <div className="landing-container py-6 flex flex-col gap-1">
               {navLinks.map((link) => (
                 <Link
                   key={link.href}
                   to={link.href}
-                  className="text-sm py-3 px-3 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-colors font-medium"
+                  className="text-sm py-3 px-3 rounded-xl text-muted-foreground hover:text-foreground hover:bg-muted transition-all font-medium"
                 >
                   {link.label}
                 </Link>
               ))}
-              <div className="flex flex-col gap-2 pt-4 mt-2 border-t border-border/50">
-                <Button variant="outline" asChild className="w-full font-semibold border-2">
+              <div className="flex flex-col gap-2 pt-4 mt-2 border-t border-border/40">
+                <Button variant="outline" asChild className="w-full font-semibold border-2 rounded-xl">
                   <Link to="/login">Se connecter</Link>
                 </Button>
-                <Button asChild className="w-full rounded-full font-bold">
+                <Button variant="premium" asChild className="w-full rounded-full font-bold">
                   <Link to="/auth">Essai gratuit</Link>
                 </Button>
               </div>
