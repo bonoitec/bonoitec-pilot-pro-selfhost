@@ -92,6 +92,13 @@ const Repairs = () => {
     const repairId = result.draggableId;
     const repair = repairs.find(r => r.id === repairId);
     if (!repair || repair.status === newStatus) return;
+
+    // Intercept drag to "Restitué" → open restitution workflow
+    if (newStatus === "pret_a_recuperer") {
+      setRestitutionRepair(repair);
+      return;
+    }
+
     updateStatus.mutate({ id: repairId, status: newStatus });
   }, [repairs, updateStatus]);
 
