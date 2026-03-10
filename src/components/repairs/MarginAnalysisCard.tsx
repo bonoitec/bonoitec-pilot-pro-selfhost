@@ -42,7 +42,7 @@ export function MarginAnalysisCard({ repair }: Props) {
   const vatRate = org?.vat_rate ?? 20;
 
   const margin: MarginResult = calculateMargin({
-    sellingPrice,
+    sellingPrice: effectiveSellingPrice,
     partsCost,
     laborCost,
     vatEnabled,
