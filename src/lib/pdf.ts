@@ -435,22 +435,25 @@ export async function generatePDF(org: OrgInfo, data: DocData, options?: { previ
   // ═══════════════════════════════════════════
 
   if (data.notes) {
-    doc.setFillColor(...GRAY_50);
     const noteLines = doc.splitTextToSize(data.notes, CONTENT_WIDTH - 12);
-    const noteH = noteLines.length * 3.5 + 10;
+    const noteH = noteLines.length * 3.8 + 14;
+    
+    if (finalY + noteH > PAGE_BOTTOM) { doc.addPage(); doc.setFillColor(...PRIMARY); doc.rect(0, 0, 210, 4, "F"); finalY = 14; }
+
+    doc.setFillColor(...GRAY_50);
     doc.roundedRect(PAGE_LEFT, finalY, CONTENT_WIDTH, noteH, 2, 2, "F");
 
     doc.setFontSize(7);
     doc.setFont("helvetica", "bold");
     doc.setTextColor(...PRIMARY);
-    doc.text("NOTES", PAGE_LEFT + 6, finalY + 5);
+    doc.text("NOTES", PAGE_LEFT + 6, finalY + 6);
 
     doc.setFont("helvetica", "normal");
     doc.setFontSize(7.5);
     doc.setTextColor(...GRAY_500);
-    doc.text(noteLines, PAGE_LEFT + 6, finalY + 10);
+    doc.text(noteLines, PAGE_LEFT + 6, finalY + 12);
 
-    finalY += noteH + 6;
+    finalY += noteH + 8;
   }
 
   // ═══════════════════════════════════════════
