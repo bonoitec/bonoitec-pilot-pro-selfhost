@@ -354,50 +354,59 @@ export async function generatePDF(org: OrgInfo, data: DocData, options?: { previ
   // TOTALS BLOCK — elegant right-aligned box
   // ═══════════════════════════════════════════
   
-  let finalY = (doc as any).lastAutoTable.finalY + 8;
+  let finalY = (doc as any).lastAutoTable.finalY + 10;
   const totalsX = 120;
   const totalsW = PAGE_RIGHT - totalsX;
 
+  // Check if totals fit on current page
+  const totalsHeight = vatEnabled ? 36 : 28;
+  if (finalY + totalsHeight > PAGE_BOTTOM) {
+    doc.addPage();
+    doc.setFillColor(...PRIMARY);
+    doc.rect(0, 0, 210, 4, "F");
+    finalY = 14;
+  }
+
   doc.setFillColor(...GRAY_50);
-  doc.roundedRect(totalsX, finalY - 2, totalsW, vatEnabled ? 32 : 24, 2, 2, "F");
+  doc.roundedRect(totalsX, finalY, totalsW, vatEnabled ? 30 : 22, 2, 2, "F");
 
   doc.setFontSize(8.5);
   doc.setFont("helvetica", "normal");
   doc.setTextColor(...GRAY_700);
 
   // Total HT
-  doc.text("Total HT", totalsX + 5, finalY + 4);
-  doc.text(`${data.totalHT.toFixed(2)} €`, PAGE_RIGHT - 5, finalY + 4, { align: "right" });
+  doc.text("Total HT", totalsX + 5, finalY + 6);
+  doc.text(`${data.totalHT.toFixed(2)} €`, PAGE_RIGHT - 5, finalY + 6, { align: "right" });
 
   if (vatEnabled) {
     const vatAmount = data.totalTTC - data.totalHT;
     // TVA
-    doc.text(`TVA (${data.vatRate}%)`, totalsX + 5, finalY + 11);
-    doc.text(`${vatAmount.toFixed(2)} €`, PAGE_RIGHT - 5, finalY + 11, { align: "right" });
+    doc.text(`TVA (${data.vatRate}%)`, totalsX + 5, finalY + 13);
+    doc.text(`${vatAmount.toFixed(2)} €`, PAGE_RIGHT - 5, finalY + 13, { align: "right" });
     
     // Separator
     doc.setDrawColor(...GRAY_200);
     doc.setLineWidth(0.3);
-    doc.line(totalsX + 5, finalY + 15, PAGE_RIGHT - 5, finalY + 15);
+    doc.line(totalsX + 5, finalY + 17, PAGE_RIGHT - 5, finalY + 17);
     
     // Total TTC
     doc.setFontSize(11);
     doc.setFont("helvetica", "bold");
     doc.setTextColor(...PRIMARY);
-    doc.text("Total TTC", totalsX + 5, finalY + 23);
-    doc.text(`${data.totalTTC.toFixed(2)} €`, PAGE_RIGHT - 5, finalY + 23, { align: "right" });
+    doc.text("Total TTC", totalsX + 5, finalY + 25);
+    doc.text(`${data.totalTTC.toFixed(2)} €`, PAGE_RIGHT - 5, finalY + 25, { align: "right" });
 
-    finalY += 36;
+    finalY += 38;
   } else {
     // TVA non applicable
     doc.setFontSize(7);
     doc.setFont("helvetica", "italic");
     doc.setTextColor(...GRAY_400);
-    doc.text("TVA non applicable, art. 293B du CGI", totalsX + 5, finalY + 11);
+    doc.text("TVA non applicable, art. 293B du CGI", totalsX + 5, finalY + 12);
     
     doc.setDrawColor(...GRAY_200);
     doc.setLineWidth(0.3);
-    doc.line(totalsX + 5, finalY + 14, PAGE_RIGHT - 5, finalY + 14);
+    doc.line(totalsX + 5, finalY + 15, PAGE_RIGHT - 5, finalY + 15);
     
     doc.setFontSize(11);
     doc.setFont("helvetica", "bold");
@@ -405,7 +414,7 @@ export async function generatePDF(org: OrgInfo, data: DocData, options?: { previ
     doc.text("Total", totalsX + 5, finalY + 21);
     doc.text(`${data.totalHT.toFixed(2)} €`, PAGE_RIGHT - 5, finalY + 21, { align: "right" });
 
-    finalY += 28;
+    finalY += 30;
   }
 
   // ═══════════════════════════════════════════
