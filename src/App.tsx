@@ -65,6 +65,7 @@ const App = () => (
               <Route path="/support" element={<LandingSupport />} />
               <Route path="/support/:slug" element={<LandingSupportDetail />} />
               <Route path="/contact" element={<LandingContact />} />
+              <Route path="/demo" element={<LandingDemo />} />
             </Route>
 
             {/* Auth pages */}
