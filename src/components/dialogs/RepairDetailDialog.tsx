@@ -243,7 +243,8 @@ export function RepairDetailDialog({ open, onOpenChange, repair }: Props) {
   const photos = (repair.photos as string[]) || [];
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <>
+    <Dialog open={open && !showRestitution} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-3xl max-h-[90vh]">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
