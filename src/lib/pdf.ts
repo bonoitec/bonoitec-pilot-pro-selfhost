@@ -422,11 +422,12 @@ export async function generatePDF(org: OrgInfo, data: DocData, options?: { previ
   // ═══════════════════════════════════════════
 
   if (data.paymentMethod) {
+    if (finalY > PAGE_BOTTOM) { doc.addPage(); doc.setFillColor(...PRIMARY); doc.rect(0, 0, 210, 4, "F"); finalY = 14; }
     doc.setFontSize(8);
     doc.setFont("helvetica", "normal");
     doc.setTextColor(...GRAY_500);
     doc.text(`Mode de paiement : ${data.paymentMethod}`, PAGE_LEFT, finalY);
-    finalY += 6;
+    finalY += 8;
   }
 
   // ═══════════════════════════════════════════
