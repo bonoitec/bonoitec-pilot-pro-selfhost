@@ -283,8 +283,8 @@ function GuidedDemoSection() {
                 {/* Step number & icon */}
                 <div className="flex items-center gap-4 sm:flex-col sm:items-center sm:min-w-[80px]">
                   <span className="text-4xl sm:text-5xl font-extrabold font-display gradient-text opacity-60">{step.step}</span>
-                  <div className={`h-12 w-12 rounded-xl bg-background border border-border/50 flex items-center justify-center shadow-sm ${step.iconColor} group-hover:scale-110 transition-transform duration-300`}>
-                    <step.icon className="h-5 w-5" />
+                  <div className={`h-12 w-12 rounded-xl bg-background border border-border/50 flex items-center justify-center shadow-sm group-hover:scale-110 transition-all duration-300`}>
+                    <step.icon className={`h-5 w-5 ${step.iconColor} group-hover:text-primary transition-colors duration-300`} />
                   </div>
                 </div>
 
