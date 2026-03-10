@@ -106,7 +106,7 @@ function drawLine(doc: jsPDF, y: number, color = GRAY_200) {
   doc.line(PAGE_LEFT, y, PAGE_RIGHT, y);
 }
 
-export async function generatePDF(org: OrgInfo, data: DocData) {
+export async function generatePDF(org: OrgInfo, data: DocData, options?: { preview?: boolean }): Promise<string | void> {
   const doc = new jsPDF();
   const isInvoice = data.type === "invoice";
   const title = isInvoice ? "FACTURE" : "DEVIS";
@@ -543,5 +543,9 @@ export async function generatePDF(org: OrgInfo, data: DocData) {
     doc.setTextColor(0);
   }
 
+  if (options?.preview) {
+    const blob = doc.output("blob");
+    return URL.createObjectURL(blob);
+  }
   doc.save(`${data.reference}.pdf`);
 }
