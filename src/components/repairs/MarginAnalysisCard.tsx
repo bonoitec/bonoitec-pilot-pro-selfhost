@@ -31,6 +31,10 @@ export function MarginAnalysisCard({ repair }: Props) {
   const sellingPrice = repair.final_price ?? repair.estimated_price ?? 0;
   const partsCost = getPartsTotal(repair.parts_used);
   const laborCost = Number(repair.labor_cost ?? 0);
+  const servicesTotal = getServicesTotal(repair.services_used);
+
+  // If no selling price set but services exist, use services total as revenue
+  const effectiveSellingPrice = sellingPrice > 0 ? sellingPrice : servicesTotal;
 
   if (sellingPrice <= 0 && partsCost <= 0 && laborCost <= 0) return null;
 
