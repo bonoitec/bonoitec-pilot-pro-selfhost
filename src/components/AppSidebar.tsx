@@ -60,8 +60,8 @@ export function AppSidebar() {
             <NavLink
               to={item.url}
               end={item.url === "/"}
-              className="transition-colors"
-              activeClassName="bg-sidebar-accent text-sidebar-accent-foreground font-medium"
+              className="transition-all duration-200 rounded-xl"
+              activeClassName="bg-sidebar-primary/15 text-sidebar-primary-foreground font-medium border border-sidebar-primary/20"
             >
               <item.icon className="h-4 w-4" />
               {!collapsed && <span>{item.title}</span>}
@@ -76,15 +76,15 @@ export function AppSidebar() {
     <Sidebar collapsible="icon" className="border-r-0">
       <SidebarHeader className="p-4">
         <div className="flex items-center gap-2.5">
-          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary text-primary-foreground">
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl gradient-primary text-primary-foreground shadow-lg shadow-primary/25">
             <Zap className="h-5 w-5" />
           </div>
           {!collapsed && (
             <div className="flex flex-col">
-              <span className="text-sm font-bold text-sidebar-primary-foreground tracking-tight">
+              <span className="text-sm font-bold text-sidebar-primary-foreground tracking-tight font-display">
                 BonoitecPilot
               </span>
-              <span className="text-[10px] text-sidebar-foreground/60 leading-none">
+              <span className="text-[10px] text-sidebar-foreground/50 leading-none">
                 Le cockpit intelligent
               </span>
             </div>
@@ -100,14 +100,14 @@ export function AppSidebar() {
         </SidebarGroup>
 
         <SidebarGroup>
-          {!collapsed && <SidebarGroupLabel className="text-sidebar-foreground/40 text-[10px] uppercase tracking-wider">Atelier</SidebarGroupLabel>}
+          {!collapsed && <SidebarGroupLabel className="text-sidebar-foreground/30 text-[10px] uppercase tracking-wider font-semibold">Atelier</SidebarGroupLabel>}
           <SidebarGroupContent>
             {renderMenu(shopItems)}
           </SidebarGroupContent>
         </SidebarGroup>
 
         <SidebarGroup>
-          {!collapsed && <SidebarGroupLabel className="text-sidebar-foreground/40 text-[10px] uppercase tracking-wider">Outils IA</SidebarGroupLabel>}
+          {!collapsed && <SidebarGroupLabel className="text-sidebar-foreground/30 text-[10px] uppercase tracking-wider font-semibold">Outils IA</SidebarGroupLabel>}
           <SidebarGroupContent>
             {renderMenu(toolsItems)}
           </SidebarGroupContent>
