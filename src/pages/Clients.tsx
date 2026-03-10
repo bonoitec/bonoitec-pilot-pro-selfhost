@@ -66,7 +66,11 @@ const Clients = () => {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {filtered.map((client) => (
-            <Card key={client.id} className="hover:shadow-md transition-shadow cursor-pointer">
+            <Card
+              key={client.id}
+              ref={highlightId === client.id ? highlightRef : undefined}
+              className={`hover:shadow-md transition-all cursor-pointer ${highlightId === client.id ? "ring-2 ring-primary shadow-lg" : ""}`}
+            >
               <CardContent className="p-5">
                 <div className="flex items-start justify-between mb-3">
                   <div>
