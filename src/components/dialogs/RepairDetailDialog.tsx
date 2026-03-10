@@ -91,6 +91,15 @@ export function RepairDetailDialog({ open, onOpenChange, repair }: Props) {
     return Array.isArray(raw) ? raw.map((p: any) => ({ inventory_id: p.inventory_id, name: p.name || "", buy_price: Number(p.buy_price ?? p.cost ?? 0), sell_price: Number(p.sell_price ?? 0), quantity: Number(p.quantity ?? 1) })) : [];
   });
   const [showPayment, setShowPayment] = useState(false);
+  const { data: org } = useQuery({
+    queryKey: ["organization"],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("organizations").select("*").single();
+      if (error) throw error;
+      return data;
+    },
+    staleTime: 60000,
+  });
   const [showNotification, setShowNotification] = useState(false);
   const [pendingStatus, setPendingStatus] = useState("");
 
