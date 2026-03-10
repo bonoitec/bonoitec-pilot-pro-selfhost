@@ -1,5 +1,4 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.99.0";
-import nodemailer from "npm:nodemailer@6.9.16";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -7,14 +6,16 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
-// Brand colors from index.css
+const FROM_EMAIL = "BonoitecPilot <noreply@send.bonoitecpilot.fr>";
+const REPLY_TO = "contact@bonoitecpilot.fr";
+
+// Brand colors
 const BRAND = {
-  primary: "#4338ca",       // hsl(234, 85%, 55%)
-  primaryLight: "#eef2ff",  // hsl(234, 85%, 95%)
-  foreground: "#1e293b",    // hsl(222, 47%, 11%)
-  muted: "#64748b",         // hsl(215, 16%, 47%)
-  background: "#f8fafc",    // hsl(210, 20%, 98%)
-  success: "#22c55e",
+  primary: "#4338ca",
+  primaryLight: "#eef2ff",
+  foreground: "#1e293b",
+  muted: "#64748b",
+  background: "#f8fafc",
   white: "#ffffff",
   border: "#e2e8f0",
 };
@@ -38,7 +39,6 @@ function emailLayout(content: string, preheader = ""): string {
     .body h2 { color: ${BRAND.foreground}; font-size: 20px; font-weight: 700; margin: 0 0 16px; }
     .body p { color: ${BRAND.muted}; font-size: 14px; line-height: 1.7; margin: 0 0 14px; }
     .btn { display: inline-block; background: ${BRAND.primary}; color: ${BRAND.white} !important; text-decoration: none; padding: 12px 28px; border-radius: 8px; font-weight: 600; font-size: 14px; margin: 20px 0; }
-    .btn:hover { opacity: 0.9; }
     .info-box { background: ${BRAND.primaryLight}; border-radius: 8px; padding: 16px 20px; margin: 20px 0; }
     .info-box p { color: ${BRAND.foreground}; margin: 4px 0; font-size: 13px; }
     .info-box strong { color: ${BRAND.primary}; }
@@ -79,8 +79,6 @@ function emailLayout(content: string, preheader = ""): string {
 // ─── Templates ───────────────────────────────────────────────────────
 
 const templates: Record<string, (data: Record<string, string>) => { subject: string; html: string }> = {
-
-  // Devis disponible
   quote_ready: (d) => ({
     subject: `Votre devis ${d.reference} est disponible`,
     html: emailLayout(`
@@ -99,7 +97,6 @@ const templates: Record<string, (data: Record<string, string>) => { subject: str
     `, `Votre devis ${d.reference} est disponible`),
   }),
 
-  // Réparation terminée
   repair_completed: (d) => ({
     subject: `Réparation ${d.reference} terminée — Appareil prêt`,
     html: emailLayout(`
@@ -119,7 +116,6 @@ const templates: Record<string, (data: Record<string, string>) => { subject: str
     `, `Votre réparation ${d.reference} est terminée`),
   }),
 
-  // Facture envoyée
   invoice_sent: (d) => ({
     subject: `Facture ${d.reference} — BonoitecPilot`,
     html: emailLayout(`
@@ -139,7 +135,6 @@ const templates: Record<string, (data: Record<string, string>) => { subject: str
     `, `Facture ${d.reference}`),
   }),
 
-  // Notification de statut (générique)
   status_update: (d) => ({
     subject: `Mise à jour de votre réparation ${d.reference}`,
     html: emailLayout(`
@@ -158,7 +153,6 @@ const templates: Record<string, (data: Record<string, string>) => { subject: str
     `, `Réparation ${d.reference} — mise à jour`),
   }),
 
-  // Notification client générique
   client_notification: (d) => ({
     subject: d.subject || "Notification — BonoitecPilot",
     html: emailLayout(`
@@ -173,26 +167,31 @@ const templates: Record<string, (data: Record<string, string>) => { subject: str
   }),
 };
 
-// ─── SMTP Send ───────────────────────────────────────────────────────
+// ─── Resend Send ────────────────────────────────────────────────────
 
-async function sendSMTP(to: string, subject: string, html: string): Promise<void> {
-  const transporter = nodemailer.createTransport({
-    host: Deno.env.get("SMTP_HOST") || "smtp.hostinger.com",
-    port: Number(Deno.env.get("SMTP_PORT") || "587"),
-    secure: false, // STARTTLS
-    auth: {
-      user: Deno.env.get("SMTP_USER") || "",
-      pass: Deno.env.get("SMTP_PASS") || "",
+async function sendResend(to: string, subject: string, html: string): Promise<void> {
+  const apiKey = Deno.env.get("RESEND_API_KEY");
+  if (!apiKey) throw new Error("RESEND_API_KEY is not configured");
+
+  const res = await fetch("https://api.resend.com/emails", {
+    method: "POST",
+    headers: {
+      "Authorization": `Bearer ${apiKey}`,
+      "Content-Type": "application/json",
     },
+    body: JSON.stringify({
+      from: FROM_EMAIL,
+      to: [to],
+      reply_to: REPLY_TO,
+      subject,
+      html,
+    }),
   });
 
-  await transporter.sendMail({
-    from: `"BonoitecPilot" <${Deno.env.get("SMTP_USER") || "noreply@bonoitecpilot.fr"}>`,
-    to,
-    replyTo: Deno.env.get("SMTP_REPLY_TO") || "contact@bonoitecpilot.fr",
-    subject,
-    html,
-  });
+  const body = await res.text();
+  if (!res.ok) {
+    throw new Error(`Resend error (${res.status}): ${body}`);
+  }
 }
 
 // ─── Handler ─────────────────────────────────────────────────────────
@@ -230,11 +229,11 @@ Deno.serve(async (req) => {
     let errorMessage: string | null = null;
 
     try {
-      await sendSMTP(to, subject, html);
-    } catch (smtpError) {
+      await sendResend(to, subject, html);
+    } catch (sendError) {
       status = "failed";
-      errorMessage = smtpError instanceof Error ? smtpError.message : "SMTP error";
-      console.error("SMTP error:", errorMessage);
+      errorMessage = sendError instanceof Error ? sendError.message : "Resend error";
+      console.error("Resend error:", errorMessage);
     }
 
     // Log the email
