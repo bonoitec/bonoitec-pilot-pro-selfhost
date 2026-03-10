@@ -30,7 +30,7 @@ export function PartsSelector({ parts, onChange }: Props) {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("inventory")
-        .select("id, name, buy_price, sell_price, quantity, category, device_compatibility")
+        .select("id, name, buy_price, sell_price, quantity, min_quantity, category, device_compatibility")
         .gt("quantity", 0)
         .order("name");
       if (error) throw error;
