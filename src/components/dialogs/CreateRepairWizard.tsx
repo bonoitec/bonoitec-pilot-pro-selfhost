@@ -290,6 +290,7 @@ export function CreateRepairWizard({ open, onOpenChange }: Props) {
         technician_id: technicianId || null,
         issue: `${repairType ? repairType + " — " : ""}${issue.trim()}`,
         estimated_price: estimatedPrice ? parseFloat(estimatedPrice) : null,
+        labor_cost: laborCost ? parseFloat(laborCost) : 0,
         status: "nouveau",
         intake_checklist: intakeChecklist,
         screen_condition: screenCondition,
