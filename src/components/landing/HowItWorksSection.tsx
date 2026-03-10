@@ -61,15 +61,16 @@ const HowItWorksSection = ({ expanded = false }: { expanded?: boolean }) => {
   const isInView = useInView(ref, { once: true, margin: "-80px" });
 
   return (
-    <section className="landing-section bg-muted/20" ref={ref}>
-      <div className="landing-container">
+    <section className="landing-section relative" ref={ref}>
+      <div className="absolute inset-0 bg-gradient-to-b from-transparent via-muted/20 to-transparent" />
+      <div className="landing-container relative">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={isInView ? { opacity: 1, y: 0 } : {}}
           transition={{ duration: 0.5 }}
           className="text-center max-w-2xl mx-auto mb-16"
         >
-          <div className="inline-flex items-center gap-2 rounded-full bg-primary/10 border border-primary/20 px-4 py-1.5 text-xs font-semibold text-primary mb-6">
+          <div className="inline-flex items-center gap-2 rounded-full gradient-primary-subtle border border-primary/20 px-4 py-1.5 text-xs font-semibold text-primary mb-6">
             Comment ça marche
           </div>
           <h2 className="text-3xl sm:text-4xl font-bold font-display mb-4">
@@ -80,20 +81,20 @@ const HowItWorksSection = ({ expanded = false }: { expanded?: boolean }) => {
           </p>
         </motion.div>
 
-        <div className="space-y-8">
+        <div className="space-y-6">
           {steps.map((step, i) => (
             <motion.div
               key={step.num}
               initial={{ opacity: 0, y: 20 }}
               animate={isInView ? { opacity: 1, y: 0 } : {}}
               transition={{ duration: 0.5, delay: i * 0.1 }}
-              className="landing-card p-8 lg:p-10"
+              className="landing-card p-8 lg:p-10 hover-lift"
             >
               <div className="flex flex-col lg:flex-row gap-8">
                 <div className="flex-1 space-y-4">
                   <div className="flex items-center gap-4">
-                    <span className="text-4xl font-extrabold font-display text-primary/20">{step.num}</span>
-                    <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-primary text-primary-foreground">
+                    <span className="text-4xl font-extrabold font-display gradient-text">{step.num}</span>
+                    <div className="flex h-11 w-11 items-center justify-center rounded-xl gradient-primary text-primary-foreground shadow-md shadow-primary/20">
                       <step.icon className="h-5 w-5" />
                     </div>
                     <h3 className="text-xl font-bold font-display">{step.title}</h3>
@@ -109,11 +110,11 @@ const HowItWorksSection = ({ expanded = false }: { expanded?: boolean }) => {
                   </ul>
                 </div>
                 <div className="lg:w-72 shrink-0">
-                  <div className="rounded-xl bg-accent/50 border border-border/60 p-5 space-y-2">
+                  <div className="rounded-2xl gradient-primary-subtle border border-primary/10 p-5 space-y-2">
                     <p className="text-xs font-semibold text-primary uppercase tracking-wide mb-3">Fonctionnalités</p>
                     {step.features.map((f) => (
                       <div key={f} className="flex items-center gap-2 text-sm text-foreground">
-                        <div className="w-1.5 h-1.5 rounded-full bg-primary" />
+                        <div className="w-1.5 h-1.5 rounded-full gradient-primary" />
                         {f}
                       </div>
                     ))}

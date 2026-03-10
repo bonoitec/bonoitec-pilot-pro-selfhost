@@ -30,12 +30,12 @@ const footerSections = [
 ];
 
 const LandingFooter = () => (
-  <footer className="border-t border-border/60 bg-muted/30">
+  <footer className="border-t border-border/40 bg-gradient-to-b from-muted/20 to-muted/40">
     <div className="landing-container py-16 lg:py-20">
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-10">
         <div className="col-span-2">
           <Link to="/" className="flex items-center gap-2.5 mb-4">
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary text-primary-foreground">
+            <div className="flex h-9 w-9 items-center justify-center rounded-xl gradient-primary text-primary-foreground shadow-md shadow-primary/20">
               <Zap className="h-5 w-5" />
             </div>
             <span className="text-xl font-bold tracking-tight font-display">BonoitecPilot</span>
@@ -57,7 +57,7 @@ const LandingFooter = () => (
 
         {footerSections.map((section) => (
           <div key={section.title}>
-            <h4 className="font-semibold text-sm text-foreground mb-4">{section.title}</h4>
+            <h4 className="font-semibold text-sm text-foreground mb-4 font-display">{section.title}</h4>
             <ul className="space-y-2.5">
               {section.links.map((link) => (
                 <li key={link.label}>
@@ -74,7 +74,7 @@ const LandingFooter = () => (
         ))}
       </div>
 
-      <div className="mt-16 pt-8 border-t border-border/60 flex flex-col sm:flex-row items-center justify-between gap-4">
+      <div className="mt-16 pt-8 border-t border-border/40 flex flex-col sm:flex-row items-center justify-between gap-4">
         <p className="text-xs text-muted-foreground">
           © {new Date().getFullYear()} BonoitecPilot — Bonoitec Repair. Tous droits réservés.
         </p>
