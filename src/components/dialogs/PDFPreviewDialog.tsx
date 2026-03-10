@@ -56,6 +56,21 @@ export function PDFPreviewDialog({ open, onOpenChange, pdfUrl, loading, referenc
           <Button variant="outline" onClick={() => onOpenChange(false)}>
             <X className="h-4 w-4 mr-2" />Fermer
           </Button>
+          <Button
+            variant="outline"
+            onClick={() => {
+              if (!pdfUrl) return;
+              const printWindow = window.open(pdfUrl);
+              if (printWindow) {
+                printWindow.addEventListener("load", () => {
+                  printWindow.print();
+                });
+              }
+            }}
+            disabled={!pdfUrl}
+          >
+            <Printer className="h-4 w-4 mr-2" />Imprimer
+          </Button>
           <Button onClick={onDownload} disabled={!pdfUrl}>
             <Download className="h-4 w-4 mr-2" />Télécharger
           </Button>
