@@ -414,6 +414,7 @@ export function CreateRepairWizard({ open, onOpenChange }: Props) {
         <div className="border-b border-border px-6 pt-5 pb-4">
           <DialogHeader>
             <DialogTitle className="text-lg font-semibold">Nouvelle réparation</DialogTitle>
+            <DialogDescription className="sr-only">Assistant de création de réparation</DialogDescription>
           </DialogHeader>
           <div className="mt-3">
             <Progress value={progress} className="h-1.5" />
