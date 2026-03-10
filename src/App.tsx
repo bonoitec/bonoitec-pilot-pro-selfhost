@@ -47,6 +47,7 @@ import Articles from "./pages/Articles";
 import StockAlerts from "./pages/StockAlerts";
 import Messages from "./pages/Messages";
 import Profitability from "./pages/Profitability";
+import Sales from "./pages/Sales";
 import Auth from "./pages/Auth";
 import ResetPassword from "./pages/ResetPassword";
 import NotFound from "./pages/NotFound";
