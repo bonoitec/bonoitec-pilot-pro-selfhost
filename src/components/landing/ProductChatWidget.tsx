@@ -145,7 +145,9 @@ export function ProductChatWidget() {
             className="fixed bottom-6 right-6 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg shadow-primary/30 hover:shadow-xl hover:shadow-primary/40 transition-shadow"
             aria-label="Ouvrir l'assistant"
           >
-            <MessageSquare className="h-6 w-6" />
+            {/* Pulse ring */}
+            <span className="absolute inset-0 rounded-full bg-primary/40 animate-ping" style={{ animationDuration: "2s" }} />
+            <MessageSquare className="h-6 w-6 relative z-10" />
           </motion.button>
         )}
       </AnimatePresence>
