@@ -492,6 +492,8 @@ export type Database = {
         Row: {
           address: string | null
           ape_code: string | null
+          article_categories: Json
+          checklist_label: string
           city: string | null
           country: string | null
           created_at: string
@@ -517,6 +519,8 @@ export type Database = {
         Insert: {
           address?: string | null
           ape_code?: string | null
+          article_categories?: Json
+          checklist_label?: string
           city?: string | null
           country?: string | null
           created_at?: string
@@ -542,6 +546,8 @@ export type Database = {
         Update: {
           address?: string | null
           ape_code?: string | null
+          article_categories?: Json
+          checklist_label?: string
           city?: string | null
           country?: string | null
           created_at?: string
