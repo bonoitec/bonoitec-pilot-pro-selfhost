@@ -157,6 +157,8 @@ export function RepairDetailDialog({ open, onOpenChange, repair }: Props) {
       toast({ title: "Réparation mise à jour" });
       qc.invalidateQueries({ queryKey: ["repairs"] });
       qc.invalidateQueries({ queryKey: ["dashboard-repairs"] });
+      qc.invalidateQueries({ queryKey: ["inventory-for-parts"] });
+      qc.invalidateQueries({ queryKey: ["inventory"] });
       // Show notification suggestion if status changed
       if (status !== repair.status) {
         setPendingStatus(status);
