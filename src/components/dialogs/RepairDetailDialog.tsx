@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
@@ -87,19 +87,22 @@ function LiveTimer({ startedAt, estimatedMinutes }: { startedAt: string; estimat
   );
 }
 
-function ConditionStars({ value, label }: { value: number | null; label: string }) {
-  if (!value) return null;
-  return (
-    <div className="flex items-center gap-2">
-      <span className="text-xs text-muted-foreground w-24">{label}</span>
-      <div className="flex gap-0.5">
-        {[1, 2, 3, 4, 5].map(s => (
-          <Star key={s} className={`h-4 w-4 ${s <= value ? "text-warning fill-warning" : "text-muted-foreground/20"}`} />
-        ))}
+const ConditionStars = React.forwardRef<HTMLDivElement, { value: number | null; label: string }>(
+  ({ value, label }, ref) => {
+    if (!value) return null;
+    return (
+      <div ref={ref} className="flex items-center gap-2">
+        <span className="text-xs text-muted-foreground w-24">{label}</span>
+        <div className="flex gap-0.5">
+          {[1, 2, 3, 4, 5].map(s => (
+            <Star key={s} className={`h-4 w-4 ${s <= value ? "text-warning fill-warning" : "text-muted-foreground/20"}`} />
+          ))}
+        </div>
       </div>
-    </div>
-  );
-}
+    );
+  }
+);
+ConditionStars.displayName = "ConditionStars";
 
 interface Props {
   open: boolean;
