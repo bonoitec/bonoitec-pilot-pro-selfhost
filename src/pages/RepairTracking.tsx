@@ -3,16 +3,16 @@ import { useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Zap, Clock, CheckCircle2, Search as SearchIcon, Package, Wrench } from "lucide-react";
+import { Zap, Clock, CheckCircle2, Search as SearchIcon, Package, Wrench, Truck } from "lucide-react";
 import { CustomerChat } from "@/components/messaging/CustomerChat";
 
 const statusConfig: Record<string, { label: string; color: string; emoji: string; icon: any }> = {
   nouveau: { label: "Reçu", color: "bg-muted text-muted-foreground", emoji: "⚪", icon: Clock },
-  diagnostic: { label: "Diagnostic", color: "bg-warning/10 text-warning border-warning/20", emoji: "🟡", icon: SearchIcon },
-  en_cours: { label: "En réparation", color: "bg-primary/10 text-primary border-primary/20", emoji: "🔵", icon: Wrench },
-  en_attente_piece: { label: "Pièce commandée", color: "bg-[hsl(25,95%,53%)]/10 text-[hsl(25,95%,53%)] border-[hsl(25,95%,53%)]/20", emoji: "🟠", icon: Package },
+  diagnostic: { label: "Débuté", color: "bg-warning/10 text-warning border-warning/20", emoji: "🟡", icon: Wrench },
+  en_cours: { label: "Pièces à commander", color: "bg-primary/10 text-primary border-primary/20", emoji: "🔵", icon: Package },
+  en_attente_piece: { label: "Livraison en attente", color: "bg-muted text-muted-foreground border-border", emoji: "🟠", icon: Truck },
   termine: { label: "Terminé", color: "bg-success/10 text-success border-success/20", emoji: "🟢", icon: CheckCircle2 },
-  pret_a_recuperer: { label: "Prêt à récupérer", color: "bg-success/10 text-success border-success/20", emoji: "🟢", icon: CheckCircle2 },
+  pret_a_recuperer: { label: "Restitué", color: "bg-success/10 text-success border-success/20", emoji: "✅", icon: CheckCircle2 },
 };
 
 const statusOrder = ["nouveau", "diagnostic", "en_cours", "en_attente_piece", "termine", "pret_a_recuperer"];
@@ -36,7 +36,6 @@ export default function RepairTracking() {
     setLoading(false);
   };
 
-  // Initial fetch + polling for real-time updates
   useEffect(() => {
     fetchRepair();
     const interval = setInterval(fetchRepair, 10000);
@@ -164,7 +163,6 @@ export default function RepairTracking() {
           </Card>
         )}
 
-        {/* Customer messaging */}
         {code && <CustomerChat trackingCode={code} />}
       </div>
     </div>

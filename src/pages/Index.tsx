@@ -9,23 +9,7 @@ import { Wrench, Clock, CheckCircle2, DollarSign, AlertTriangle, TrendingUp, Plu
 import { CreateRepairWizard } from "@/components/dialogs/CreateRepairWizard";
 import { ProfitabilitySection } from "@/components/dashboard/ProfitabilitySection";
 
-const statusLabels: Record<string, string> = {
-  nouveau: "Nouveau",
-  diagnostic: "Diagnostic",
-  en_cours: "En cours",
-  en_attente_piece: "En attente de pièce",
-  termine: "Terminé",
-  pret_a_recuperer: "Prêt à récupérer",
-};
-
-const statusColors: Record<string, string> = {
-  nouveau: "bg-info/10 text-info",
-  diagnostic: "bg-warning/10 text-warning",
-  en_cours: "bg-primary/10 text-primary",
-  en_attente_piece: "bg-muted text-muted-foreground",
-  termine: "bg-success/10 text-success",
-  pret_a_recuperer: "gradient-primary-subtle text-primary",
-};
+import { statusLabels, statusColors } from "@/lib/repairStatuses";
 
 const Index = () => {
   const [showWizard, setShowWizard] = useState(false);

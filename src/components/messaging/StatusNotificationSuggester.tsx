@@ -8,27 +8,28 @@ import { Badge } from "@/components/ui/badge";
 import { Send, MessageSquare, X, Mail } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { sendTransactionalEmail } from "@/lib/email";
+import { statusLabels } from "@/lib/repairStatuses";
 
 const defaultMessages: Record<string, { subject: string; body: string }> = {
   diagnostic: {
-    subject: "Diagnostic en cours",
-    body: "Bonjour,\n\nNous avons commencé le diagnostic de votre appareil {{device}}.\nRéférence : {{reference}}\n\nNous vous tiendrons informé des résultats.\n\nCordialement,\nL'équipe de réparation",
+    subject: "Réparation débutée",
+    body: "Bonjour,\n\nLa réparation de votre {{device}} a bien débuté.\nRéférence : {{reference}}\n\nNous vous tiendrons informé(e) de l'avancement.\n\nCordialement,\nL'équipe BonoitecPilot",
   },
   en_cours: {
-    subject: "Réparation démarrée",
-    body: "Bonjour,\n\nLa réparation de votre appareil {{device}} est maintenant en cours.\nRéférence : {{reference}}\n\nNous vous notifierons dès qu'elle sera terminée.\n\nCordialement,\nL'équipe de réparation",
+    subject: "Pièces à commander",
+    body: "Bonjour,\n\nUne ou plusieurs pièces doivent être commandées pour la réparation de votre {{device}}.\nRéférence : {{reference}}\n\nNous vous informerons dès leur réception pour reprendre l'intervention.\n\nCordialement,\nL'équipe BonoitecPilot",
   },
   en_attente_piece: {
-    subject: "Pièce en commande",
-    body: "Bonjour,\n\nUne pièce a été commandée pour la réparation de votre {{device}}.\nRéférence : {{reference}}\n\nNous reprendrons la réparation dès réception.\n\nCordialement,\nL'équipe de réparation",
+    subject: "Livraison en attente",
+    body: "Bonjour,\n\nLa réparation de votre {{device}} est en attente de réception d'une pièce.\nRéférence : {{reference}}\n\nNous reprendrons dès que possible.\n\nCordialement,\nL'équipe BonoitecPilot",
   },
   termine: {
     subject: "Réparation terminée",
-    body: "Bonjour,\n\nLa réparation de votre {{device}} est terminée !\nRéférence : {{reference}}\n\nVous pouvez venir le récupérer à notre atelier.\n\nCordialement,\nL'équipe de réparation",
+    body: "Bonjour,\n\nLa réparation de votre {{device}} est terminée !\nRéférence : {{reference}}\n\nVotre appareil est prêt à être récupéré à notre atelier.\n\nCordialement,\nL'équipe BonoitecPilot",
   },
   pret_a_recuperer: {
-    subject: "Appareil prêt à récupérer",
-    body: "Bonjour,\n\nVotre {{device}} est prêt à être récupéré.\nRéférence : {{reference}}\n\nN'hésitez pas à nous contacter pour convenir d'un créneau.\n\nMerci de votre confiance !",
+    subject: "Intervention clôturée — Restitution",
+    body: "Bonjour,\n\nVotre {{device}} vous a été restitué. L'intervention est désormais clôturée.\nRéférence : {{reference}}\n\nMerci de votre confiance !\n\nCordialement,\nL'équipe BonoitecPilot",
   },
 };
 
@@ -55,7 +56,6 @@ export function StatusNotificationSuggester({ repair, newStatus, onDismiss }: Pr
 
   const sendNotification = useMutation({
     mutationFn: async () => {
-      // Save as a system message in the conversation
       const { error } = await supabase.from("repair_messages").insert({
         repair_id: repair.id,
         organization_id: repair.organization_id,
@@ -66,23 +66,20 @@ export function StatusNotificationSuggester({ repair, newStatus, onDismiss }: Pr
       });
       if (error) throw error;
 
-      // Send real email if client has email
       if (repair.clients?.email) {
-        const statusTemplateMap: Record<string, string> = {
-          termine: "repair_completed",
-          pret_a_recuperer: "repair_completed",
-        };
-        const emailTemplate = statusTemplateMap[newStatus] || "status_update";
+        const emailTemplate = newStatus === "termine" || newStatus === "pret_a_recuperer"
+          ? "repair_completed"
+          : "status_update";
 
         await sendTransactionalEmail({
           template: emailTemplate as any,
           to: repair.clients.email,
           data: {
             clientName: repair.clients?.name || "",
-            reference: reference,
-            device: device,
+            reference,
+            device,
             status: newStatus,
-            statusLabel: fillTemplate(template.subject),
+            statusLabel: statusLabels[newStatus] || newStatus,
             message: message.trim(),
           },
           organizationId: repair.organization_id,
@@ -126,8 +123,7 @@ export function StatusNotificationSuggester({ repair, newStatus, onDismiss }: Pr
         <div className="flex justify-end gap-2">
           <Button variant="outline" size="sm" onClick={onDismiss}>Ignorer</Button>
           <Button size="sm" onClick={() => sendNotification.mutate()} disabled={sendNotification.isPending}>
-            <Send className="h-3 w-3 mr-1" />
-            Envoyer
+            <Send className="h-3 w-3 mr-1" />Envoyer
           </Button>
         </div>
       </CardContent>
