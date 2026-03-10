@@ -272,7 +272,7 @@ function GuidedDemoSection() {
             <motion.div
               key={step.step}
               variants={fadeUp}
-              className={`group relative rounded-2xl border border-border/50 bg-gradient-to-br ${step.gradient} p-6 sm:p-10 hover:shadow-premium-lg hover:border-primary/15 transition-all duration-300 overflow-hidden`}
+              className={`group relative rounded-2xl border border-border/50 bg-gradient-to-br ${step.gradient} p-6 sm:p-10 hover:shadow-premium-lg hover:border-primary/15 transition-all duration-300 overflow-hidden cursor-pointer`}
             >
               {/* Step connector line */}
               {i < demoSteps.length - 1 && (
