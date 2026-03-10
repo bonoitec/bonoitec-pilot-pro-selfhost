@@ -281,10 +281,11 @@ const LandingContact = forwardRef<HTMLDivElement>((_, ref) => {
 
                 <Button
                   type="submit"
+                  variant="premium"
                   size="lg"
-                  className="w-full rounded-full h-13 text-base font-bold shadow-lg hover:shadow-xl hover:scale-[1.01] active:scale-[0.99] transition-all duration-200"
+                  className="w-full rounded-full h-14 text-base font-bold shadow-xl hover:shadow-2xl hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 py-4"
                 >
-                  <Send className="h-4 w-4 mr-2" />
+                  <Send className="h-5 w-5 mr-2" />
                   Envoyer le message
                 </Button>
               </form>

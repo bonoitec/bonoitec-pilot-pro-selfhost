@@ -33,7 +33,7 @@ const CTASection = forwardRef<HTMLElement>((_, forwardedRef) => {
               <Button
                 size="lg"
                 asChild
-                className="rounded-full px-10 h-14 text-base font-bold bg-primary-foreground text-primary hover:bg-primary-foreground/90 shadow-xl hover:shadow-2xl hover:scale-[1.03] active:scale-[0.97] transition-all duration-200"
+                className="rounded-full px-12 h-14 text-base font-bold bg-white text-indigo-700 hover:bg-gray-100 shadow-[0_4px_24px_rgba(0,0,0,0.25)] hover:shadow-[0_8px_32px_rgba(0,0,0,0.3)] hover:scale-[1.03] active:scale-[0.97] transition-all duration-200 ring-2 ring-white/50"
               >
                 <Link to="/auth">
                   Créer mon espace <ArrowRight className="h-5 w-5 ml-2" />
