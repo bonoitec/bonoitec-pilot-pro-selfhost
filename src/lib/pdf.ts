@@ -460,16 +460,16 @@ export async function generatePDF(org: OrgInfo, data: DocData, options?: { previ
   // CUSTOMER SIGNATURE
   // ═══════════════════════════════════════════
 
-  if (intake?.signatureUrl && finalY < 245) {
+  if (intake?.signatureUrl && finalY + 30 < PAGE_BOTTOM) {
     doc.setFontSize(7);
     doc.setFont("helvetica", "bold");
     doc.setTextColor(...PRIMARY);
-    doc.text("SIGNATURE CLIENT", PAGE_LEFT, finalY + 3);
+    doc.text("SIGNATURE CLIENT", PAGE_LEFT, finalY + 4);
     const sigImg = await loadImage(intake.signatureUrl);
     if (sigImg) {
-      doc.addImage(sigImg, "PNG", PAGE_LEFT, finalY + 5, 50, 20);
+      doc.addImage(sigImg, "PNG", PAGE_LEFT, finalY + 7, 50, 20);
     }
-    finalY += 28;
+    finalY += 32;
   }
 
   // ═══════════════════════════════════════════
