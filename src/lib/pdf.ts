@@ -531,7 +531,9 @@ export async function generatePDF(org: OrgInfo, data: DocData, options?: { previ
       doc.setFont("helvetica", "normal");
       doc.setTextColor(...GRAY_400);
       const footerLines = doc.splitTextToSize(org.invoice_footer, CONTENT_WIDTH);
-      doc.text(footerLines, 105, pageH - 22, { align: "center" });
+      // Place custom footer above the accent line, with enough clearance
+      const footerTextY = pageH - 20 - (footerLines.length * 3);
+      doc.text(footerLines, 105, footerTextY, { align: "center" });
       doc.setTextColor(0);
     }
   }
