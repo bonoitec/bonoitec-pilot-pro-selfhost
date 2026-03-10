@@ -292,7 +292,7 @@ export async function generatePDF(org: OrgInfo, data: DocData, options?: { previ
       doc.text(`✓  ${item}`, PAGE_LEFT + 2, currentY);
       currentY += 3.8;
     });
-    currentY += 4;
+    currentY += 6;
   }
 
   // Page break check
