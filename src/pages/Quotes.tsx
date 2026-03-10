@@ -5,9 +5,10 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Plus, Send, ArrowRight, Download, Mail } from "lucide-react";
+import { Plus, Send, ArrowRight, Download, Mail, Eye } from "lucide-react";
 import { format } from "date-fns";
 import { CreateQuoteDialog } from "@/components/dialogs/CreateQuoteDialog";
+import { PDFPreviewDialog } from "@/components/dialogs/PDFPreviewDialog";
 import { useToast } from "@/hooks/use-toast";
 import { generatePDF } from "@/lib/pdf";
 import { sendTransactionalEmail } from "@/lib/email";
@@ -24,6 +25,11 @@ const statusColors: Record<string, string> = {
 
 const Quotes = () => {
   const [showCreate, setShowCreate] = useState(false);
+  const [previewOpen, setPreviewOpen] = useState(false);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [previewRef, setPreviewRef] = useState("");
+  const [previewLoading, setPreviewLoading] = useState(false);
+  const [previewQuote, setPreviewQuote] = useState<any>(null);
   const { toast } = useToast();
   const qc = useQueryClient();
 
@@ -32,7 +38,7 @@ const Quotes = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("quotes")
-        .select("*, clients(name, address, email), devices(brand, model)")
+        .select("*, clients(name, address, email, phone), devices(brand, model)")
         .order("created_at", { ascending: false });
       if (error) throw error;
       return data;
@@ -65,7 +71,6 @@ const Quotes = () => {
         },
         organizationId: orgId,
       });
-      // Also mark as sent if still draft
       if (quote.status === "brouillon") {
         await supabase.from("quotes").update({ status: "envoye" as any }).eq("id", quote.id);
       }
@@ -98,17 +103,53 @@ const Quotes = () => {
     },
   });
 
+  const buildPdfParams = (quote: any) => {
+    const lines = Array.isArray(quote.lines) ? quote.lines : [];
+    return {
+      type: "quote" as const,
+      reference: quote.reference,
+      date: format(new Date(quote.created_at), "dd/MM/yyyy"),
+      clientName: quote.clients?.name,
+      clientAddress: quote.clients?.address,
+      clientPhone: quote.clients?.phone,
+      clientEmail: quote.clients?.email,
+      lines,
+      totalHT: Number(quote.total_ht),
+      totalTTC: Number(quote.total_ttc),
+      vatRate: Number(quote.vat_rate),
+      notes: quote.notes,
+    };
+  };
+
+  const previewPDF = async (quote: any) => {
+    setPreviewRef(quote.reference);
+    setPreviewQuote(quote);
+    setPreviewLoading(true);
+    setPreviewOpen(true);
+    setPreviewUrl(null);
+    try {
+      const { data: org } = await supabase.from("organizations").select("*").single();
+      if (!org) return;
+      const url = await generatePDF(org, buildPdfParams(quote), { preview: true });
+      setPreviewUrl(url as string);
+    } catch (e) {
+      toast({ title: "Erreur", description: "Impossible de générer l'aperçu", variant: "destructive" });
+    } finally {
+      setPreviewLoading(false);
+    }
+  };
+
+  const downloadFromPreview = async () => {
+    if (!previewQuote) return;
+    const { data: org } = await supabase.from("organizations").select("*").single();
+    if (!org) return;
+    await generatePDF(org, buildPdfParams(previewQuote));
+  };
+
   const downloadPDF = async (quote: any) => {
     const { data: org } = await supabase.from("organizations").select("*").single();
     if (!org) return;
-    const lines = Array.isArray(quote.lines) ? quote.lines : [];
-    await generatePDF(org, {
-      type: "quote", reference: quote.reference,
-      date: format(new Date(quote.created_at), "dd/MM/yyyy"),
-      clientName: quote.clients?.name, clientAddress: quote.clients?.address,
-      lines, totalHT: Number(quote.total_ht), totalTTC: Number(quote.total_ttc), vatRate: Number(quote.vat_rate),
-      notes: quote.notes,
-    });
+    await generatePDF(org, buildPdfParams(quote));
   };
 
   return (
@@ -143,6 +184,9 @@ const Quotes = () => {
                     <p className="text-xs text-muted-foreground">{format(new Date(quote.created_at), "dd/MM/yyyy")}</p>
                   </div>
                   <div className="flex gap-1">
+                    <Button variant="ghost" size="icon" title="Aperçu PDF" onClick={() => previewPDF(quote)}>
+                      <Eye className="h-4 w-4 text-primary" />
+                    </Button>
                     <Button variant="ghost" size="icon" title="Télécharger PDF" onClick={() => downloadPDF(quote)}>
                       <Download className="h-4 w-4" />
                     </Button>
@@ -176,6 +220,14 @@ const Quotes = () => {
       )}
 
       <CreateQuoteDialog open={showCreate} onOpenChange={setShowCreate} />
+      <PDFPreviewDialog
+        open={previewOpen}
+        onOpenChange={setPreviewOpen}
+        pdfUrl={previewUrl}
+        loading={previewLoading}
+        reference={previewRef}
+        onDownload={downloadFromPreview}
+      />
     </div>
   );
 };

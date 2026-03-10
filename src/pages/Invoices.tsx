@@ -5,9 +5,10 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Plus, Download, CheckCircle2, Mail } from "lucide-react";
+import { Plus, Download, CheckCircle2, Mail, Eye } from "lucide-react";
 import { format } from "date-fns";
 import { CreateInvoiceDialog } from "@/components/dialogs/CreateInvoiceDialog";
+import { PDFPreviewDialog } from "@/components/dialogs/PDFPreviewDialog";
 import { useToast } from "@/hooks/use-toast";
 import { generatePDF } from "@/lib/pdf";
 import { sendTransactionalEmail } from "@/lib/email";
@@ -28,6 +29,11 @@ const paymentLabels: Record<string, string> = {
 
 const Invoices = () => {
   const [showCreate, setShowCreate] = useState(false);
+  const [previewOpen, setPreviewOpen] = useState(false);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [previewRef, setPreviewRef] = useState("");
+  const [previewLoading, setPreviewLoading] = useState(false);
+  const [previewInv, setPreviewInv] = useState<any>(null);
   const { toast } = useToast();
   const qc = useQueryClient();
 
@@ -36,7 +42,7 @@ const Invoices = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("invoices")
-        .select("*, clients(name, address, email)")
+        .select("*, clients(name, address, email, phone)")
         .order("created_at", { ascending: false });
       if (error) throw error;
       return data;
@@ -75,7 +81,6 @@ const Invoices = () => {
         },
         organizationId: orgId,
       });
-      // Mark as sent if still draft
       if (inv.status === "brouillon") {
         await supabase.from("invoices").update({ status: "envoyee" as any }).eq("id", inv.id);
       }
@@ -87,18 +92,54 @@ const Invoices = () => {
     onError: (e: Error) => toast({ title: "Erreur d'envoi", description: e.message, variant: "destructive" }),
   });
 
+  const buildPdfParams = (inv: any) => {
+    const lines = Array.isArray(inv.lines) ? inv.lines : [];
+    return {
+      type: "invoice" as const,
+      reference: inv.reference,
+      date: format(new Date(inv.created_at), "dd/MM/yyyy"),
+      clientName: inv.clients?.name,
+      clientAddress: inv.clients?.address,
+      clientPhone: inv.clients?.phone,
+      clientEmail: inv.clients?.email,
+      lines,
+      totalHT: Number(inv.total_ht),
+      totalTTC: Number(inv.total_ttc),
+      vatRate: Number(inv.vat_rate),
+      paymentMethod: inv.payment_method ? paymentLabels[inv.payment_method] || inv.payment_method : undefined,
+      notes: inv.notes,
+    };
+  };
+
+  const previewPDF = async (inv: any) => {
+    setPreviewRef(inv.reference);
+    setPreviewInv(inv);
+    setPreviewLoading(true);
+    setPreviewOpen(true);
+    setPreviewUrl(null);
+    try {
+      const { data: org } = await supabase.from("organizations").select("*").single();
+      if (!org) return;
+      const url = await generatePDF(org, buildPdfParams(inv), { preview: true });
+      setPreviewUrl(url as string);
+    } catch (e) {
+      toast({ title: "Erreur", description: "Impossible de générer l'aperçu", variant: "destructive" });
+    } finally {
+      setPreviewLoading(false);
+    }
+  };
+
+  const downloadFromPreview = async () => {
+    if (!previewInv) return;
+    const { data: org } = await supabase.from("organizations").select("*").single();
+    if (!org) return;
+    await generatePDF(org, buildPdfParams(previewInv));
+  };
+
   const downloadPDF = async (inv: any) => {
     const { data: org } = await supabase.from("organizations").select("*").single();
     if (!org) return;
-    const lines = Array.isArray(inv.lines) ? inv.lines : [];
-    await generatePDF(org, {
-      type: "invoice", reference: inv.reference,
-      date: format(new Date(inv.created_at), "dd/MM/yyyy"),
-      clientName: inv.clients?.name, clientAddress: inv.clients?.address,
-      lines, totalHT: Number(inv.total_ht), totalTTC: Number(inv.total_ttc), vatRate: Number(inv.vat_rate),
-      paymentMethod: inv.payment_method ? paymentLabels[inv.payment_method] || inv.payment_method : undefined,
-      notes: inv.notes,
-    });
+    await generatePDF(org, buildPdfParams(inv));
   };
 
   return (
@@ -146,6 +187,9 @@ const Invoices = () => {
                       <td className="p-3 text-center text-xs text-muted-foreground">{format(new Date(inv.created_at), "dd/MM/yyyy")}</td>
                       <td className="p-3 text-center">
                         <div className="flex justify-center gap-1">
+                          <Button variant="ghost" size="icon" className="h-8 w-8" title="Aperçu PDF" onClick={() => previewPDF(inv)}>
+                            <Eye className="h-3.5 w-3.5 text-primary" />
+                          </Button>
                           {inv.clients?.email && (
                             <Button
                               variant="ghost"
@@ -178,6 +222,14 @@ const Invoices = () => {
       )}
 
       <CreateInvoiceDialog open={showCreate} onOpenChange={setShowCreate} />
+      <PDFPreviewDialog
+        open={previewOpen}
+        onOpenChange={setPreviewOpen}
+        pdfUrl={previewUrl}
+        loading={previewLoading}
+        reference={previewRef}
+        onDownload={downloadFromPreview}
+      />
     </div>
   );
 };
