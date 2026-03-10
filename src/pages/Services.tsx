@@ -55,6 +55,8 @@ const Services = () => {
         default_price: parseFloat(form.default_price) || 0,
         estimated_time_minutes: parseInt(form.estimated_time_minutes) || 30,
         compatible_categories: form.compatible_categories,
+        compatible_brand: form.compatible_brand.trim() || null,
+        compatible_model: form.compatible_model.trim() || null,
       };
       if (editingId) {
         const { error } = await supabase.from("services").update(payload).eq("id", editingId);
