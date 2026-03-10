@@ -85,6 +85,7 @@ const SettingsPage = () => {
     onSuccess: () => {
       toast({ title: "Paramètres sauvegardés" });
       qc.invalidateQueries({ queryKey: ["organization"] });
+      qc.invalidateQueries({ queryKey: ["org-vat-settings"] });
     },
     onError: (e: Error) => toast({ title: "Erreur", description: e.message, variant: "destructive" }),
   });
