@@ -73,7 +73,11 @@ const Devices = () => {
           {filtered.map((device) => {
             const Icon = typeIcons[device.type] || Smartphone;
             return (
-              <Card key={device.id} className="hover:shadow-md transition-shadow cursor-pointer">
+              <Card
+                key={device.id}
+                ref={highlightId === device.id ? highlightRef : undefined}
+                className={`hover:shadow-md transition-all cursor-pointer ${highlightId === device.id ? "ring-2 ring-primary shadow-lg" : ""}`}
+              >
                 <CardContent className="p-5">
                   <div className="flex items-start gap-3">
                     <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-secondary">
