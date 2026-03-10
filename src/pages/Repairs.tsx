@@ -10,6 +10,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Plus, Search, LayoutGrid, List, Timer, GripVertical } from "lucide-react";
 import { CreateRepairWizard } from "@/components/dialogs/CreateRepairWizard";
 import { RepairDetailDialog } from "@/components/dialogs/RepairDetailDialog";
+import { RestitutionDialog } from "@/components/dialogs/RestitutionDialog";
 import { DragDropContext, Droppable, Draggable, DropResult } from "@hello-pangea/dnd";
 import { useToast } from "@/hooks/use-toast";
 import { statusLabels, statusOrder, statusColors, statusHelpText } from "@/lib/repairStatuses";
