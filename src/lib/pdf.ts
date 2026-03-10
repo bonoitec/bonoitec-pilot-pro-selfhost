@@ -99,6 +99,8 @@ const WHITE = [255, 255, 255] as const;
 const PAGE_LEFT = 20;
 const PAGE_RIGHT = 190;
 const CONTENT_WIDTH = PAGE_RIGHT - PAGE_LEFT;
+const FOOTER_ZONE = 40; // reserved space at bottom for footer elements
+const PAGE_BOTTOM = 297 - FOOTER_ZONE; // max Y for content before footer
 
 function drawLine(doc: jsPDF, y: number, color = GRAY_200) {
   doc.setDrawColor(...color);
