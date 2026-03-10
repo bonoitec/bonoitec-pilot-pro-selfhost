@@ -56,35 +56,33 @@ const BlogSection = forwardRef<HTMLElement, { expanded?: boolean }>(({ expanded 
 
         <div className="grid md:grid-cols-3 gap-6">
           {articles.map((a, i) => (
-            <motion.div
-              key={a.slug}
-              initial={{ opacity: 0, y: 20 }}
-              animate={isInView ? { opacity: 1, y: 0 } : {}}
-              transition={{ duration: 0.4, delay: i * 0.08 }}
-              className="landing-card overflow-hidden group hover-lift cursor-pointer"
-            >
-              <div className="h-48 overflow-hidden">
-                <img
-                  src={a.image}
-                  alt={a.title}
-                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
-                  loading="lazy"
-                />
-              </div>
-              <div className="p-6 space-y-3">
-                <span className="text-xs font-bold text-primary gradient-text">{a.category}</span>
-                <h3 className="font-semibold font-display leading-snug group-hover:text-primary transition-colors">
-                  {a.title}
-                </h3>
-                <p className="text-sm text-muted-foreground leading-relaxed">{a.excerpt}</p>
-                <Link
-                  to={`/blog/${a.slug}`}
-                  className="inline-flex items-center gap-1 text-sm font-medium text-primary hover:underline pt-1"
-                >
-                  Lire l'article <ArrowRight className="h-3.5 w-3.5" />
-                </Link>
-              </div>
-            </motion.div>
+            <Link to={`/blog/${a.slug}`} key={a.slug} className="block">
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={isInView ? { opacity: 1, y: 0 } : {}}
+                transition={{ duration: 0.4, delay: i * 0.08 }}
+                className="landing-card overflow-hidden group hover-lift cursor-pointer h-full"
+              >
+                <div className="h-48 overflow-hidden">
+                  <img
+                    src={a.image}
+                    alt={a.title}
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+                    loading="lazy"
+                  />
+                </div>
+                <div className="p-6 space-y-3">
+                  <span className="text-xs font-bold text-primary gradient-text">{a.category}</span>
+                  <h3 className="font-semibold font-display leading-snug group-hover:text-primary transition-colors">
+                    {a.title}
+                  </h3>
+                  <p className="text-sm text-muted-foreground leading-relaxed">{a.excerpt}</p>
+                  <span className="inline-flex items-center gap-1 text-sm font-medium text-primary pt-1">
+                    Lire l'article <ArrowRight className="h-3.5 w-3.5" />
+                  </span>
+                </div>
+              </motion.div>
+            </Link>
           ))}
         </div>
       </div>
