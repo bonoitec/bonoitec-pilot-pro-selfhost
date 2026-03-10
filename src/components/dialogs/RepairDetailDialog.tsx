@@ -86,6 +86,10 @@ export function RepairDetailDialog({ open, onOpenChange, repair }: Props) {
   const [finalPrice, setFinalPrice] = useState(repair?.final_price?.toString() || "");
   const [paymentMethod, setPaymentMethod] = useState((repair as any)?.payment_method || "");
   const [laborCost, setLaborCost] = useState((repair as any)?.labor_cost?.toString() || "0");
+  const [partsUsed, setPartsUsed] = useState<PartUsed[]>(() => {
+    const raw = repair?.parts_used;
+    return Array.isArray(raw) ? raw.map((p: any) => ({ inventory_id: p.inventory_id, name: p.name || "", buy_price: Number(p.buy_price ?? p.cost ?? 0), sell_price: Number(p.sell_price ?? 0), quantity: Number(p.quantity ?? 1) })) : [];
+  });
   const [showPayment, setShowPayment] = useState(false);
   const [showNotification, setShowNotification] = useState(false);
   const [pendingStatus, setPendingStatus] = useState("");
