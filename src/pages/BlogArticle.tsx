@@ -5,6 +5,8 @@ import { Button } from "@/components/ui/button";
 import blogOrganiser from "@/assets/blog-organiser-atelier.jpg";
 import blogFacturation from "@/assets/blog-facturation.jpg";
 import blogCentraliser from "@/assets/blog-centraliser.jpg";
+import blogSuiviClient from "@/assets/blog-suivi-client.jpg";
+import blogDevis from "@/assets/blog-devis-rapides.jpg";
 
 interface ArticleSection {
   id: string;
