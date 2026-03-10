@@ -26,6 +26,20 @@ const Articles = () => {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState<ArticleForm>(emptyForm);
 
+  const { data: org } = useQuery({
+    queryKey: ["organization"],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("organizations").select("*").single();
+      if (error) throw error;
+      return data;
+    },
+    staleTime: 60000,
+  });
+
+  const categories = ((org as any)?.article_categories as string[] | undefined)?.length
+    ? (org as any).article_categories as string[]
+    : defaultCategories;
+
   const { data: articles = [], isLoading } = useQuery({
     queryKey: ["articles"],
     queryFn: async () => {
