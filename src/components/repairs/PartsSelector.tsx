@@ -179,7 +179,8 @@ export function PartsSelector({ parts, onChange }: Props) {
                   <Trash2 className="h-3.5 w-3.5 text-destructive" />
                 </Button>
               </div>
-            ))}
+              );
+            })}
           </div>
         )}
 
