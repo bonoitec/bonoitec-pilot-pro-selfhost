@@ -5,11 +5,12 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Plus, Send, ArrowRight } from "lucide-react";
+import { Plus, Send, ArrowRight, Download, Mail } from "lucide-react";
 import { format } from "date-fns";
 import { CreateQuoteDialog } from "@/components/dialogs/CreateQuoteDialog";
 import { useToast } from "@/hooks/use-toast";
 import { generatePDF } from "@/lib/pdf";
+import { sendTransactionalEmail } from "@/lib/email";
 
 const statusLabels: Record<string, string> = {
   brouillon: "Brouillon", envoye: "Envoyé", accepte: "Accepté", refuse: "Refusé",
@@ -31,7 +32,7 @@ const Quotes = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("quotes")
-        .select("*, clients(name, address), devices(brand, model)")
+        .select("*, clients(name, address, email), devices(brand, model)")
         .order("created_at", { ascending: false });
       if (error) throw error;
       return data;
@@ -44,6 +45,36 @@ const Quotes = () => {
       if (error) throw error;
     },
     onSuccess: () => { toast({ title: "Devis envoyé" }); qc.invalidateQueries({ queryKey: ["quotes"] }); },
+  });
+
+  const emailMutation = useMutation({
+    mutationFn: async (quote: any) => {
+      const email = quote.clients?.email;
+      if (!email) throw new Error("Ce client n'a pas d'adresse email.");
+      const { data: orgId } = await supabase.rpc("get_user_org_id");
+      if (!orgId) throw new Error("Organisation introuvable");
+      const device = quote.devices ? `${quote.devices.brand} ${quote.devices.model}` : "—";
+      await sendTransactionalEmail({
+        template: "quote_ready",
+        to: email,
+        data: {
+          clientName: quote.clients?.name || "",
+          reference: quote.reference,
+          device,
+          totalTTC: Number(quote.total_ttc).toFixed(2),
+        },
+        organizationId: orgId,
+      });
+      // Also mark as sent if still draft
+      if (quote.status === "brouillon") {
+        await supabase.from("quotes").update({ status: "envoye" as any }).eq("id", quote.id);
+      }
+    },
+    onSuccess: () => {
+      toast({ title: "Devis envoyé par email", description: "Le client a reçu le devis par email." });
+      qc.invalidateQueries({ queryKey: ["quotes"] });
+    },
+    onError: (e: Error) => toast({ title: "Erreur d'envoi", description: e.message, variant: "destructive" }),
   });
 
   const convertMutation = useMutation({
@@ -113,8 +144,19 @@ const Quotes = () => {
                   </div>
                   <div className="flex gap-1">
                     <Button variant="ghost" size="icon" title="Télécharger PDF" onClick={() => downloadPDF(quote)}>
-                      <Send className="h-4 w-4" />
+                      <Download className="h-4 w-4" />
                     </Button>
+                    {quote.clients?.email && (
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        title="Envoyer par email"
+                        onClick={() => emailMutation.mutate(quote)}
+                        disabled={emailMutation.isPending}
+                      >
+                        <Mail className="h-4 w-4 text-primary" />
+                      </Button>
+                    )}
                     {quote.status === "brouillon" && (
                       <Button variant="ghost" size="icon" title="Marquer envoyé" onClick={() => sendMutation.mutate(quote.id)}>
                         <Send className="h-4 w-4 text-info" />
