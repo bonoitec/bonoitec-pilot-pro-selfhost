@@ -32,7 +32,7 @@ const footerSections = [
 const LandingFooter = () => (
   <footer className="border-t border-border/60 bg-muted/30">
     <div className="landing-container py-16 lg:py-20">
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-10">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-10">
         <div className="col-span-2">
           <Link to="/" className="flex items-center gap-2.5 mb-4">
             <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary text-primary-foreground">

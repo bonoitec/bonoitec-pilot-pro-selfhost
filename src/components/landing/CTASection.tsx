@@ -15,7 +15,7 @@ const CTASection = forwardRef<HTMLElement>((_, forwardedRef) => {
           initial={{ opacity: 0, y: 20 }}
           animate={isInView ? { opacity: 1, y: 0 } : {}}
           transition={{ duration: 0.5 }}
-          className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-primary to-[hsl(280,80%,50%)] p-12 lg:p-20 text-center"
+          className="relative overflow-hidden rounded-2xl sm:rounded-3xl bg-gradient-to-br from-primary to-[hsl(280,80%,50%)] p-8 sm:p-12 lg:p-20 text-center"
         >
           <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,hsl(0,0%,100%,0.1),transparent_60%)]" />
           <div className="relative space-y-8 max-w-2xl mx-auto">
