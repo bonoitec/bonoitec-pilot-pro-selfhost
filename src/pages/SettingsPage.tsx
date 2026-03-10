@@ -219,32 +219,95 @@ const SettingsPage = () => {
         <CardHeader>
           <div className="flex items-center gap-2">
             <ClipboardCheck className="h-4 w-4 text-primary" />
-            <CardTitle className="text-base">Checklist d'intake</CardTitle>
+            <CardTitle className="text-base">{form.checklist_label || "Checklist de prise en charge"}</CardTitle>
           </div>
-          <CardDescription>Personnalisez les points de contrôle lors de la prise en charge d'un appareil</CardDescription>
+          <CardDescription>Personnalisez le nom et les points de contrôle lors de la prise en charge d'un appareil</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="space-y-2">
+            <Label>Nom de la checklist</Label>
+            <Input
+              value={form.checklist_label}
+              onChange={e => setForm(f => ({ ...f, checklist_label: e.target.value }))}
+              placeholder="Checklist de prise en charge"
+            />
+            <p className="text-xs text-muted-foreground">Ce libellé sera affiché dans les fiches de réparation</p>
+          </div>
+          <div className="space-y-3">
+            <Label>Points de contrôle</Label>
+            {form.intake_checklist_items.map((item, i) => (
+              <div key={i} className="flex items-center gap-2">
+                <Input
+                  value={item}
+                  onChange={e => {
+                    const items = [...form.intake_checklist_items];
+                    items[i] = e.target.value;
+                    setForm(f => ({ ...f, intake_checklist_items: items }));
+                  }}
+                  className="flex-1"
+                />
+                <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => {
+                  setForm(f => ({ ...f, intake_checklist_items: f.intake_checklist_items.filter((_, idx) => idx !== i) }));
+                }}>
+                  <X className="h-4 w-4" />
+                </Button>
+              </div>
+            ))}
+            <Button variant="outline" size="sm" onClick={() => setForm(f => ({ ...f, intake_checklist_items: [...f.intake_checklist_items, ""] }))}>
+              <Plus className="h-3 w-3 mr-2" />Ajouter un point
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Article Categories */}
+      <Card>
+        <CardHeader>
+          <div className="flex items-center gap-2">
+            <Tag className="h-4 w-4 text-primary" />
+            <CardTitle className="text-base">Catégories d'articles</CardTitle>
+          </div>
+          <CardDescription>Personnalisez les catégories utilisées pour classer vos articles en vente</CardDescription>
         </CardHeader>
         <CardContent className="space-y-3">
-          {form.intake_checklist_items.map((item, i) => (
+          {form.article_categories.map((cat, i) => (
             <div key={i} className="flex items-center gap-2">
               <Input
-                value={item}
+                value={cat}
                 onChange={e => {
-                  const items = [...form.intake_checklist_items];
-                  items[i] = e.target.value;
-                  setForm(f => ({ ...f, intake_checklist_items: items }));
+                  const cats = [...form.article_categories];
+                  cats[i] = e.target.value;
+                  setForm(f => ({ ...f, article_categories: cats }));
                 }}
                 className="flex-1"
               />
               <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => {
-                setForm(f => ({ ...f, intake_checklist_items: f.intake_checklist_items.filter((_, idx) => idx !== i) }));
+                setForm(f => ({ ...f, article_categories: f.article_categories.filter((_, idx) => idx !== i) }));
               }}>
                 <X className="h-4 w-4" />
               </Button>
             </div>
           ))}
-          <Button variant="outline" size="sm" onClick={() => setForm(f => ({ ...f, intake_checklist_items: [...f.intake_checklist_items, ""] }))}>
-            <Plus className="h-3 w-3 mr-2" />Ajouter un point
+          <Button variant="outline" size="sm" onClick={() => setForm(f => ({ ...f, article_categories: [...f.article_categories, ""] }))}>
+            <Plus className="h-3 w-3 mr-2" />Ajouter une catégorie
           </Button>
+        </CardContent>
+      </Card>
+
+      {/* Device Catalog management */}
+      <Card>
+        <CardHeader>
+          <div className="flex items-center gap-2">
+            <Smartphone className="h-4 w-4 text-primary" />
+            <CardTitle className="text-base">Modèles d'appareils</CardTitle>
+          </div>
+          <CardDescription>Gérez votre catalogue d'appareils depuis la page dédiée</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Button variant="outline" onClick={() => window.location.href = "/device-catalog"}>
+            <Smartphone className="h-4 w-4 mr-2" />Gérer le catalogue d'appareils
+          </Button>
+          <p className="text-xs text-muted-foreground mt-2">Ajoutez, modifiez ou supprimez des modèles d'appareils (marques, modèles, variantes)</p>
         </CardContent>
       </Card>
 
