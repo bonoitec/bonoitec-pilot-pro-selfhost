@@ -388,31 +388,12 @@ export function RepairDetailDialog({ open, onOpenChange, repair }: Props) {
                 </Select>
               </div>
 
-              {/* Payment section - shown when Restitué */}
-              {showPayment && (
-                <Card className="border-warning/30 bg-warning/5">
-                  <CardHeader className="pb-2 pt-3 px-4">
-                    <CardTitle className="text-sm flex items-center gap-2"><CreditCard className="h-4 w-4 text-warning" />Paiement & Facturation</CardTitle>
-                  </CardHeader>
-                  <CardContent className="px-4 pb-3 space-y-3">
-                    <div>
-                      <Label className="text-xs">Prix final (€)</Label>
-                      <Input type="number" step="0.01" value={finalPrice} onChange={e => setFinalPrice(e.target.value)} placeholder={repair.estimated_price?.toString() || "0.00"} />
-                    </div>
-                    <div>
-                      <Label className="text-xs">Mode de paiement</Label>
-                      <Select value={paymentMethod} onValueChange={setPaymentMethod}>
-                        <SelectTrigger><SelectValue placeholder="Sélectionner..." /></SelectTrigger>
-                        <SelectContent>
-                          {paymentMethods.map(pm => <SelectItem key={pm.value} value={pm.value}>{pm.label}</SelectItem>)}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <p className="text-[11px] text-muted-foreground">
-                      La facture sera automatiquement générée lors de l'enregistrement.
-                    </p>
-                  </CardContent>
-                </Card>
+              {/* Restitution button - shown when status is already pret_a_recuperer but no payment yet */}
+              {repair.status === "pret_a_recuperer" && !repair.payment_method && (
+                <Button variant="outline" className="w-full border-warning/30 text-warning hover:bg-warning/10" onClick={() => setShowRestitution(true)}>
+                  <CreditCard className="h-4 w-4 mr-2" />
+                  Finaliser le paiement & la facture
+                </Button>
               )}
 
               <div><Label>Diagnostic</Label><Textarea value={diagnostic} onChange={e => setDiagnostic(e.target.value)} placeholder="Résultat du diagnostic..." rows={3} /></div>
