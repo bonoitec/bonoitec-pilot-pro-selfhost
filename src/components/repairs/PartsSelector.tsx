@@ -3,11 +3,10 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { Package, Plus, Trash2, Search, AlertTriangle } from "lucide-react";
+import { Package, Plus, Trash2, Search, AlertTriangle, Sparkles } from "lucide-react";
 
 export interface PartUsed {
   inventory_id?: string;
@@ -20,9 +19,11 @@ export interface PartUsed {
 interface Props {
   parts: PartUsed[];
   onChange: (parts: PartUsed[]) => void;
+  deviceBrand?: string;
+  deviceModel?: string;
 }
 
-export function PartsSelector({ parts, onChange }: Props) {
+export function PartsSelector({ parts, onChange, deviceBrand, deviceModel }: Props) {
   const [search, setSearch] = useState("");
 
   const { data: inventory = [] } = useQuery({
@@ -30,7 +31,7 @@ export function PartsSelector({ parts, onChange }: Props) {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("inventory")
-        .select("id, name, buy_price, sell_price, quantity, min_quantity, category, device_compatibility")
+        .select("id, name, buy_price, sell_price, quantity, min_quantity, category, device_compatibility, compatible_brand, compatible_model")
         .gt("quantity", 0)
         .order("name");
       if (error) throw error;
@@ -39,11 +40,36 @@ export function PartsSelector({ parts, onChange }: Props) {
     staleTime: 30000,
   });
 
-  const filteredInventory = inventory.filter(
-    (item) =>
-      item.name.toLowerCase().includes(search.toLowerCase()) ||
-      (item.device_compatibility?.toLowerCase().includes(search.toLowerCase()) ?? false)
-  );
+  const brandLower = (deviceBrand || "").toLowerCase();
+  const modelLower = (deviceModel || "").toLowerCase();
+
+  // Score each part for compatibility
+  const scoredInventory = inventory.map((item) => {
+    const iBrand = ((item as any).compatible_brand || "").toLowerCase();
+    const iModel = ((item as any).compatible_model || "").toLowerCase();
+    const iCompat = (item.device_compatibility || "").toLowerCase();
+    const iName = item.name.toLowerCase();
+    let score = 0;
+    if (brandLower && iBrand && iBrand.includes(brandLower)) score += 2;
+    if (modelLower && iModel && iModel.includes(modelLower)) score += 3;
+    if (brandLower && iName.includes(brandLower)) score += 1;
+    if (modelLower && iName.includes(modelLower)) score += 2;
+    if (modelLower && iCompat.includes(modelLower)) score += 2;
+    if (brandLower && iCompat.includes(brandLower)) score += 1;
+    return { ...item, _score: score };
+  });
+
+  const suggested = scoredInventory.filter((i) => i._score > 0).sort((a, b) => b._score - a._score);
+
+  const filteredInventory = scoredInventory
+    .filter(
+      (item) =>
+        item.name.toLowerCase().includes(search.toLowerCase()) ||
+        (item.device_compatibility?.toLowerCase().includes(search.toLowerCase()) ?? false) ||
+        ((item as any).compatible_brand || "").toLowerCase().includes(search.toLowerCase()) ||
+        ((item as any).compatible_model || "").toLowerCase().includes(search.toLowerCase())
+    )
+    .sort((a, b) => b._score - a._score);
 
   const addPart = (inventoryId: string) => {
     const item = inventory.find((i) => i.id === inventoryId);
@@ -87,7 +113,39 @@ export function PartsSelector({ parts, onChange }: Props) {
         </CardTitle>
       </CardHeader>
       <CardContent className="px-4 pb-3 space-y-3">
-        {/* Search & add from stock */}
+        {/* Suggested parts */}
+        {suggested.length > 0 && parts.length === 0 && !search && (
+          <div>
+            <p className="text-[11px] text-muted-foreground flex items-center gap-1 mb-1.5">
+              <Sparkles className="h-3 w-3 text-warning" />
+              Pièces suggérées pour {deviceBrand} {deviceModel}
+            </p>
+            <div className="space-y-1">
+              {suggested.slice(0, 5).map((item) => {
+                const isLow = item.quantity <= item.min_quantity;
+                return (
+                  <button
+                    key={item.id}
+                    type="button"
+                    onClick={() => addPart(item.id)}
+                    className={`w-full flex items-center justify-between px-3 py-1.5 text-xs border rounded-md hover:bg-warning/10 transition-colors text-left ${isLow ? "border-warning/30 bg-warning/5" : "border-warning/20 bg-warning/5"}`}
+                  >
+                    <span className="truncate font-medium flex items-center gap-1.5">
+                      {item.name}
+                      {isLow && <AlertTriangle className="h-3 w-3 text-warning shrink-0" />}
+                    </span>
+                    <span className="flex items-center gap-2 shrink-0 ml-2">
+                      <span className="text-muted-foreground">×{item.quantity}</span>
+                      <span className="font-mono">{item.buy_price.toFixed(2)} €</span>
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        {/* Search */}
         <div className="relative">
           <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
           <Input
