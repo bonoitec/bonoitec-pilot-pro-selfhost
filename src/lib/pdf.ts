@@ -258,7 +258,7 @@ export async function generatePDF(org: OrgInfo, data: DocData, options?: { previ
     if (intake!.serialNumber) { doc.text(`IMEI / Série : ${intake!.serialNumber}`, deviceBlockX + 6, devY); devY += 3.5; }
   }
 
-  currentY += 40;
+  currentY += 42;
 
   // ═══════════════════════════════════════════
   // DEVICE CONDITION RATINGS (if present)
