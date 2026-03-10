@@ -207,6 +207,8 @@ const LandingSupportDetail = forwardRef<HTMLDivElement>((_, ref) => {
       )}
     </motion.div>
   );
-};
+});
+
+LandingSupportDetail.displayName = "LandingSupportDetail";
 
 export default LandingSupportDetail;
