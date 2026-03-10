@@ -1,4 +1,3 @@
-import { forwardRef } from "react";
 import HeroSection from "@/components/landing/HeroSection";
 import BenefitsSection from "@/components/landing/BenefitsSection";
 import FeaturesSection from "@/components/landing/FeaturesSection";
@@ -9,8 +8,8 @@ import BlogSection from "@/components/landing/BlogSection";
 import SupportSection from "@/components/landing/SupportSection";
 import CTASection from "@/components/landing/CTASection";
 
-const Landing = forwardRef<HTMLDivElement>((_, ref) => (
-  <div ref={ref}>
+const Landing = () => (
+  <div>
     <HeroSection />
     <BenefitsSection />
     <FeaturesSection />
@@ -21,7 +20,6 @@ const Landing = forwardRef<HTMLDivElement>((_, ref) => (
     <SupportSection />
     <CTASection />
   </div>
-));
-Landing.displayName = "Landing";
+);
 
 export default Landing;
