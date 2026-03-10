@@ -46,6 +46,7 @@ import Services from "./pages/Services";
 import Articles from "./pages/Articles";
 import StockAlerts from "./pages/StockAlerts";
 import Messages from "./pages/Messages";
+import Profitability from "./pages/Profitability";
 import Auth from "./pages/Auth";
 import ResetPassword from "./pages/ResetPassword";
 import NotFound from "./pages/NotFound";
