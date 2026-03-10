@@ -17,6 +17,7 @@ import { Timer, Star, ClipboardCheck, Camera, CreditCard, Upload, MessageSquare,
 import { RepairChat } from "@/components/messaging/RepairChat";
 import { StatusNotificationSuggester } from "@/components/messaging/StatusNotificationSuggester";
 import { MarginAnalysisCard } from "@/components/repairs/MarginAnalysisCard";
+import { PartsSelector, type PartUsed } from "@/components/repairs/PartsSelector";
 
 const statusLabels: Record<string, string> = {
   nouveau: "Nouveau", diagnostic: "Diagnostic", en_cours: "En cours",
