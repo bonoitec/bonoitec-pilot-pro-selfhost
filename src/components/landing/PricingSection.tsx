@@ -3,7 +3,7 @@ import { motion, useInView } from "framer-motion";
 import { useRef } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Check, Shield, Headphones, Zap } from "lucide-react";
+import { Check, Shield, Headphones, Zap, Sparkles } from "lucide-react";
 
 const features = [
   "Gestion complète des réparations",
@@ -69,7 +69,8 @@ const PricingSection = () => {
           transition={{ duration: 0.5 }}
           className="text-center max-w-2xl mx-auto mb-14"
         >
-          <div className="inline-flex items-center gap-2 rounded-full bg-primary/10 border border-primary/20 px-4 py-1.5 text-xs font-semibold text-primary mb-6">
+          <div className="inline-flex items-center gap-2 rounded-full gradient-primary-subtle border border-primary/20 px-4 py-1.5 text-xs font-semibold text-primary mb-6">
+            <Sparkles className="h-3.5 w-3.5" />
             Tarif unique
           </div>
           <h2 className="text-3xl sm:text-4xl font-bold font-display mb-4">
@@ -86,22 +87,22 @@ const PricingSection = () => {
           transition={{ duration: 0.5, delay: 0.1 }}
           className="max-w-3xl mx-auto"
         >
-          {/* Billing toggle */}
+          {/* Premium billing toggle */}
           <div className="flex justify-center mb-10">
-            <div className="inline-flex items-center gap-1 p-1.5 rounded-2xl bg-muted border border-border/60 w-full sm:w-auto">
+            <div className="inline-flex items-center gap-1 p-1.5 rounded-2xl bg-muted/60 border border-border/40 w-full sm:w-auto">
               {billingOptions.map((opt) => (
                 <button
                   key={opt.id}
                   onClick={() => setSelected(opt.id)}
-                  className={`relative flex-1 sm:flex-initial px-3 sm:px-6 py-3 rounded-xl text-xs sm:text-sm font-semibold transition-all duration-200 ${
+                  className={`relative flex-1 sm:flex-initial px-3 sm:px-6 py-3 rounded-xl text-xs sm:text-sm font-semibold transition-all duration-300 ${
                     selected === opt.id
-                      ? "bg-primary text-primary-foreground shadow-lg"
+                      ? "gradient-primary text-primary-foreground shadow-lg shadow-primary/25"
                       : "text-muted-foreground hover:text-foreground"
                   }`}
                 >
                   {opt.label}
                   {opt.popular && selected !== opt.id && (
-                    <span className="absolute -top-2 -right-1 bg-success text-success-foreground text-[10px] font-bold px-1.5 sm:px-2 py-0.5 rounded-full">
+                    <span className="absolute -top-2 -right-1 bg-success text-success-foreground text-[10px] font-bold px-1.5 sm:px-2 py-0.5 rounded-full shadow-sm">
                       -29%
                     </span>
                   )}
@@ -110,19 +111,21 @@ const PricingSection = () => {
             </div>
           </div>
 
-          {/* Main pricing card */}
-          <div className="relative rounded-3xl border-2 border-primary/20 bg-card shadow-2xl overflow-hidden">
-            <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-primary via-[hsl(280,80%,55%)] to-primary" />
+          {/* Premium pricing card */}
+          <div className="relative rounded-3xl border border-primary/20 bg-card shadow-premium-lg overflow-hidden">
+            {/* Gradient top border */}
+            <div className="absolute top-0 left-0 right-0 h-1 gradient-primary" />
+            {/* Subtle corner glow */}
+            <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-bl from-primary/5 via-transparent to-transparent" />
             
-            <div className="p-8 sm:p-12">
+            <div className="p-8 sm:p-12 relative">
               <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-8">
-                {/* Price */}
                 <div className="space-y-3">
                   <h3 className="text-xl font-bold font-display text-foreground">
                     BonoitecPilot — Offre complète
                   </h3>
                   <div className="flex items-baseline gap-2">
-                    <span className="text-6xl font-extrabold font-display text-foreground">
+                    <span className="text-6xl font-extrabold font-display gradient-text">
                       {current.price}€
                     </span>
                     <div className="text-muted-foreground">
@@ -138,12 +141,12 @@ const PricingSection = () => {
                   )}
                 </div>
 
-                {/* CTA */}
                 <div className="flex flex-col items-center lg:items-end gap-3">
                   <Button
+                    variant="premium"
                     size="lg"
                     asChild
-                    className="rounded-full px-10 h-14 text-base font-bold shadow-xl hover:shadow-2xl hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 w-full lg:w-auto"
+                    className="rounded-full px-10 h-14 text-base font-bold w-full lg:w-auto"
                   >
                     <Link to="/auth">Commencer l'essai gratuit</Link>
                   </Button>
@@ -153,16 +156,16 @@ const PricingSection = () => {
                 </div>
               </div>
 
-              {/* Divider */}
-              <div className="my-8 border-t border-border/60" />
+              <div className="my-8 border-t border-border/40" />
 
-              {/* Features grid */}
               <div>
                 <p className="text-sm font-semibold text-foreground mb-5">Tout est inclus :</p>
                 <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
                   {features.map((f) => (
                     <div key={f} className="flex items-center gap-2.5 text-sm">
-                      <Check className="h-4 w-4 text-success shrink-0" />
+                      <div className="flex h-5 w-5 items-center justify-center rounded-full bg-success/10">
+                        <Check className="h-3 w-3 text-success" />
+                      </div>
                       <span className="text-muted-foreground">{f}</span>
                     </div>
                   ))}
@@ -171,7 +174,6 @@ const PricingSection = () => {
             </div>
           </div>
 
-          {/* Reassurance */}
           <div className="flex flex-wrap justify-center gap-8 mt-10">
             {reassurance.map((r) => (
               <div key={r.text} className="flex items-center gap-2 text-sm text-muted-foreground">

@@ -16,8 +16,9 @@ const BenefitsSection = () => {
   const isInView = useInView(ref, { once: true, margin: "-80px" });
 
   return (
-    <section className="landing-section bg-muted/20" ref={ref}>
-      <div className="landing-container">
+    <section className="landing-section relative" ref={ref}>
+      <div className="absolute inset-0 bg-gradient-to-b from-transparent via-muted/20 to-transparent" />
+      <div className="landing-container relative">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={isInView ? { opacity: 1, y: 0 } : {}}
@@ -41,9 +42,9 @@ const BenefitsSection = () => {
               initial={{ opacity: 0, y: 20 }}
               animate={isInView ? { opacity: 1, y: 0 } : {}}
               transition={{ duration: 0.4, delay: i * 0.08 }}
-              className="landing-card p-7 group"
+              className="landing-card p-7 group hover-lift"
             >
-              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10 text-primary mb-5 group-hover:bg-primary group-hover:text-primary-foreground transition-colors duration-300">
+              <div className="flex h-12 w-12 items-center justify-center rounded-2xl gradient-primary-subtle text-primary mb-5 group-hover:gradient-primary group-hover:text-primary-foreground transition-all duration-500 shadow-sm group-hover:shadow-lg group-hover:shadow-primary/20">
                 <b.icon className="h-6 w-6" />
               </div>
               <h3 className="font-semibold text-lg font-display mb-2">{b.title}</h3>
