@@ -18,6 +18,7 @@ import { RepairChat } from "@/components/messaging/RepairChat";
 import { StatusNotificationSuggester } from "@/components/messaging/StatusNotificationSuggester";
 import { MarginAnalysisCard } from "@/components/repairs/MarginAnalysisCard";
 import { PartsSelector, type PartUsed } from "@/components/repairs/PartsSelector";
+import { ServiceSelector, type ServiceUsed } from "@/components/repairs/ServiceSelector";
 import { statusLabels, statusOrder } from "@/lib/repairStatuses";
 import { RestitutionDialog } from "@/components/dialogs/RestitutionDialog";
 
