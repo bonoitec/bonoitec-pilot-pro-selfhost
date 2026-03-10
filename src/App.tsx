@@ -6,6 +6,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { AppLayout } from "@/components/AppLayout";
+import { ScrollToTop } from "@/components/ScrollToTop";
 
 // Landing pages
 import LandingLayout from "@/components/landing/LandingLayout";
@@ -52,6 +53,7 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <AuthProvider>
+          <ScrollToTop />
           <Routes>
             {/* Public landing pages */}
             <Route element={<LandingLayout />}>
