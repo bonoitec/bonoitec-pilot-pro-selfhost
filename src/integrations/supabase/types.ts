@@ -307,6 +307,51 @@ export type Database = {
           },
         ]
       }
+      inventory_price_history: {
+        Row: {
+          created_at: string
+          id: string
+          inventory_id: string
+          new_price: number
+          old_price: number
+          organization_id: string
+          supplier: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          inventory_id: string
+          new_price?: number
+          old_price?: number
+          organization_id: string
+          supplier?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          inventory_id?: string
+          new_price?: number
+          old_price?: number
+          organization_id?: string
+          supplier?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "inventory_price_history_inventory_id_fkey"
+            columns: ["inventory_id"]
+            isOneToOne: false
+            referencedRelation: "inventory"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inventory_price_history_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       invoices: {
         Row: {
           client_id: string | null

@@ -6,8 +6,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Plus, Search, AlertTriangle, Pencil, Trash2 } from "lucide-react";
+import { Plus, Search, AlertTriangle, Pencil, Trash2, History } from "lucide-react";
 import { CreateStockDialog } from "@/components/dialogs/CreateStockDialog";
+import { PriceHistoryDialog } from "@/components/dialogs/PriceHistoryDialog";
 import { useToast } from "@/hooks/use-toast";
 
 const Stock = () => {
@@ -16,6 +17,7 @@ const Stock = () => {
   const [search, setSearch] = useState("");
   const [showCreate, setShowCreate] = useState(false);
   const [editingPart, setEditingPart] = useState<any>(null);
+  const [historyPart, setHistoryPart] = useState<any>(null);
 
   const { data: parts = [], isLoading } = useQuery({
     queryKey: ["inventory"],
@@ -115,6 +117,9 @@ const Stock = () => {
                         </td>
                         <td className="p-3 text-center">
                           <div className="flex justify-center gap-1">
+                            <Button variant="ghost" size="icon" className="h-7 w-7" title="Historique des prix" onClick={() => setHistoryPart(part)}>
+                              <History className="h-3 w-3" />
+                            </Button>
                             <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => { setEditingPart(part); setShowCreate(true); }}>
                               <Pencil className="h-3 w-3" />
                             </Button>
@@ -134,6 +139,7 @@ const Stock = () => {
       )}
 
       <CreateStockDialog open={showCreate} onOpenChange={setShowCreate} editingPart={editingPart} />
+      <PriceHistoryDialog open={!!historyPart} onOpenChange={(o) => !o && setHistoryPart(null)} part={historyPart} />
     </div>
   );
 };
