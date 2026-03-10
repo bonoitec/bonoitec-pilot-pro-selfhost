@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { TrendingUp, TrendingDown, Minus, DollarSign, Percent, Calculator, Package, Wrench as WrenchIcon } from "lucide-react";
-import { calculateMargin, getPartsTotal, type MarginResult } from "@/lib/margin";
+import { calculateMargin, getPartsTotal, getServicesTotal, type MarginResult } from "@/lib/margin";
 
 interface Props {
   repair: any;
