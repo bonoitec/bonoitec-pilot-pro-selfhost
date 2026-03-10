@@ -6,8 +6,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Plus, Search, AlertTriangle, Pencil, Trash2 } from "lucide-react";
+import { Plus, Search, AlertTriangle, Pencil, Trash2, History } from "lucide-react";
 import { CreateStockDialog } from "@/components/dialogs/CreateStockDialog";
+import { PriceHistoryDialog } from "@/components/dialogs/PriceHistoryDialog";
 import { useToast } from "@/hooks/use-toast";
 
 const Stock = () => {
