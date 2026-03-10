@@ -2,6 +2,7 @@ import { Outlet } from "react-router-dom";
 import LandingHeader from "./LandingHeader";
 import LandingFooter from "./LandingFooter";
 import { CookieConsent } from "@/components/CookieConsent";
+import { ProductChatWidget } from "@/components/landing/ProductChatWidget";
 
 const LandingLayout = () => (
   <div className="min-h-screen flex flex-col">
@@ -11,6 +12,7 @@ const LandingLayout = () => (
     </main>
     <LandingFooter />
     <CookieConsent />
+    <ProductChatWidget />
   </div>
 );
 
