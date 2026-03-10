@@ -104,9 +104,9 @@ const PricingSection = () => {
                   }`}
                 >
                   {opt.label}
-                  {opt.popular && selected !== opt.id && (
+                  {opt.discount && selected !== opt.id && (
                     <span className="absolute -top-2 -right-1 bg-success text-success-foreground text-[10px] font-bold px-1.5 sm:px-2 py-0.5 rounded-full shadow-sm">
-                      -29%
+                      {opt.discount}
                     </span>
                   )}
                 </button>
