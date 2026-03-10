@@ -286,8 +286,14 @@ export function RepairDetailDialog({ open, onOpenChange, repair }: Props) {
                 </Card>
               )}
 
-              {/* Margin Analysis */}
-              <MarginAnalysisCard repair={repair} />
+              {/* Labor cost */}
+              <div>
+                <Label className="text-xs">Coût main-d'œuvre (€)</Label>
+                <Input type="number" step="0.01" value={laborCost} onChange={e => setLaborCost(e.target.value)} placeholder="0.00" />
+              </div>
+
+              {/* Margin Analysis - uses live repair data + laborCost override */}
+              <MarginAnalysisCard repair={{ ...repair, labor_cost: laborCost ? parseFloat(laborCost) : 0, final_price: finalPrice ? parseFloat(finalPrice) : repair.final_price }} />
 
               <Separator />
 
