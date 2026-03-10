@@ -102,6 +102,8 @@ export function RepairDetailDialog({ open, onOpenChange, repair }: Props) {
       setFinalPrice(repair.final_price?.toString() || "");
       setPaymentMethod((repair as any)?.payment_method || "");
       setLaborCost((repair as any)?.labor_cost?.toString() || "0");
+      const raw = repair.parts_used;
+      setPartsUsed(Array.isArray(raw) ? raw.map((p: any) => ({ inventory_id: p.inventory_id, name: p.name || "", buy_price: Number(p.buy_price ?? p.cost ?? 0), sell_price: Number(p.sell_price ?? 0), quantity: Number(p.quantity ?? 1) })) : []);
       setShowPayment(false);
       setShowNotification(false);
       setPendingStatus("");
