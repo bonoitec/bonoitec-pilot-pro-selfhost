@@ -340,7 +340,7 @@ export async function generatePDF(org: OrgInfo, data: DocData, options?: { previ
       3: { halign: "right", cellWidth: 35, fontStyle: "bold" },
     },
     theme: "plain",
-    margin: { left: PAGE_LEFT, right: PAGE_RIGHT - PAGE_LEFT - CONTENT_WIDTH + PAGE_LEFT },
+    margin: { left: PAGE_LEFT, right: 20, bottom: FOOTER_ZONE + 5 },
     tableLineColor: [...GRAY_200],
     tableLineWidth: 0.2,
     didDrawPage: () => {
