@@ -40,6 +40,7 @@ import Articles from "./pages/Articles";
 import StockAlerts from "./pages/StockAlerts";
 import Messages from "./pages/Messages";
 import Auth from "./pages/Auth";
+import ResetPassword from "./pages/ResetPassword";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
