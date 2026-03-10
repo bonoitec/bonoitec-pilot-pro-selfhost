@@ -191,8 +191,8 @@ const LandingSupportDetail = forwardRef<HTMLDivElement>((_, ref) => {
                   <a href="tel:0465969585" className="text-primary hover:underline font-medium">04 65 96 95 85</a>
                 </p>
               </div>
-              <Button asChild size="sm" className="rounded-full font-bold shrink-0 shadow-md">
-                <a href="mailto:contact@bonoitecpilot.fr">Contacter le support</a>
+              <Button asChild size="sm" className="rounded-full font-bold shrink-0 shadow-md hover:scale-[1.02] active:scale-[0.98] transition-all duration-200">
+                <Link to="/contact">Contacter le support</Link>
               </Button>
             </div>
           </div>
