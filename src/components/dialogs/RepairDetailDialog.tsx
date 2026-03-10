@@ -170,6 +170,7 @@ export function RepairDetailDialog({ open, onOpenChange, repair }: Props) {
         final_price: finalPrice ? parseFloat(finalPrice) : null,
         labor_cost: laborCost ? parseFloat(laborCost) : 0,
         parts_used: partsUsed,
+        services_used: servicesUsed,
       };
       // Timer starts on "diagnostic" (Débuté)
       if (status === "diagnostic" && repair.status !== "diagnostic" && !repair.repair_started_at) {
