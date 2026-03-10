@@ -99,6 +99,8 @@ const WHITE = [255, 255, 255] as const;
 const PAGE_LEFT = 20;
 const PAGE_RIGHT = 190;
 const CONTENT_WIDTH = PAGE_RIGHT - PAGE_LEFT;
+const FOOTER_ZONE = 40; // reserved space at bottom for footer elements
+const PAGE_BOTTOM = 297 - FOOTER_ZONE; // max Y for content before footer
 
 function drawLine(doc: jsPDF, y: number, color = GRAY_200) {
   doc.setDrawColor(...color);
@@ -256,7 +258,7 @@ export async function generatePDF(org: OrgInfo, data: DocData, options?: { previ
     if (intake!.serialNumber) { doc.text(`IMEI / Série : ${intake!.serialNumber}`, deviceBlockX + 6, devY); devY += 3.5; }
   }
 
-  currentY += 40;
+  currentY += 42;
 
   // ═══════════════════════════════════════════
   // DEVICE CONDITION RATINGS (if present)
@@ -274,7 +276,7 @@ export async function generatePDF(org: OrgInfo, data: DocData, options?: { previ
     if (intake.screenCondition) { doc.text(`Écran : ${starText(intake.screenCondition)}`, PAGE_LEFT + 2, currentY); currentY += 4; }
     if (intake.frameCondition) { doc.text(`Châssis : ${starText(intake.frameCondition)}`, PAGE_LEFT + 2, currentY); currentY += 4; }
     if (intake.backCondition) { doc.text(`Vitre arrière : ${starText(intake.backCondition)}`, PAGE_LEFT + 2, currentY); currentY += 4; }
-    currentY += 4;
+    currentY += 6;
   }
 
   // Checklist
@@ -291,13 +293,13 @@ export async function generatePDF(org: OrgInfo, data: DocData, options?: { previ
       doc.text(`✓  ${item}`, PAGE_LEFT + 2, currentY);
       currentY += 3.8;
     });
-    currentY += 4;
+    currentY += 6;
   }
 
   // Page break check
-  if (currentY > 220) {
+  if (currentY > PAGE_BOTTOM - 40) {
     doc.addPage();
-    currentY = 20;
+    currentY = 14;
   }
 
   // ═══════════════════════════════════════════
@@ -339,10 +341,10 @@ export async function generatePDF(org: OrgInfo, data: DocData, options?: { previ
       3: { halign: "right", cellWidth: 35, fontStyle: "bold" },
     },
     theme: "plain",
-    margin: { left: PAGE_LEFT, right: PAGE_RIGHT - PAGE_LEFT - CONTENT_WIDTH + PAGE_LEFT },
+    margin: { left: PAGE_LEFT, right: 20, bottom: FOOTER_ZONE + 5 },
     tableLineColor: [...GRAY_200],
     tableLineWidth: 0.2,
-    didDrawPage: () => {
+    didDrawPage: (data: any) => {
       // redraw accent bar on new pages
       doc.setFillColor(...PRIMARY);
       doc.rect(0, 0, 210, 4, "F");
@@ -353,50 +355,59 @@ export async function generatePDF(org: OrgInfo, data: DocData, options?: { previ
   // TOTALS BLOCK — elegant right-aligned box
   // ═══════════════════════════════════════════
   
-  let finalY = (doc as any).lastAutoTable.finalY + 8;
+  let finalY = (doc as any).lastAutoTable.finalY + 10;
   const totalsX = 120;
   const totalsW = PAGE_RIGHT - totalsX;
 
+  // Check if totals fit on current page
+  const totalsHeight = vatEnabled ? 36 : 28;
+  if (finalY + totalsHeight > PAGE_BOTTOM) {
+    doc.addPage();
+    doc.setFillColor(...PRIMARY);
+    doc.rect(0, 0, 210, 4, "F");
+    finalY = 14;
+  }
+
   doc.setFillColor(...GRAY_50);
-  doc.roundedRect(totalsX, finalY - 2, totalsW, vatEnabled ? 32 : 24, 2, 2, "F");
+  doc.roundedRect(totalsX, finalY, totalsW, vatEnabled ? 30 : 22, 2, 2, "F");
 
   doc.setFontSize(8.5);
   doc.setFont("helvetica", "normal");
   doc.setTextColor(...GRAY_700);
 
   // Total HT
-  doc.text("Total HT", totalsX + 5, finalY + 4);
-  doc.text(`${data.totalHT.toFixed(2)} €`, PAGE_RIGHT - 5, finalY + 4, { align: "right" });
+  doc.text("Total HT", totalsX + 5, finalY + 6);
+  doc.text(`${data.totalHT.toFixed(2)} €`, PAGE_RIGHT - 5, finalY + 6, { align: "right" });
 
   if (vatEnabled) {
     const vatAmount = data.totalTTC - data.totalHT;
     // TVA
-    doc.text(`TVA (${data.vatRate}%)`, totalsX + 5, finalY + 11);
-    doc.text(`${vatAmount.toFixed(2)} €`, PAGE_RIGHT - 5, finalY + 11, { align: "right" });
+    doc.text(`TVA (${data.vatRate}%)`, totalsX + 5, finalY + 13);
+    doc.text(`${vatAmount.toFixed(2)} €`, PAGE_RIGHT - 5, finalY + 13, { align: "right" });
     
     // Separator
     doc.setDrawColor(...GRAY_200);
     doc.setLineWidth(0.3);
-    doc.line(totalsX + 5, finalY + 15, PAGE_RIGHT - 5, finalY + 15);
+    doc.line(totalsX + 5, finalY + 17, PAGE_RIGHT - 5, finalY + 17);
     
     // Total TTC
     doc.setFontSize(11);
     doc.setFont("helvetica", "bold");
     doc.setTextColor(...PRIMARY);
-    doc.text("Total TTC", totalsX + 5, finalY + 23);
-    doc.text(`${data.totalTTC.toFixed(2)} €`, PAGE_RIGHT - 5, finalY + 23, { align: "right" });
+    doc.text("Total TTC", totalsX + 5, finalY + 25);
+    doc.text(`${data.totalTTC.toFixed(2)} €`, PAGE_RIGHT - 5, finalY + 25, { align: "right" });
 
-    finalY += 36;
+    finalY += 38;
   } else {
     // TVA non applicable
     doc.setFontSize(7);
     doc.setFont("helvetica", "italic");
     doc.setTextColor(...GRAY_400);
-    doc.text("TVA non applicable, art. 293B du CGI", totalsX + 5, finalY + 11);
+    doc.text("TVA non applicable, art. 293B du CGI", totalsX + 5, finalY + 12);
     
     doc.setDrawColor(...GRAY_200);
     doc.setLineWidth(0.3);
-    doc.line(totalsX + 5, finalY + 14, PAGE_RIGHT - 5, finalY + 14);
+    doc.line(totalsX + 5, finalY + 15, PAGE_RIGHT - 5, finalY + 15);
     
     doc.setFontSize(11);
     doc.setFont("helvetica", "bold");
@@ -404,7 +415,7 @@ export async function generatePDF(org: OrgInfo, data: DocData, options?: { previ
     doc.text("Total", totalsX + 5, finalY + 21);
     doc.text(`${data.totalHT.toFixed(2)} €`, PAGE_RIGHT - 5, finalY + 21, { align: "right" });
 
-    finalY += 28;
+    finalY += 30;
   }
 
   // ═══════════════════════════════════════════
@@ -412,11 +423,12 @@ export async function generatePDF(org: OrgInfo, data: DocData, options?: { previ
   // ═══════════════════════════════════════════
 
   if (data.paymentMethod) {
+    if (finalY > PAGE_BOTTOM) { doc.addPage(); doc.setFillColor(...PRIMARY); doc.rect(0, 0, 210, 4, "F"); finalY = 14; }
     doc.setFontSize(8);
     doc.setFont("helvetica", "normal");
     doc.setTextColor(...GRAY_500);
     doc.text(`Mode de paiement : ${data.paymentMethod}`, PAGE_LEFT, finalY);
-    finalY += 6;
+    finalY += 8;
   }
 
   // ═══════════════════════════════════════════
@@ -424,38 +436,41 @@ export async function generatePDF(org: OrgInfo, data: DocData, options?: { previ
   // ═══════════════════════════════════════════
 
   if (data.notes) {
-    doc.setFillColor(...GRAY_50);
     const noteLines = doc.splitTextToSize(data.notes, CONTENT_WIDTH - 12);
-    const noteH = noteLines.length * 3.5 + 10;
+    const noteH = noteLines.length * 3.8 + 14;
+    
+    if (finalY + noteH > PAGE_BOTTOM) { doc.addPage(); doc.setFillColor(...PRIMARY); doc.rect(0, 0, 210, 4, "F"); finalY = 14; }
+
+    doc.setFillColor(...GRAY_50);
     doc.roundedRect(PAGE_LEFT, finalY, CONTENT_WIDTH, noteH, 2, 2, "F");
 
     doc.setFontSize(7);
     doc.setFont("helvetica", "bold");
     doc.setTextColor(...PRIMARY);
-    doc.text("NOTES", PAGE_LEFT + 6, finalY + 5);
+    doc.text("NOTES", PAGE_LEFT + 6, finalY + 6);
 
     doc.setFont("helvetica", "normal");
     doc.setFontSize(7.5);
     doc.setTextColor(...GRAY_500);
-    doc.text(noteLines, PAGE_LEFT + 6, finalY + 10);
+    doc.text(noteLines, PAGE_LEFT + 6, finalY + 12);
 
-    finalY += noteH + 6;
+    finalY += noteH + 8;
   }
 
   // ═══════════════════════════════════════════
   // CUSTOMER SIGNATURE
   // ═══════════════════════════════════════════
 
-  if (intake?.signatureUrl && finalY < 245) {
+  if (intake?.signatureUrl && finalY + 30 < PAGE_BOTTOM) {
     doc.setFontSize(7);
     doc.setFont("helvetica", "bold");
     doc.setTextColor(...PRIMARY);
-    doc.text("SIGNATURE CLIENT", PAGE_LEFT, finalY + 3);
+    doc.text("SIGNATURE CLIENT", PAGE_LEFT, finalY + 4);
     const sigImg = await loadImage(intake.signatureUrl);
     if (sigImg) {
-      doc.addImage(sigImg, "PNG", PAGE_LEFT, finalY + 5, 50, 20);
+      doc.addImage(sigImg, "PNG", PAGE_LEFT, finalY + 7, 50, 20);
     }
-    finalY += 28;
+    finalY += 32;
   }
 
   // ═══════════════════════════════════════════
@@ -490,14 +505,18 @@ export async function generatePDF(org: OrgInfo, data: DocData, options?: { previ
   if (org.google_review_url && isInvoice) {
     const pageCount = doc.getNumberOfPages();
     doc.setPage(pageCount);
-    const qrY = Math.min(finalY + 4, 262);
-    doc.setFontSize(7.5);
-    doc.setFont("helvetica", "normal");
-    doc.setTextColor(...GRAY_500);
-    doc.text("⭐ Laissez-nous un avis Google :", PAGE_LEFT, qrY);
-    doc.setTextColor(...PRIMARY);
-    doc.textWithLink(org.google_review_url, PAGE_LEFT, qrY + 4, { url: org.google_review_url });
-    doc.setTextColor(0);
+    const pageH = doc.internal.pageSize.getHeight();
+    // Place above the footer zone, never overlapping
+    const qrY = Math.min(finalY + 4, pageH - FOOTER_ZONE - 2);
+    if (qrY > 14 && qrY < pageH - FOOTER_ZONE) {
+      doc.setFontSize(7.5);
+      doc.setFont("helvetica", "normal");
+      doc.setTextColor(...GRAY_500);
+      doc.text("⭐ Laissez-nous un avis Google :", PAGE_LEFT, qrY);
+      doc.setTextColor(...PRIMARY);
+      doc.textWithLink(org.google_review_url, PAGE_LEFT, qrY + 4, { url: org.google_review_url });
+      doc.setTextColor(0);
+    }
   }
 
   // ═══════════════════════════════════════════
@@ -513,7 +532,9 @@ export async function generatePDF(org: OrgInfo, data: DocData, options?: { previ
       doc.setFont("helvetica", "normal");
       doc.setTextColor(...GRAY_400);
       const footerLines = doc.splitTextToSize(org.invoice_footer, CONTENT_WIDTH);
-      doc.text(footerLines, 105, pageH - 22, { align: "center" });
+      // Place custom footer above the accent line, with enough clearance
+      const footerTextY = pageH - 20 - (footerLines.length * 3);
+      doc.text(footerLines, 105, footerTextY, { align: "center" });
       doc.setTextColor(0);
     }
   }
@@ -527,19 +548,20 @@ export async function generatePDF(org: OrgInfo, data: DocData, options?: { previ
     doc.setPage(i);
     const pageH = doc.internal.pageSize.getHeight();
 
-    // Bottom accent line
+    // Bottom accent line — well below content, above company info
     doc.setDrawColor(...PRIMARY);
-    doc.setLineWidth(0.5);
-    doc.line(PAGE_LEFT, pageH - 12, PAGE_RIGHT, pageH - 12);
+    doc.setLineWidth(0.4);
+    doc.line(PAGE_LEFT, pageH - 14, PAGE_RIGHT, pageH - 14);
 
+    // Company summary — below the accent line
     doc.setFontSize(6);
     doc.setFont("helvetica", "normal");
     doc.setTextColor(...GRAY_400);
     const footerParts = [org.name, org.siret ? `SIRET : ${org.siret}` : "", org.vat_number ? `TVA : ${org.vat_number}` : "", fullAddress].filter(Boolean);
-    doc.text(footerParts.join("  •  "), 105, pageH - 7, { align: "center" });
+    doc.text(footerParts.join("  •  "), 105, pageH - 9, { align: "center" });
 
     // Page number
-    doc.text(`Page ${i} / ${totalPages}`, PAGE_RIGHT, pageH - 7, { align: "right" });
+    doc.text(`Page ${i} / ${totalPages}`, PAGE_RIGHT, pageH - 5, { align: "right" });
     doc.setTextColor(0);
   }
 
