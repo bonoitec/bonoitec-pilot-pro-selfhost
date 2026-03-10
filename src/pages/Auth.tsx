@@ -109,9 +109,10 @@ const Auth = () => {
     `h-[42px] text-sm bg-background border-border/50 focus:border-primary transition-colors ${err ? "border-destructive" : ""}`;
 
   return (
-    <div className="min-h-screen bg-background flex">
+    <div className="min-h-screen bg-background flex justify-center">
+      <div className="flex w-full max-w-[1200px]">
       {/* LEFT — Visual panel */}
-      <div className="hidden lg:flex lg:w-[52%] relative overflow-hidden bg-gradient-to-br from-primary/[0.04] via-background to-accent/30">
+      <div className="hidden lg:flex lg:w-[50%] relative overflow-hidden bg-gradient-to-br from-primary/[0.04] via-background to-accent/30">
         <div className="absolute inset-0">
           <div className="absolute top-[-20%] left-[-10%] w-[600px] h-[600px] bg-primary/[0.06] rounded-full blur-[100px]" />
           <div className="absolute bottom-[-15%] right-[-5%] w-[500px] h-[500px] bg-accent/40 rounded-full blur-[100px]" />
