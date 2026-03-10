@@ -44,7 +44,10 @@ export function CreateClientDialog({ open, onOpenChange }: Props) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
-        <DialogHeader><DialogTitle>Nouveau client</DialogTitle></DialogHeader>
+        <DialogHeader>
+          <DialogTitle>Nouveau client</DialogTitle>
+          <DialogDescription>Remplissez les informations du nouveau client.</DialogDescription>
+        </DialogHeader>
         <div className="space-y-3">
           <div><Label>Nom *</Label><Input value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} placeholder="Nom complet" /></div>
           <div className="grid grid-cols-2 gap-3">

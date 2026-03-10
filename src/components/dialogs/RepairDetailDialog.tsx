@@ -165,6 +165,7 @@ export function RepairDetailDialog({ open, onOpenChange, repair }: Props) {
     onSuccess: () => {
       toast({ title: "Réparation mise à jour" });
       qc.invalidateQueries({ queryKey: ["repairs"] });
+      qc.invalidateQueries({ queryKey: ["sales-repairs"] });
       qc.invalidateQueries({ queryKey: ["dashboard-repairs"] });
       qc.invalidateQueries({ queryKey: ["inventory-for-parts"] });
       qc.invalidateQueries({ queryKey: ["inventory"] });

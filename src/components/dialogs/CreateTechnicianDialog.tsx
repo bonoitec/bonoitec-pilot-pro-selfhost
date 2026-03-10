@@ -40,7 +40,10 @@ export function CreateTechnicianDialog({ open, onOpenChange }: Props) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-sm">
-        <DialogHeader><DialogTitle>Ajouter un technicien</DialogTitle></DialogHeader>
+        <DialogHeader>
+          <DialogTitle>Ajouter un technicien</DialogTitle>
+          <DialogDescription>Remplissez les informations du technicien.</DialogDescription>
+        </DialogHeader>
         <div className="space-y-3">
           <div><Label>Nom *</Label><Input value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} placeholder="Nom complet" /></div>
           <div><Label>Spécialité</Label><Input value={form.specialty} onChange={e => setForm({ ...form, specialty: e.target.value })} placeholder="Écrans, micro-soudure..." /></div>
