@@ -309,7 +309,23 @@ const Auth = () => {
                 <div className="space-y-1">
                   <div className="flex items-center justify-between">
                     <Label htmlFor="l-pw" className="text-xs font-medium">Mot de passe</Label>
-                    <button type="button" className="text-[11px] text-primary hover:text-primary/80 font-medium transition-colors">
+                    <button
+                      type="button"
+                      className="text-[11px] text-primary hover:text-primary/80 font-medium transition-colors"
+                      onClick={async () => {
+                        if (!loginEmail.trim()) {
+                          toast.error("Entrez votre e-mail d'abord.");
+                          return;
+                        }
+                        setLoading(true);
+                        const { error } = await supabase.auth.resetPasswordForEmail(loginEmail, {
+                          redirectTo: `${window.location.origin}/reset-password`,
+                        });
+                        setLoading(false);
+                        if (error) toast.error(error.message);
+                        else toast.success("Un e-mail de réinitialisation a été envoyé.");
+                      }}
+                    >
                       Mot de passe oublié ?
                     </button>
                   </div>
