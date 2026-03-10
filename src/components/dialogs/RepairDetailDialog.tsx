@@ -129,6 +129,29 @@ export function RepairDetailDialog({ open, onOpenChange, repair }: Props) {
       if (paymentMethod) updates.payment_method = paymentMethod;
       const { error } = await supabase.from("repairs").update(updates).eq("id", repair.id);
       if (error) throw error;
+
+      // Deduct stock: compute delta between old and new parts
+      const oldParts: PartUsed[] = Array.isArray(repair.parts_used)
+        ? repair.parts_used.map((p: any) => ({ inventory_id: p.inventory_id, quantity: Number(p.quantity ?? 1) }))
+        : [];
+      const oldQtyMap = new Map<string, number>();
+      oldParts.forEach((p) => { if (p.inventory_id) oldQtyMap.set(p.inventory_id, (oldQtyMap.get(p.inventory_id) || 0) + p.quantity); });
+      const newQtyMap = new Map<string, number>();
+      partsUsed.forEach((p) => { if (p.inventory_id) newQtyMap.set(p.inventory_id, (newQtyMap.get(p.inventory_id) || 0) + p.quantity); });
+
+      // For each inventory item, compute net change and update
+      const allIds = new Set([...oldQtyMap.keys(), ...newQtyMap.keys()]);
+      for (const id of allIds) {
+        const oldQty = oldQtyMap.get(id) || 0;
+        const newQty = newQtyMap.get(id) || 0;
+        const delta = newQty - oldQty; // positive = need to deduct more
+        if (delta === 0) continue;
+        // Fetch current stock
+        const { data: inv } = await supabase.from("inventory").select("quantity").eq("id", id).single();
+        if (!inv) continue;
+        const updatedQty = Math.max(0, inv.quantity - delta);
+        await supabase.from("inventory").update({ quantity: updatedQty }).eq("id", id);
+      }
     },
     onSuccess: () => {
       toast({ title: "Réparation mise à jour" });
