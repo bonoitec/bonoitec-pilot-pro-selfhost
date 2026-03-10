@@ -77,6 +77,8 @@ const SettingsPage = () => {
         vat_enabled: form.vat_enabled,
         logo_url: form.logo_url || null,
         intake_checklist_items: form.intake_checklist_items,
+        checklist_label: form.checklist_label.trim() || "Checklist de prise en charge",
+        article_categories: form.article_categories.filter(c => c.trim() !== ""),
       } as any).eq("id", org.id);
       if (error) throw error;
     },
