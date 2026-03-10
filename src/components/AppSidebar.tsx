@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/sidebar";
 
 const mainItems = [
-  { title: "Dashboard", url: "/", icon: LayoutDashboard },
+  { title: "Dashboard", url: "/dashboard", icon: LayoutDashboard },
   { title: "Réparations", url: "/repairs", icon: Wrench },
   { title: "Messages", url: "/messages", icon: MessageSquare },
   { title: "Clients", url: "/clients", icon: Users },
