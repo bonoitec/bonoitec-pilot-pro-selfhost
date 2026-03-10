@@ -94,6 +94,7 @@ export function CreateRepairWizard({ open, onOpenChange }: Props) {
   const [repairType, setRepairType] = useState("");
   const [issue, setIssue] = useState("");
   const [estimatedPrice, setEstimatedPrice] = useState("");
+  const [laborCost, setLaborCost] = useState("");
 
   // Step 7 — Planning
   const [technicianId, setTechnicianId] = useState("");
