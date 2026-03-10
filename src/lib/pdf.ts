@@ -547,19 +547,20 @@ export async function generatePDF(org: OrgInfo, data: DocData, options?: { previ
     doc.setPage(i);
     const pageH = doc.internal.pageSize.getHeight();
 
-    // Bottom accent line
+    // Bottom accent line — well below content, above company info
     doc.setDrawColor(...PRIMARY);
-    doc.setLineWidth(0.5);
-    doc.line(PAGE_LEFT, pageH - 12, PAGE_RIGHT, pageH - 12);
+    doc.setLineWidth(0.4);
+    doc.line(PAGE_LEFT, pageH - 14, PAGE_RIGHT, pageH - 14);
 
+    // Company summary — below the accent line
     doc.setFontSize(6);
     doc.setFont("helvetica", "normal");
     doc.setTextColor(...GRAY_400);
     const footerParts = [org.name, org.siret ? `SIRET : ${org.siret}` : "", org.vat_number ? `TVA : ${org.vat_number}` : "", fullAddress].filter(Boolean);
-    doc.text(footerParts.join("  •  "), 105, pageH - 7, { align: "center" });
+    doc.text(footerParts.join("  •  "), 105, pageH - 9, { align: "center" });
 
     // Page number
-    doc.text(`Page ${i} / ${totalPages}`, PAGE_RIGHT, pageH - 7, { align: "right" });
+    doc.text(`Page ${i} / ${totalPages}`, PAGE_RIGHT, pageH - 5, { align: "right" });
     doc.setTextColor(0);
   }
 
