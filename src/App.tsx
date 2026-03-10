@@ -6,6 +6,17 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { AppLayout } from "@/components/AppLayout";
+
+// Landing pages
+import LandingLayout from "@/components/landing/LandingLayout";
+import Landing from "./pages/Landing";
+import LandingFonctionnalites from "./pages/LandingFonctionnalites";
+import LandingTarifs from "./pages/LandingTarifs";
+import LandingBlog from "./pages/LandingBlog";
+import LandingSupport from "./pages/LandingSupport";
+import LandingSupportDetail from "./pages/LandingSupportDetail";
+
+// App pages
 import Index from "./pages/Index";
 import Repairs from "./pages/Repairs";
 import Clients from "./pages/Clients";
@@ -40,14 +51,25 @@ const App = () => (
       <BrowserRouter>
         <AuthProvider>
           <Routes>
-            {/* Public pages */}
+            {/* Public landing pages */}
+            <Route element={<LandingLayout />}>
+              <Route path="/" element={<Landing />} />
+              <Route path="/fonctionnalites" element={<LandingFonctionnalites />} />
+              <Route path="/tarifs" element={<LandingTarifs />} />
+              <Route path="/blog" element={<LandingBlog />} />
+              <Route path="/support" element={<LandingSupport />} />
+              <Route path="/support/:slug" element={<LandingSupportDetail />} />
+            </Route>
+
+            {/* Auth pages */}
             <Route path="/auth" element={<Auth />} />
+            <Route path="/login" element={<Auth />} />
             <Route path="/repair/:code" element={<RepairTracking />} />
             <Route path="/deposit/:code" element={<DepositForm />} />
 
             {/* Protected app pages */}
             <Route element={<ProtectedRoute><AppLayout /></ProtectedRoute>}>
-              <Route path="/" element={<Index />} />
+              <Route path="/dashboard" element={<Index />} />
               <Route path="/repairs" element={<Repairs />} />
               <Route path="/clients" element={<Clients />} />
               <Route path="/devices" element={<Devices />} />
