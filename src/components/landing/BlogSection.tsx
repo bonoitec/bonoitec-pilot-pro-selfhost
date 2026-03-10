@@ -90,6 +90,8 @@ const BlogSection = forwardRef<HTMLElement, { expanded?: boolean }>(({ expanded 
       </div>
     </section>
   );
-};
+});
+
+BlogSection.displayName = "BlogSection";
 
 export default BlogSection;
