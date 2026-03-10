@@ -33,6 +33,8 @@ const SettingsPage = () => {
     vat_number: "", ape_code: "", website: "", invoice_footer: "",
     google_review_url: "", vat_enabled: true, logo_url: "",
     intake_checklist_items: [] as string[],
+    checklist_label: "Checklist de prise en charge",
+    article_categories: [] as string[],
   });
 
   useEffect(() => {
