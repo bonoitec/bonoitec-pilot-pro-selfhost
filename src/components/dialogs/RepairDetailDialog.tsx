@@ -13,17 +13,13 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
-import { Timer, Star, ClipboardCheck, Camera, CreditCard, Upload, MessageSquare, FileText } from "lucide-react";
+import { Timer, Star, ClipboardCheck, Camera, CreditCard, Upload, MessageSquare, FileText, AlertTriangle } from "lucide-react";
 import { RepairChat } from "@/components/messaging/RepairChat";
 import { StatusNotificationSuggester } from "@/components/messaging/StatusNotificationSuggester";
 import { MarginAnalysisCard } from "@/components/repairs/MarginAnalysisCard";
 import { PartsSelector, type PartUsed } from "@/components/repairs/PartsSelector";
+import { statusLabels, statusOrder } from "@/lib/repairStatuses";
 
-const statusLabels: Record<string, string> = {
-  nouveau: "Nouveau", diagnostic: "Diagnostic", en_cours: "En cours",
-  en_attente_piece: "En attente de pièce", termine: "Terminé", pret_a_recuperer: "Prêt à récupérer",
-};
-const statusOrder = ["nouveau", "diagnostic", "en_cours", "en_attente_piece", "termine", "pret_a_recuperer"];
 const paymentMethods = [
   { value: "cb", label: "Carte bancaire" },
   { value: "especes", label: "Espèces" },
@@ -32,8 +28,11 @@ const paymentMethods = [
   { value: "autre", label: "Autre" },
 ];
 
-function LiveTimer({ startedAt }: { startedAt: string }) {
+function LiveTimer({ startedAt, estimatedMinutes }: { startedAt: string; estimatedMinutes?: number | null }) {
   const [elapsed, setElapsed] = useState("");
+  const [overTime, setOverTime] = useState(false);
+  const [progress, setProgress] = useState(0);
+
   useEffect(() => {
     const update = () => {
       const ms = Date.now() - new Date(startedAt).getTime();
@@ -41,17 +40,48 @@ function LiveTimer({ startedAt }: { startedAt: string }) {
       const m = Math.floor((ms % 3600000) / 60000);
       const s = Math.floor((ms % 60000) / 1000);
       setElapsed(`${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`);
+      if (estimatedMinutes && estimatedMinutes > 0) {
+        const elapsedMin = ms / 60000;
+        setProgress(Math.min((elapsedMin / estimatedMinutes) * 100, 150));
+        setOverTime(elapsedMin > estimatedMinutes);
+      }
     };
     update();
     const iv = setInterval(update, 1000);
     return () => clearInterval(iv);
-  }, [startedAt]);
+  }, [startedAt, estimatedMinutes]);
+
   return (
-    <div className="flex items-center gap-2 rounded-lg bg-primary/10 border border-primary/20 p-3">
-      <Timer className="h-5 w-5 text-primary" />
-      <div>
-        <p className="text-xs text-muted-foreground">Durée de réparation</p>
-        <p className="text-lg font-mono font-bold text-primary">{elapsed}</p>
+    <div className={`flex items-center gap-3 rounded-lg border p-3 ${overTime ? "bg-destructive/10 border-destructive/20" : "bg-primary/10 border-primary/20"}`}>
+      <Timer className={`h-5 w-5 ${overTime ? "text-destructive" : "text-primary"}`} />
+      <div className="flex-1">
+        <div className="flex items-center justify-between">
+          <p className="text-xs text-muted-foreground">Durée de réparation</p>
+          {estimatedMinutes && estimatedMinutes > 0 && (
+            <p className="text-[10px] text-muted-foreground">
+              Estimé : {estimatedMinutes} min
+            </p>
+          )}
+        </div>
+        <p className={`text-lg font-mono font-bold ${overTime ? "text-destructive" : "text-primary"}`}>{elapsed}</p>
+        {estimatedMinutes && estimatedMinutes > 0 && (
+          <div className="mt-1.5">
+            <div className="h-1.5 w-full rounded-full bg-muted overflow-hidden">
+              <div
+                className={`h-full rounded-full transition-all duration-1000 ${
+                  overTime ? "bg-destructive" : progress > 80 ? "bg-warning" : "bg-primary"
+                }`}
+                style={{ width: `${Math.min(progress, 100)}%` }}
+              />
+            </div>
+            {overTime && (
+              <div className="flex items-center gap-1 mt-1">
+                <AlertTriangle className="h-3 w-3 text-destructive" />
+                <span className="text-[10px] text-destructive font-medium">Temps estimé dépassé</span>
+              </div>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );
@@ -84,8 +114,8 @@ export function RepairDetailDialog({ open, onOpenChange, repair }: Props) {
   const [diagnostic, setDiagnostic] = useState(repair?.diagnostic || "");
   const [techMessage, setTechMessage] = useState(repair?.technician_message || "");
   const [finalPrice, setFinalPrice] = useState(repair?.final_price?.toString() || "");
-  const [paymentMethod, setPaymentMethod] = useState((repair as any)?.payment_method || "");
-  const [laborCost, setLaborCost] = useState((repair as any)?.labor_cost?.toString() || "0");
+  const [paymentMethod, setPaymentMethod] = useState(repair?.payment_method || "");
+  const [laborCost, setLaborCost] = useState(repair?.labor_cost?.toString() || "0");
   const [partsUsed, setPartsUsed] = useState<PartUsed[]>(() => {
     const raw = repair?.parts_used;
     return Array.isArray(raw) ? raw.map((p: any) => ({ inventory_id: p.inventory_id, name: p.name || "", buy_price: Number(p.buy_price ?? p.cost ?? 0), sell_price: Number(p.sell_price ?? 0), quantity: Number(p.quantity ?? 1) })) : [];
@@ -109,8 +139,8 @@ export function RepairDetailDialog({ open, onOpenChange, repair }: Props) {
       setDiagnostic(repair.diagnostic || "");
       setTechMessage(repair.technician_message || "");
       setFinalPrice(repair.final_price?.toString() || "");
-      setPaymentMethod((repair as any)?.payment_method || "");
-      setLaborCost((repair as any)?.labor_cost?.toString() || "0");
+      setPaymentMethod(repair.payment_method || "");
+      setLaborCost(repair.labor_cost?.toString() || "0");
       const raw = repair.parts_used;
       setPartsUsed(Array.isArray(raw) ? raw.map((p: any) => ({ inventory_id: p.inventory_id, name: p.name || "", buy_price: Number(p.buy_price ?? p.cost ?? 0), sell_price: Number(p.sell_price ?? 0), quantity: Number(p.quantity ?? 1) })) : []);
       setShowPayment(false);
@@ -129,9 +159,11 @@ export function RepairDetailDialog({ open, onOpenChange, repair }: Props) {
         labor_cost: laborCost ? parseFloat(laborCost) : 0,
         parts_used: partsUsed,
       };
-      if (status === "en_cours" && repair.status !== "en_cours" && !(repair as any).repair_started_at) {
+      // Timer starts on "diagnostic" (Débuté)
+      if (status === "diagnostic" && repair.status !== "diagnostic" && !repair.repair_started_at) {
         updates.repair_started_at = new Date().toISOString();
       }
+      // Timer ends on "termine" or "pret_a_recuperer"
       if ((status === "termine" || status === "pret_a_recuperer") && repair.status !== status) {
         updates.repair_ended_at = new Date().toISOString();
       }
@@ -148,14 +180,12 @@ export function RepairDetailDialog({ open, onOpenChange, repair }: Props) {
       const newQtyMap = new Map<string, number>();
       partsUsed.forEach((p) => { if (p.inventory_id) newQtyMap.set(p.inventory_id, (newQtyMap.get(p.inventory_id) || 0) + p.quantity); });
 
-      // For each inventory item, compute net change and update
       const allIds = new Set([...oldQtyMap.keys(), ...newQtyMap.keys()]);
       for (const id of allIds) {
         const oldQty = oldQtyMap.get(id) || 0;
         const newQty = newQtyMap.get(id) || 0;
-        const delta = newQty - oldQty; // positive = need to deduct more
+        const delta = newQty - oldQty;
         if (delta === 0) continue;
-        // Fetch current stock
         const { data: inv } = await supabase.from("inventory").select("quantity").eq("id", id).single();
         if (!inv) continue;
         const updatedQty = Math.max(0, inv.quantity - delta);
@@ -169,7 +199,6 @@ export function RepairDetailDialog({ open, onOpenChange, repair }: Props) {
       qc.invalidateQueries({ queryKey: ["dashboard-repairs"] });
       qc.invalidateQueries({ queryKey: ["inventory-for-parts"] });
       qc.invalidateQueries({ queryKey: ["inventory"] });
-      // Show notification suggestion if status changed
       if (status !== repair.status) {
         setPendingStatus(status);
         setShowNotification(true);
@@ -182,7 +211,8 @@ export function RepairDetailDialog({ open, onOpenChange, repair }: Props) {
 
   const handleStatusChange = (newStatus: string) => {
     setStatus(newStatus);
-    if (newStatus === "pret_a_recuperer" || newStatus === "termine") {
+    // Show payment section for "Restitué" (pret_a_recuperer)
+    if (newStatus === "pret_a_recuperer") {
       setShowPayment(true);
     } else {
       setShowPayment(false);
@@ -204,7 +234,7 @@ export function RepairDetailDialog({ open, onOpenChange, repair }: Props) {
 
   if (!repair) return null;
 
-  const intakeChecklist = (repair as any).intake_checklist as string[] | null;
+  const intakeChecklist = repair.intake_checklist as string[] | null;
   const photos = (repair.photos as string[]) || [];
 
   return (
@@ -220,7 +250,6 @@ export function RepairDetailDialog({ open, onOpenChange, repair }: Props) {
           <DialogDescription className="sr-only">Détails de la réparation {repair.reference}</DialogDescription>
         </DialogHeader>
 
-        {/* Notification suggestion after status change */}
         {showNotification && pendingStatus && (
           <StatusNotificationSuggester
             repair={repair}
@@ -247,18 +276,18 @@ export function RepairDetailDialog({ open, onOpenChange, repair }: Props) {
               </div>
               <div className="text-sm"><span className="text-muted-foreground">Problème:</span> <p className="mt-1">{repair.issue}</p></div>
 
-              {/* Timer */}
-              {(repair as any).repair_started_at && !(repair as any).repair_ended_at && (
-                <LiveTimer startedAt={(repair as any).repair_started_at} />
+              {/* Timer - active when started but not ended */}
+              {repair.repair_started_at && !repair.repair_ended_at && (
+                <LiveTimer startedAt={repair.repair_started_at} estimatedMinutes={repair.estimated_time_minutes} />
               )}
-              {(repair as any).repair_started_at && (repair as any).repair_ended_at && (
+              {repair.repair_started_at && repair.repair_ended_at && (
                 <div className="flex items-center gap-2 rounded-lg bg-success/10 border border-success/20 p-3">
                   <Timer className="h-5 w-5 text-success" />
                   <div>
                     <p className="text-xs text-muted-foreground">Durée totale</p>
                     <p className="text-sm font-mono font-bold text-success">
                       {(() => {
-                        const ms = new Date((repair as any).repair_ended_at).getTime() - new Date((repair as any).repair_started_at).getTime();
+                        const ms = new Date(repair.repair_ended_at).getTime() - new Date(repair.repair_started_at).getTime();
                         const h = Math.floor(ms / 3600000);
                         const m = Math.floor((ms % 3600000) / 60000);
                         return `${h}h${String(m).padStart(2, "0")}`;
@@ -285,15 +314,15 @@ export function RepairDetailDialog({ open, onOpenChange, repair }: Props) {
               )}
 
               {/* Condition */}
-              {((repair as any).screen_condition || (repair as any).frame_condition || (repair as any).back_condition) && (
+              {(repair.screen_condition || repair.frame_condition || repair.back_condition) && (
                 <Card className="border-border/60">
                   <CardHeader className="pb-2 pt-3 px-4">
                     <CardTitle className="text-sm flex items-center gap-2"><Star className="h-4 w-4 text-warning" />État de l'appareil</CardTitle>
                   </CardHeader>
                   <CardContent className="px-4 pb-3 space-y-1">
-                    <ConditionStars value={(repair as any).screen_condition} label="Écran" />
-                    <ConditionStars value={(repair as any).frame_condition} label="Châssis" />
-                    <ConditionStars value={(repair as any).back_condition} label="Vitre arrière" />
+                    <ConditionStars value={repair.screen_condition} label="Écran" />
+                    <ConditionStars value={repair.frame_condition} label="Châssis" />
+                    <ConditionStars value={repair.back_condition} label="Vitre arrière" />
                   </CardContent>
                 </Card>
               )}
@@ -319,13 +348,13 @@ export function RepairDetailDialog({ open, onOpenChange, repair }: Props) {
               </Card>
 
               {/* Customer Signature */}
-              {(repair as any).customer_signature_url && (
+              {repair.customer_signature_url && (
                 <Card className="border-border/60">
                   <CardHeader className="pb-2 pt-3 px-4">
                     <CardTitle className="text-sm flex items-center gap-2"><PenTool className="h-4 w-4 text-primary" />Signature du client</CardTitle>
                   </CardHeader>
                   <CardContent className="px-4 pb-3">
-                    <img src={(repair as any).customer_signature_url} alt="Signature client" className="max-h-[100px] border border-border rounded-lg p-2 bg-card" />
+                    <img src={repair.customer_signature_url} alt="Signature client" className="max-h-[100px] border border-border rounded-lg p-2 bg-card" />
                   </CardContent>
                 </Card>
               )}
@@ -339,7 +368,7 @@ export function RepairDetailDialog({ open, onOpenChange, repair }: Props) {
                 <Input type="number" step="0.01" value={laborCost} onChange={e => setLaborCost(e.target.value)} placeholder="0.00" />
               </div>
 
-              {/* Margin Analysis - uses live repair data + laborCost override */}
+              {/* Margin Analysis */}
               <MarginAnalysisCard repair={{ ...repair, parts_used: partsUsed, labor_cost: laborCost ? parseFloat(laborCost) : 0, final_price: finalPrice ? parseFloat(finalPrice) : repair.final_price }} />
 
               <Separator />
@@ -353,11 +382,11 @@ export function RepairDetailDialog({ open, onOpenChange, repair }: Props) {
                 </Select>
               </div>
 
-              {/* Payment section */}
+              {/* Payment section - shown when Restitué */}
               {showPayment && (
                 <Card className="border-warning/30 bg-warning/5">
                   <CardHeader className="pb-2 pt-3 px-4">
-                    <CardTitle className="text-sm flex items-center gap-2"><CreditCard className="h-4 w-4 text-warning" />Paiement</CardTitle>
+                    <CardTitle className="text-sm flex items-center gap-2"><CreditCard className="h-4 w-4 text-warning" />Paiement & Facturation</CardTitle>
                   </CardHeader>
                   <CardContent className="px-4 pb-3 space-y-3">
                     <div>
@@ -373,6 +402,9 @@ export function RepairDetailDialog({ open, onOpenChange, repair }: Props) {
                         </SelectContent>
                       </Select>
                     </div>
+                    <p className="text-[11px] text-muted-foreground">
+                      La facture sera automatiquement générée lors de l'enregistrement.
+                    </p>
                   </CardContent>
                 </Card>
               )}

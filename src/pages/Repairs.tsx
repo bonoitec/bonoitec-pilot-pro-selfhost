@@ -7,25 +7,13 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Plus, Search, LayoutGrid, List, Timer } from "lucide-react";
+import { Plus, Search, LayoutGrid, List, Timer, GripVertical } from "lucide-react";
 import { CreateRepairWizard } from "@/components/dialogs/CreateRepairWizard";
 import { RepairDetailDialog } from "@/components/dialogs/RepairDetailDialog";
 import { DragDropContext, Droppable, Draggable, DropResult } from "@hello-pangea/dnd";
 import { useToast } from "@/hooks/use-toast";
-
-const statusLabels: Record<string, string> = {
-  nouveau: "Nouveau", diagnostic: "Diagnostic", en_cours: "En cours",
-  en_attente_piece: "Attente pièce", termine: "Terminé", pret_a_recuperer: "Prêt",
-};
-const statusOrder = ["nouveau", "diagnostic", "en_cours", "en_attente_piece", "termine", "pret_a_recuperer"];
-const statusColors: Record<string, string> = {
-  nouveau: "bg-info/10 text-info border-info/20",
-  diagnostic: "bg-warning/10 text-warning border-warning/20",
-  en_cours: "bg-primary/10 text-primary border-primary/20",
-  en_attente_piece: "bg-muted text-muted-foreground border-border",
-  termine: "bg-success/10 text-success border-success/20",
-  pret_a_recuperer: "bg-accent text-accent-foreground border-accent-foreground/20",
-};
+import { statusLabels, statusOrder, statusColors, statusHelpText } from "@/lib/repairStatuses";
+import { sendTransactionalEmail } from "@/lib/email";
 
 function formatDuration(startedAt: string | null) {
   if (!startedAt) return null;
@@ -47,7 +35,7 @@ const Repairs = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("repairs")
-        .select("*, clients(name), devices(brand, model)")
+        .select("*, clients(name, email, phone), devices(brand, model)")
         .order("created_at", { ascending: false });
       if (error) throw error;
       return data;
@@ -57,14 +45,41 @@ const Repairs = () => {
   const updateStatus = useMutation({
     mutationFn: async ({ id, status }: { id: string; status: string }) => {
       const updates: any = { status };
-      if (status === "en_cours") updates.repair_started_at = new Date().toISOString();
+      // Timer starts on "diagnostic" (Débuté)
+      if (status === "diagnostic") updates.repair_started_at = new Date().toISOString();
+      // Timer ends on "termine" or "pret_a_recuperer"
       if (status === "termine" || status === "pret_a_recuperer") updates.repair_ended_at = new Date().toISOString();
       const { error } = await supabase.from("repairs").update(updates).eq("id", id);
       if (error) throw error;
+
+      // Send auto email to client
+      const repair = repairs.find(r => r.id === id);
+      if (repair?.clients?.email) {
+        try {
+          const device = repair.devices ? `${repair.devices.brand} ${repair.devices.model}` : "votre appareil";
+          await sendTransactionalEmail({
+            template: "status_update",
+            to: repair.clients.email,
+            data: {
+              clientName: repair.clients.name || "",
+              reference: repair.reference,
+              device,
+              status,
+              statusLabel: statusLabels[status] || status,
+              message: getAutoEmailMessage(status, device, repair.reference),
+            },
+            organizationId: repair.organization_id,
+            repairId: repair.id,
+          });
+        } catch (emailErr) {
+          console.error("Auto email failed:", emailErr);
+        }
+      }
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["repairs"] });
       qc.invalidateQueries({ queryKey: ["dashboard-repairs"] });
+      qc.invalidateQueries({ queryKey: ["sales-repairs"] });
     },
     onError: (e: Error) => toast({ title: "Erreur", description: e.message, variant: "destructive" }),
   });
@@ -122,12 +137,36 @@ const Repairs = () => {
                           <div
                             ref={provided.innerRef}
                             {...provided.droppableProps}
-                            className={`space-y-2 min-h-[120px] rounded-lg p-2 transition-colors ${snapshot.isDraggingOver ? "bg-primary/5 ring-2 ring-primary/20" : ""}`}
+                            className={`space-y-2 min-h-[120px] rounded-lg p-2 transition-all duration-300 ${
+                              snapshot.isDraggingOver
+                                ? "bg-primary/5 ring-2 ring-primary/20 scale-[1.01]"
+                                : "hover:bg-muted/30"
+                            }`}
                           >
                             <div className="flex items-center gap-2 mb-2">
                               <Badge variant="outline" className={`text-xs ${statusColors[status]}`}>{statusLabels[status]}</Badge>
                               <span className="text-xs text-muted-foreground">{items.length}</span>
                             </div>
+
+                            {/* Help text for empty columns */}
+                            {items.length === 0 && !snapshot.isDraggingOver && (
+                              <div className="flex flex-col items-center justify-center py-6 px-2 text-center">
+                                <div className="w-8 h-8 rounded-full bg-muted/50 flex items-center justify-center mb-2">
+                                  <GripVertical className="h-3.5 w-3.5 text-muted-foreground/40" />
+                                </div>
+                                <p className="text-[11px] text-muted-foreground/50 leading-relaxed">
+                                  {statusHelpText[status]}
+                                </p>
+                              </div>
+                            )}
+
+                            {/* Drop indicator when dragging over empty column */}
+                            {items.length === 0 && snapshot.isDraggingOver && (
+                              <div className="flex items-center justify-center py-8 rounded-md border-2 border-dashed border-primary/30 bg-primary/5">
+                                <p className="text-xs text-primary/60 font-medium">Déposez ici</p>
+                              </div>
+                            )}
+
                             {items.map((repair, index) => (
                               <Draggable key={repair.id} draggableId={repair.id} index={index}>
                                 {(provided, snapshot) => (
@@ -135,7 +174,11 @@ const Repairs = () => {
                                     ref={provided.innerRef}
                                     {...provided.draggableProps}
                                     {...provided.dragHandleProps}
-                                    className={`cursor-pointer transition-shadow ${snapshot.isDragging ? "shadow-lg ring-2 ring-primary/30" : "hover:shadow-md"}`}
+                                    className={`cursor-pointer transition-all duration-200 ${
+                                      snapshot.isDragging
+                                        ? "shadow-lg ring-2 ring-primary/30 rotate-[1deg] scale-105"
+                                        : "hover:shadow-md hover:-translate-y-0.5"
+                                    }`}
                                     onClick={() => !snapshot.isDragging && setSelectedRepair(repair)}
                                   >
                                     <CardContent className="p-3">
@@ -143,10 +186,10 @@ const Repairs = () => {
                                       <p className="text-sm font-medium mt-1">{repair.clients?.name ?? "—"}</p>
                                       <p className="text-xs text-muted-foreground">{repair.devices ? `${repair.devices.brand} ${repair.devices.model}` : "—"}</p>
                                       <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{repair.issue}</p>
-                                      {(repair as any).repair_started_at && !(repair as any).repair_ended_at && (
+                                      {repair.repair_started_at && !repair.repair_ended_at && (
                                         <div className="flex items-center gap-1 mt-2 text-xs text-primary">
                                           <Timer className="h-3 w-3" />
-                                          {formatDuration((repair as any).repair_started_at)}
+                                          {formatDuration(repair.repair_started_at)}
                                         </div>
                                       )}
                                     </CardContent>
@@ -209,5 +252,16 @@ const Repairs = () => {
     </div>
   );
 };
+
+function getAutoEmailMessage(status: string, device: string, reference: string): string {
+  const messages: Record<string, string> = {
+    diagnostic: `La réparation de votre ${device} a bien débuté. Nous vous tiendrons informé(e) de l'avancement.`,
+    en_cours: `Une ou plusieurs pièces doivent être commandées pour la réparation de votre ${device}. Nous vous informerons dès leur réception.`,
+    en_attente_piece: `La réparation de votre ${device} est en attente de réception d'une pièce. Nous reprendrons dès que possible.`,
+    termine: `La réparation de votre ${device} est terminée ! Votre appareil est prêt à être récupéré à notre atelier.`,
+    pret_a_recuperer: `Votre ${device} vous a été restitué. L'intervention est clôturée. Merci de votre confiance !`,
+  };
+  return messages[status] || `Le statut de votre réparation (réf. ${reference}) a été mis à jour.`;
+}
 
 export default Repairs;
