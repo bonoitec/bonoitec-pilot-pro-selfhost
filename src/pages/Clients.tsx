@@ -17,14 +17,6 @@ const Clients = () => {
   const highlightId = searchParams.get("highlight");
   const highlightRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    if (highlightId && highlightRef.current && !isLoading) {
-      setTimeout(() => {
-        highlightRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
-      }, 100);
-    }
-  }, [highlightId, isLoading]);
-
   const { data: clients = [], isLoading } = useQuery({
     queryKey: ["clients"],
     queryFn: async () => {
@@ -36,6 +28,14 @@ const Clients = () => {
       return data;
     },
   });
+
+  useEffect(() => {
+    if (highlightId && highlightRef.current && !isLoading) {
+      setTimeout(() => {
+        highlightRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+      }, 100);
+    }
+  }, [highlightId, isLoading]);
 
   const filtered = clients.filter(
     (c) =>
