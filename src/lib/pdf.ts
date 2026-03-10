@@ -543,5 +543,9 @@ export async function generatePDF(org: OrgInfo, data: DocData, options?: { previ
     doc.setTextColor(0);
   }
 
+  if (options?.preview) {
+    const blob = doc.output("blob");
+    return URL.createObjectURL(blob);
+  }
   doc.save(`${data.reference}.pdf`);
 }
