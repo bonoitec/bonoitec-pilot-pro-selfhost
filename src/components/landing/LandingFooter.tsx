@@ -38,14 +38,14 @@ const LandingFooter = () => (
             <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary text-primary-foreground">
               <Zap className="h-5 w-5" />
             </div>
-            <span className="text-xl font-bold tracking-tight font-display">Laast</span>
+            <span className="text-xl font-bold tracking-tight font-display">BonoitecPilot</span>
           </Link>
           <p className="text-sm text-muted-foreground max-w-xs leading-relaxed">
             La plateforme de gestion tout-en-un pour les ateliers de réparation. Simple, rapide, efficace.
           </p>
           <div className="mt-6 space-y-1 text-sm text-muted-foreground">
-            <p>contact@laast.io</p>
-            <p>+33 1 23 45 67 89</p>
+            <p>contact@bonoitecpilot.fr</p>
+            <p>04 65 96 95 85</p>
           </div>
         </div>
 
@@ -70,7 +70,7 @@ const LandingFooter = () => (
 
       <div className="mt-16 pt-8 border-t border-border/60 flex flex-col sm:flex-row items-center justify-between gap-4">
         <p className="text-xs text-muted-foreground">
-          © {new Date().getFullYear()} Laast. Tous droits réservés.
+          © {new Date().getFullYear()} BonoitecPilot. Tous droits réservés.
         </p>
         <div className="flex items-center gap-6">
           <a href="#" className="text-xs text-muted-foreground hover:text-primary transition-colors">Twitter</a>

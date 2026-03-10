@@ -29,7 +29,7 @@ const CTASection = () => {
               <Button
                 size="lg"
                 asChild
-                className="rounded-full px-8 h-12 text-base bg-primary-foreground text-primary hover:bg-primary-foreground/90 shadow-lg"
+                className="rounded-full px-8 h-12 text-base bg-primary-foreground text-primary font-semibold hover:bg-primary-foreground/90 shadow-lg hover:shadow-xl transition-all"
               >
                 <Link to="/auth">
                   Créer mon espace <ArrowRight className="h-4 w-4 ml-1" />
@@ -37,9 +37,8 @@ const CTASection = () => {
               </Button>
               <Button
                 size="lg"
-                variant="outline"
                 asChild
-                className="rounded-full px-8 h-12 text-base border-primary-foreground/30 text-primary-foreground hover:bg-primary-foreground/10"
+                className="rounded-full px-8 h-12 text-base bg-white/15 text-primary-foreground font-semibold border-2 border-white/30 hover:bg-white/25 hover:border-white/50 backdrop-blur-sm shadow-md transition-all"
               >
                 <Link to="/support">
                   <CalendarDays className="h-4 w-4 mr-1" /> Planifier une démo

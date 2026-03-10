@@ -84,8 +84,8 @@ const Auth = () => {
           <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary text-primary-foreground">
             <Zap className="h-7 w-7" />
           </div>
-          <h1 className="text-2xl font-bold tracking-tight text-foreground">BonoitecPilot</h1>
-          <p className="text-sm text-muted-foreground">Le cockpit intelligent pour ateliers de réparation</p>
+          <h1 className="text-2xl font-bold tracking-tight text-foreground font-display">BonoitecPilot</h1>
+          <p className="text-sm text-muted-foreground">Le cockpit intelligent de votre atelier</p>
         </div>
 
         <Card>

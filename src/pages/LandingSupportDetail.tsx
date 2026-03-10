@@ -33,9 +33,9 @@ const supportContent: Record<string, { intro: string; steps: { title: string; te
   "aide-contact": {
     intro: "Notre équipe support est disponible pour répondre à toutes vos questions et vous accompagner dans l'utilisation de la plateforme.",
     steps: [
-      { title: "Par email", text: "Envoyez-nous un message à contact@laast.io. Nous répondons sous 24h ouvrées." },
+      { title: "Par email", text: "Envoyez-nous un message à contact@bonoitecpilot.fr. Nous répondons sous 24h ouvrées." },
       { title: "Par chat", text: "Utilisez le chat en ligne disponible en bas à droite de votre écran pour une réponse rapide." },
-      { title: "Par téléphone", text: "Appelez-nous au +33 1 23 45 67 89 du lundi au vendredi, de 9h à 18h." },
+      { title: "Par téléphone", text: "Appelez-nous au 04 65 96 95 85 du lundi au vendredi, de 9h à 18h." },
     ],
   },
   "pre-requis": {
