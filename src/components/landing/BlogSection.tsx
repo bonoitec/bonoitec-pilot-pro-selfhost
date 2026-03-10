@@ -61,7 +61,7 @@ const BlogSection = forwardRef<HTMLElement, { expanded?: boolean }>(({ expanded 
               initial={{ opacity: 0, y: 20 }}
               animate={isInView ? { opacity: 1, y: 0 } : {}}
               transition={{ duration: 0.4, delay: i * 0.08 }}
-              className="landing-card overflow-hidden group hover-lift"
+              className="landing-card overflow-hidden group hover-lift cursor-pointer"
             >
               <div className="h-48 overflow-hidden">
                 <img
