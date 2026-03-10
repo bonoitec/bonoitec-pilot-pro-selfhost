@@ -94,6 +94,8 @@ const Services = () => {
       default_price: String(s.default_price),
       estimated_time_minutes: String(s.estimated_time_minutes),
       compatible_categories: (s.compatible_categories as string[]) || [],
+      compatible_brand: (s as any).compatible_brand || "",
+      compatible_model: (s as any).compatible_model || "",
     });
     setShowDialog(true);
   };
