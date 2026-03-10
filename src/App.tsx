@@ -18,6 +18,11 @@ import LandingSupport from "./pages/LandingSupport";
 import LandingSupportDetail from "./pages/LandingSupportDetail";
 import LandingContact from "./pages/LandingContact";
 import LandingDemo from "./pages/LandingDemo";
+import BlogArticle from "./pages/BlogArticle";
+import LegalMentions from "./pages/LegalMentions";
+import LegalPrivacy from "./pages/LegalPrivacy";
+import LegalTerms from "./pages/LegalTerms";
+import LegalRefund from "./pages/LegalRefund";
 
 // App pages
 import Index from "./pages/Index";
@@ -62,10 +67,15 @@ const App = () => (
               <Route path="/fonctionnalites" element={<LandingFonctionnalites />} />
               <Route path="/tarifs" element={<LandingTarifs />} />
               <Route path="/blog" element={<LandingBlog />} />
+              <Route path="/blog/:slug" element={<BlogArticle />} />
               <Route path="/support" element={<LandingSupport />} />
               <Route path="/support/:slug" element={<LandingSupportDetail />} />
               <Route path="/contact" element={<LandingContact />} />
               <Route path="/demo" element={<LandingDemo />} />
+              <Route path="/mentions-legales" element={<LegalMentions />} />
+              <Route path="/confidentialite" element={<LegalPrivacy />} />
+              <Route path="/cgu-cgv" element={<LegalTerms />} />
+              <Route path="/politique-remboursement" element={<LegalRefund />} />
             </Route>
 
             {/* Auth pages */}
