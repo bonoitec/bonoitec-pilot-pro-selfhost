@@ -1,0 +1,1 @@
+ALTER TABLE public.repairs ADD COLUMN IF NOT EXISTS labor_cost numeric DEFAULT 0;

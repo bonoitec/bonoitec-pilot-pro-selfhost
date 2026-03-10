@@ -16,6 +16,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Timer, Star, ClipboardCheck, Camera, CreditCard, Upload, MessageSquare, FileText } from "lucide-react";
 import { RepairChat } from "@/components/messaging/RepairChat";
 import { StatusNotificationSuggester } from "@/components/messaging/StatusNotificationSuggester";
+import { MarginAnalysisCard } from "@/components/repairs/MarginAnalysisCard";
 
 const statusLabels: Record<string, string> = {
   nouveau: "Nouveau", diagnostic: "Diagnostic", en_cours: "En cours",
@@ -281,6 +282,9 @@ export function RepairDetailDialog({ open, onOpenChange, repair }: Props) {
                   </CardContent>
                 </Card>
               )}
+
+              {/* Margin Analysis */}
+              <MarginAnalysisCard repair={repair} />
 
               <Separator />
 

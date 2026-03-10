@@ -37,6 +37,7 @@ const toolsItems = [
   { title: "Scanner IMEI", url: "/imei-scanner", icon: Cpu },
   { title: "Assistant IA", url: "/ai-assistant", icon: Bot },
   { title: "Statistiques", url: "/statistics", icon: BarChart3 },
+  { title: "Rentabilité", url: "/profitability", icon: BarChart3 },
 ];
 
 const bottomItems = [

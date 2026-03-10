@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Wrench, Clock, CheckCircle2, DollarSign, AlertTriangle, TrendingUp, Plus } from "lucide-react";
 import { CreateRepairWizard } from "@/components/dialogs/CreateRepairWizard";
+import { ProfitabilitySection } from "@/components/dashboard/ProfitabilitySection";
 
 const statusLabels: Record<string, string> = {
   nouveau: "Nouveau",
@@ -125,6 +126,7 @@ const Index = () => {
           )}
         </CardContent>
       </Card>
+      <ProfitabilitySection />
       <CreateRepairWizard open={showWizard} onOpenChange={setShowWizard} />
     </div>
   );

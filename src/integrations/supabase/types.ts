@@ -816,6 +816,7 @@ export type Database = {
           intake_checklist: Json | null
           internal_notes: string | null
           issue: string
+          labor_cost: number | null
           organization_id: string
           parts_used: Json | null
           payment_method: string | null
@@ -845,6 +846,7 @@ export type Database = {
           intake_checklist?: Json | null
           internal_notes?: string | null
           issue: string
+          labor_cost?: number | null
           organization_id: string
           parts_used?: Json | null
           payment_method?: string | null
@@ -874,6 +876,7 @@ export type Database = {
           intake_checklist?: Json | null
           internal_notes?: string | null
           issue?: string
+          labor_cost?: number | null
           organization_id?: string
           parts_used?: Json | null
           payment_method?: string | null
