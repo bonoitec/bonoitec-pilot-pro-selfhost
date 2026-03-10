@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Download, X, Loader2 } from "lucide-react";
+import { Download, X, Loader2, Printer } from "lucide-react";
 
 interface Props {
   open: boolean;
@@ -55,6 +55,21 @@ export function PDFPreviewDialog({ open, onOpenChange, pdfUrl, loading, referenc
         <DialogFooter className="px-6 py-3 border-t border-border/60 flex-shrink-0 gap-2">
           <Button variant="outline" onClick={() => onOpenChange(false)}>
             <X className="h-4 w-4 mr-2" />Fermer
+          </Button>
+          <Button
+            variant="outline"
+            onClick={() => {
+              if (!pdfUrl) return;
+              const printWindow = window.open(pdfUrl);
+              if (printWindow) {
+                printWindow.addEventListener("load", () => {
+                  printWindow.print();
+                });
+              }
+            }}
+            disabled={!pdfUrl}
+          >
+            <Printer className="h-4 w-4 mr-2" />Imprimer
           </Button>
           <Button onClick={onDownload} disabled={!pdfUrl}>
             <Download className="h-4 w-4 mr-2" />Télécharger
