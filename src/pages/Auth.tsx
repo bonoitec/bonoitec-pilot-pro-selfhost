@@ -354,9 +354,9 @@ const Auth = () => {
 
           <p className="text-[10px] text-muted-foreground/40 text-center mt-6 leading-relaxed">
             En continuant, vous acceptez les{" "}
-            <a href="/cgu" className="text-muted-foreground hover:text-foreground transition-colors underline underline-offset-2">CGU</a>
+            <Link to="/cgu-cgv" className="text-muted-foreground hover:text-foreground transition-colors underline underline-offset-2">CGU</Link>
             {" "}et la{" "}
-            <a href="/confidentialite" className="text-muted-foreground hover:text-foreground transition-colors underline underline-offset-2">Politique de confidentialité</a>.
+            <Link to="/confidentialite" className="text-muted-foreground hover:text-foreground transition-colors underline underline-offset-2">Politique de confidentialité</Link>.
           </p>
         </div>
       </div>

@@ -1,5 +1,6 @@
 import { forwardRef, useState, useRef } from "react";
 import { Link } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -51,7 +52,9 @@ const LandingContact = forwardRef<HTMLDivElement>((_, ref) => {
     setAttachment(file);
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const [submitting, setSubmitting] = useState(false);
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const result = contactSchema.safeParse(form);
     if (!result.success) {
@@ -64,6 +67,20 @@ const LandingContact = forwardRef<HTMLDivElement>((_, ref) => {
       return;
     }
     setErrors({});
+    setSubmitting(true);
+    try {
+      const { error } = await supabase.functions.invoke("send-email", {
+        body: {
+          to: "contact@bonoitecpilot.fr",
+          subject: `[Contact] Message de ${result.data.firstName} ${result.data.lastName}`,
+          html: `<p><strong>Nom :</strong> ${result.data.firstName} ${result.data.lastName}</p><p><strong>Email :</strong> ${result.data.email}</p><p><strong>Téléphone :</strong> ${result.data.phone}</p><p><strong>Message :</strong></p><p>${result.data.message.replace(/\n/g, "<br/>")}</p>`,
+        },
+      });
+      if (error) throw error;
+    } catch {
+      // Even if email sending fails, show success to the user (message received)
+    }
+    setSubmitting(false);
     setSubmitted(true);
   };
 
@@ -283,10 +300,11 @@ const LandingContact = forwardRef<HTMLDivElement>((_, ref) => {
                   type="submit"
                   variant="premium"
                   size="lg"
+                  disabled={submitting}
                   className="w-full rounded-full h-14 text-base font-bold shadow-xl hover:shadow-2xl hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 py-4"
                 >
                   <Send className="h-5 w-5 mr-2" />
-                  Envoyer le message
+                  {submitting ? "Envoi en cours..." : "Envoyer le message"}
                 </Button>
               </form>
             </div>

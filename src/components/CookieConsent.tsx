@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Cookie, X } from "lucide-react";
@@ -59,7 +60,7 @@ export function CookieConsent() {
                       <h3 className="font-semibold font-display text-sm">Nous utilisons des cookies</h3>
                       <p className="text-xs text-muted-foreground mt-1 leading-relaxed">
                         Ce site utilise des cookies pour améliorer votre expérience de navigation, analyser le trafic et personnaliser le contenu.
-                        Consultez notre <a href="/confidentialite" className="text-primary hover:underline font-medium">politique de confidentialité</a>.
+                        Consultez notre <Link to="/confidentialite" className="text-primary hover:underline font-medium">politique de confidentialité</Link>.
                       </p>
                     </div>
                     <div className="flex flex-wrap gap-2">
