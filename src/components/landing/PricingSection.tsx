@@ -24,26 +24,29 @@ const billingOptions = [
   {
     id: "monthly",
     label: "Mensuel",
-    price: 49,
+    price: "19,99",
     period: "/ mois",
     subtitle: "Sans engagement",
     saving: null,
+    discount: null,
   },
   {
     id: "quarterly",
     label: "Trimestriel",
-    price: 42,
+    price: "17,99",
     period: "/ mois",
-    subtitle: "Facturé 126 € TTC / trimestre",
-    saving: "Économisez 21 € par trimestre",
+    subtitle: "Facturé 53,97 € TTC / trimestre",
+    saving: "Économisez 6 € par trimestre",
+    discount: "-10%",
   },
   {
     id: "annual",
     label: "Annuel",
-    price: 35,
+    price: "14,99",
     period: "/ mois",
-    subtitle: "Facturé 420 € TTC / an",
-    saving: "Économisez 168 € par an",
+    subtitle: "Facturé 179,88 € TTC / an",
+    saving: "Économisez 60 € par an",
+    discount: "-25%",
     popular: true,
   },
 ];
@@ -101,9 +104,9 @@ const PricingSection = () => {
                   }`}
                 >
                   {opt.label}
-                  {opt.popular && selected !== opt.id && (
+                  {opt.discount && selected !== opt.id && (
                     <span className="absolute -top-2 -right-1 bg-success text-success-foreground text-[10px] font-bold px-1.5 sm:px-2 py-0.5 rounded-full shadow-sm">
-                      -29%
+                      {opt.discount}
                     </span>
                   )}
                 </button>
