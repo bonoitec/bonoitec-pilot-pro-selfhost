@@ -70,7 +70,7 @@ const LandingFooter = () => (
 
       <div className="mt-16 pt-8 border-t border-border/60 flex flex-col sm:flex-row items-center justify-between gap-4">
         <p className="text-xs text-muted-foreground">
-          © {new Date().getFullYear()} Laast. Tous droits réservés.
+          © {new Date().getFullYear()} BonoitecPilot. Tous droits réservés.
         </p>
         <div className="flex items-center gap-6">
           <a href="#" className="text-xs text-muted-foreground hover:text-primary transition-colors">Twitter</a>

@@ -37,7 +37,7 @@ const LandingHeader = () => {
           <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-md group-hover:shadow-lg transition-shadow">
             <Zap className="h-5 w-5" />
           </div>
-          <span className="text-xl font-bold tracking-tight font-display text-foreground">Laast</span>
+          <span className="text-xl font-bold tracking-tight font-display text-foreground">BonoitecPilot</span>
         </Link>
 
         <nav className="hidden md:flex items-center gap-8">
