@@ -126,6 +126,7 @@ const Index = () => {
           )}
         </CardContent>
       </Card>
+      <ProfitabilitySection />
       <CreateRepairWizard open={showWizard} onOpenChange={setShowWizard} />
     </div>
   );

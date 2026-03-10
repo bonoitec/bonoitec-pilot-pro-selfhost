@@ -283,6 +283,9 @@ export function RepairDetailDialog({ open, onOpenChange, repair }: Props) {
                 </Card>
               )}
 
+              {/* Margin Analysis */}
+              <MarginAnalysisCard repair={repair} />
+
               <Separator />
 
               {/* Status */}
