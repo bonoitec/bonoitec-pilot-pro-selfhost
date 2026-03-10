@@ -13,6 +13,15 @@ import { CreateClientDialog } from "@/components/dialogs/CreateClientDialog";
 const Clients = () => {
   const [search, setSearch] = useState("");
   const [showCreate, setShowCreate] = useState(false);
+  const [searchParams] = useSearchParams();
+  const highlightId = searchParams.get("highlight");
+  const highlightRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (highlightId && highlightRef.current) {
+      highlightRef.current.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
+  }, [highlightId]);
 
   const { data: clients = [], isLoading } = useQuery({
     queryKey: ["clients"],
