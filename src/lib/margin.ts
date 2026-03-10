@@ -87,3 +87,10 @@ export function getPartsTotal(partsUsed: any): number {
     return sum + cost * qty;
   }, 0);
 }
+
+export function getServicesTotal(servicesUsed: any): number {
+  if (!Array.isArray(servicesUsed)) return 0;
+  return servicesUsed.reduce((sum: number, s: any) => {
+    return sum + Number(s.price ?? 0);
+  }, 0);
+}

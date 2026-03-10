@@ -79,7 +79,7 @@ export function MarginAnalysisCard({ repair }: Props) {
               <DollarSign className="h-3 w-3" />
               {vatEnabled ? "Prix de vente TTC" : "Prix de vente"}
             </p>
-            <p className="font-semibold">{fmt(sellingPrice)}</p>
+            <p className="font-semibold">{fmt(effectiveSellingPrice)}</p>
           </div>
 
           {vatEnabled && (
