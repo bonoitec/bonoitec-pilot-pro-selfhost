@@ -432,5 +432,19 @@ export function RepairDetailDialog({ open, onOpenChange, repair }: Props) {
         </div>
       </DialogContent>
     </Dialog>
+
+    <RestitutionDialog
+      open={showRestitution}
+      onOpenChange={(o) => {
+        setShowRestitution(o);
+        if (!o) {
+          // Refresh data after restitution
+          qc.invalidateQueries({ queryKey: ["repairs"] });
+          onOpenChange(false);
+        }
+      }}
+      repair={repair}
+    />
+    </>
   );
 }
