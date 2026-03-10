@@ -5,6 +5,8 @@ import { Button } from "@/components/ui/button";
 import blogOrganiser from "@/assets/blog-organiser-atelier.jpg";
 import blogFacturation from "@/assets/blog-facturation.jpg";
 import blogCentraliser from "@/assets/blog-centraliser.jpg";
+import blogSuiviClient from "@/assets/blog-suivi-client.jpg";
+import blogDevis from "@/assets/blog-devis-rapides.jpg";
 
 interface ArticleSection {
   id: string;
@@ -153,6 +155,100 @@ const articles: Article[] = [
         id: "conclusion",
         title: "Conclusion",
         content: "Centraliser la gestion de votre atelier n'est plus une option, c'est une nécessité pour rester compétitif. Les outils existent, ils sont accessibles et leur retour sur investissement est immédiat.\n\nBonoitecPilot a été conçu spécifiquement pour les ateliers de réparation, avec toutes les fonctionnalités nécessaires dans une interface simple et intuitive. Prêt à simplifier votre quotidien ?",
+      },
+    ],
+  },
+  {
+    slug: "suivi-client",
+    category: "Relation client",
+    title: "Comment améliorer le suivi client dans un atelier",
+    excerpt: "Fidélisez vos clients et améliorez leur expérience grâce à un suivi structuré et des notifications automatiques.",
+    image: blogSuiviClient,
+    date: "12 février 2026",
+    readTime: "7 min",
+    author: "Équipe BonoitecPilot",
+    sections: [
+      {
+        id: "introduction",
+        title: "Introduction",
+        content: "Dans un atelier de réparation, la relation client ne se limite pas à l'accueil et à la remise de l'appareil. Un suivi client de qualité est ce qui transforme un client occasionnel en client fidèle, et un client satisfait en ambassadeur de votre atelier.\n\nPourtant, beaucoup de réparateurs négligent cet aspect, faute de temps ou d'outils adaptés. Dans cet article, nous vous montrons comment structurer votre suivi client pour améliorer l'expérience et fidéliser durablement."
+      },
+      {
+        id: "importance-suivi",
+        title: "1. Pourquoi le suivi client est essentiel",
+        content: "Un client qui dépose son appareil en réparation vit une période d'incertitude. Il ne sait pas quand il récupérera son appareil, si la réparation sera réussie, ni combien cela coûtera au final. Cette incertitude génère de l'anxiété et des appels répétés à votre atelier.\n\nUn bon suivi client répond à ce besoin fondamental de transparence. Il réduit les appels entrants, améliore la satisfaction et renforce la confiance. Les études montrent qu'un client bien informé est 3 fois plus susceptible de revenir et de recommander votre atelier."
+      },
+      {
+        id: "notifications-automatiques",
+        title: "2. Mettre en place des notifications automatiques",
+        content: "La première étape pour améliorer votre suivi client est d'automatiser les notifications à chaque changement de statut de la réparation. Concrètement, votre client devrait recevoir un message quand :\n\n• Son appareil est pris en charge et le diagnostic commence\n• Le diagnostic est terminé avec un devis associé\n• La réparation est en cours\n• Une pièce est en commande (avec un délai estimé)\n• La réparation est terminée et l'appareil est prêt à récupérer\n\nAvec BonoitecPilot, ces notifications sont envoyées automatiquement par email ou SMS à chaque changement de statut. Vous n'avez rien à faire manuellement."
+      },
+      {
+        id: "suivi-en-ligne",
+        title: "3. Proposer un suivi en ligne",
+        content: "Offrir à vos clients un code de suivi qu'ils peuvent consulter en ligne est un véritable avantage concurrentiel. Le client peut vérifier l'état de sa réparation à tout moment, sans avoir besoin de vous appeler.\n\nCette fonctionnalité réduit considérablement les appels entrants et donne une image professionnelle et moderne de votre atelier. Avec BonoitecPilot, chaque réparation génère automatiquement un code de suivi unique que le client peut consulter sur une page dédiée."
+      },
+      {
+        id: "historique-client",
+        title: "4. Centraliser l'historique client",
+        content: "Connaître l'historique de chaque client est un atout majeur. Quand un client revient, vous pouvez immédiatement voir ses appareils, ses réparations passées, ses préférences et ses éventuels problèmes récurrents.\n\nCette connaissance permet de personnaliser l'accueil, d'anticiper les besoins et de proposer des services adaptés. Un client qui se sent reconnu et compris est un client fidèle.\n\nAvec un outil centralisé, toutes ces informations sont accessibles en un clic, sans avoir à fouiller dans des dossiers papier ou des fichiers Excel."
+      },
+      {
+        id: "feedback",
+        title: "5. Recueillir les avis clients",
+        content: "Après chaque réparation, demandez l'avis de vos clients. Un simple message automatique avec un lien vers votre page Google My Business peut faire des merveilles pour votre réputation en ligne.\n\nLes avis positifs attirent de nouveaux clients, tandis que les retours négatifs vous permettent de vous améliorer. Dans les deux cas, vous y gagnez.\n\nBonoitecPilot permet de configurer un lien Google Review dans vos paramètres pour faciliter la collecte d'avis après chaque réparation réussie."
+      },
+      {
+        id: "conclusion",
+        title: "Conclusion",
+        content: "Le suivi client n'est pas une charge supplémentaire : c'est un investissement qui se traduit directement en fidélisation, en réputation et en chiffre d'affaires. En automatisant les notifications, en proposant un suivi en ligne et en centralisant l'historique client, vous offrez une expérience premium sans effort supplémentaire.\n\nBonoitecPilot intègre toutes ces fonctionnalités nativement, pour que vous puissiez vous concentrer sur ce que vous faites de mieux : réparer."
+      },
+    ],
+  },
+  {
+    slug: "gagner-temps-devis",
+    category: "Productivité",
+    title: "Comment gagner du temps sur les devis et réparations",
+    excerpt: "Automatisez vos devis, réduisez les tâches répétitives et concentrez-vous sur votre cœur de métier.",
+    image: blogDevis,
+    date: "5 février 2026",
+    readTime: "6 min",
+    author: "Équipe BonoitecPilot",
+    sections: [
+      {
+        id: "introduction",
+        title: "Introduction",
+        content: "Le temps est la ressource la plus précieuse dans un atelier de réparation. Entre l'accueil des clients, les diagnostics, les réparations et l'administratif, les journées passent vite. Et souvent, ce sont les tâches administratives comme la création de devis qui grignotent le temps que vous pourriez consacrer à la réparation.\n\nDans cet article, nous partageons des méthodes concrètes pour réduire drastiquement le temps passé sur les devis et les tâches répétitives."
+      },
+      {
+        id: "modeles-devis",
+        title: "1. Utiliser des modèles de devis pré-remplis",
+        content: "La plupart des ateliers réalisent régulièrement les mêmes types de réparations : remplacement d'écran, changement de batterie, réparation de connecteur de charge, etc. Plutôt que de recréer chaque devis de zéro, utilisez des modèles pré-configurés.\n\nAvec BonoitecPilot, vous pouvez créer une bibliothèque de réparations types avec les prix, les pièces nécessaires et les temps estimés. Quand un client se présente pour une réparation courante, vous générez le devis en quelques clics."
+      },
+      {
+        id: "catalogue-pieces",
+        title: "2. Lier le catalogue de pièces aux devis",
+        content: "Une des grandes pertes de temps dans la création de devis est la recherche du prix des pièces et la vérification de leur disponibilité en stock. En liant votre catalogue de pièces directement à votre système de devis, vous éliminez cette étape.\n\nQuand vous ajoutez une pièce à un devis, le prix se remplit automatiquement et vous voyez immédiatement si elle est en stock. Si la pièce manque, vous pouvez la commander directement depuis le devis."
+      },
+      {
+        id: "devis-facture",
+        title: "3. Transformer un devis en facture en un clic",
+        content: "Une fois le devis accepté et la réparation effectuée, la création de la facture devrait être instantanée. Avec un bon outil, le devis accepté se convertit en facture en un seul clic, avec toutes les informations déjà renseignées.\n\nPlus besoin de ressaisir le nom du client, la description de la réparation ou les montants. Tout est repris automatiquement, ce qui élimine aussi les risques d'erreur."
+      },
+      {
+        id: "workflow-automatise",
+        title: "4. Automatiser le workflow complet",
+        content: "Le workflow idéal dans un atelier est le suivant :\n\n1. Le client dépose son appareil\n2. Vous créez la fiche de réparation (avec diagnostic)\n3. Vous générez le devis automatiquement\n4. Le client accepte (signature numérique)\n5. Vous effectuez la réparation\n6. La facture est générée automatiquement\n7. Le client est notifié que son appareil est prêt\n\nChaque étape découle naturellement de la précédente, sans ressaisie d'information. C'est exactement ce que permet BonoitecPilot avec son workflow intégré."
+      },
+      {
+        id: "statistiques",
+        title: "5. Analyser pour optimiser",
+        content: "Pour gagner encore plus de temps, analysez vos données. Quelles sont les réparations les plus fréquentes ? Quelles pièces utilisez-vous le plus ? Quel est votre temps moyen par type de réparation ?\n\nCes informations vous permettent d'optimiser votre stock, de mieux estimer vos délais et d'ajuster vos prix. Avec le tableau de bord statistique de BonoitecPilot, toutes ces données sont calculées automatiquement et présentées de manière visuelle."
+      },
+      {
+        id: "conclusion",
+        title: "Conclusion",
+        content: "Gagner du temps sur les devis et les tâches administratives, c'est gagner du temps pour faire ce que vous aimez : réparer. En automatisant les processus répétitifs, en utilisant des modèles et en liant toutes vos données, vous pouvez facilement économiser 1 à 2 heures par jour.\n\nBonoitecPilot a été conçu pour éliminer les frictions administratives et vous permettre de piloter votre atelier efficacement. Moins d'administratif, plus de réparations, plus de revenus."
       },
     ],
   },

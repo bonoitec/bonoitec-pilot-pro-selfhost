@@ -5,6 +5,8 @@ import { ArrowRight } from "lucide-react";
 import blogOrganiser from "@/assets/blog-organiser-atelier.jpg";
 import blogFacturation from "@/assets/blog-facturation.jpg";
 import blogCentraliser from "@/assets/blog-centraliser.jpg";
+import blogSuiviClient from "@/assets/blog-suivi-client.jpg";
+import blogDevis from "@/assets/blog-devis-rapides.jpg";
 
 const articles = [
   {
@@ -27,6 +29,20 @@ const articles = [
     title: "Pourquoi centraliser clients, stock et réparations",
     excerpt: "Un seul outil pour tout gérer : les avantages concrets d'une plateforme unifiée pour votre activité de réparation.",
     image: blogCentraliser,
+  },
+  {
+    slug: "suivi-client",
+    category: "Relation client",
+    title: "Comment améliorer le suivi client dans un atelier",
+    excerpt: "Fidélisez vos clients et améliorez leur expérience grâce à un suivi structuré et des notifications automatiques.",
+    image: blogSuiviClient,
+  },
+  {
+    slug: "gagner-temps-devis",
+    category: "Productivité",
+    title: "Comment gagner du temps sur les devis et réparations",
+    excerpt: "Automatisez vos devis, réduisez les tâches répétitives et concentrez-vous sur votre cœur de métier.",
+    image: blogDevis,
   },
 ];
 
