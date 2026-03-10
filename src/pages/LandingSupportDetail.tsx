@@ -117,7 +117,7 @@ const supportContent: Record<string, { intro: string; steps: { title: string; te
   },
 };
 
-const LandingSupportDetail = () => {
+const LandingSupportDetail = forwardRef<HTMLDivElement>((_, ref) => {
   const { slug } = useParams<{ slug: string }>();
   const category = supportCategories.find((c) => c.slug === slug);
   const content = slug ? supportContent[slug] : undefined;
