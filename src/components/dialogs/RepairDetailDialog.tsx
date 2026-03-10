@@ -118,6 +118,7 @@ export function RepairDetailDialog({ open, onOpenChange, repair }: Props) {
         technician_message: techMessage.trim() || null,
         final_price: finalPrice ? parseFloat(finalPrice) : null,
         labor_cost: laborCost ? parseFloat(laborCost) : 0,
+        parts_used: partsUsed,
       };
       if (status === "en_cours" && repair.status !== "en_cours" && !(repair as any).repair_started_at) {
         updates.repair_started_at = new Date().toISOString();
