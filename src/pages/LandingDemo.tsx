@@ -219,11 +219,11 @@ function DiscoverSection() {
             <motion.div
               key={card.title}
               variants={fadeUp}
-              className="group landing-card p-6 sm:p-8 text-center hover:shadow-premium-lg hover:border-primary/20 transition-all duration-300"
+              className="group landing-card p-6 sm:p-8 text-center hover:shadow-premium-lg hover:border-primary/20 transition-all duration-300 cursor-pointer"
             >
               <div className="flex justify-center mb-5">
-                <div className="h-14 w-14 rounded-2xl gradient-primary flex items-center justify-center shadow-lg shadow-primary/20 group-hover:scale-110 transition-transform duration-300">
-                  <card.icon className="h-6 w-6 text-primary-foreground" />
+                <div className="h-14 w-14 rounded-2xl gradient-primary flex items-center justify-center shadow-lg shadow-primary/20 group-hover:scale-110 transition-all duration-300">
+                  <card.icon className="h-6 w-6 text-primary-foreground group-hover:text-primary transition-colors duration-300" />
                 </div>
               </div>
               <h3 className="font-bold font-display text-foreground mb-2">{card.title}</h3>
@@ -272,7 +272,7 @@ function GuidedDemoSection() {
             <motion.div
               key={step.step}
               variants={fadeUp}
-              className={`group relative rounded-2xl border border-border/50 bg-gradient-to-br ${step.gradient} p-6 sm:p-10 hover:shadow-premium-lg hover:border-primary/15 transition-all duration-300 overflow-hidden`}
+              className={`group relative rounded-2xl border border-border/50 bg-gradient-to-br ${step.gradient} p-6 sm:p-10 hover:shadow-premium-lg hover:border-primary/15 transition-all duration-300 overflow-hidden cursor-pointer`}
             >
               {/* Step connector line */}
               {i < demoSteps.length - 1 && (
@@ -283,8 +283,8 @@ function GuidedDemoSection() {
                 {/* Step number & icon */}
                 <div className="flex items-center gap-4 sm:flex-col sm:items-center sm:min-w-[80px]">
                   <span className="text-4xl sm:text-5xl font-extrabold font-display gradient-text opacity-60">{step.step}</span>
-                  <div className={`h-12 w-12 rounded-xl bg-background border border-border/50 flex items-center justify-center shadow-sm ${step.iconColor} group-hover:scale-110 transition-transform duration-300`}>
-                    <step.icon className="h-5 w-5" />
+                  <div className={`h-12 w-12 rounded-xl bg-background border border-border/50 flex items-center justify-center shadow-sm group-hover:scale-110 transition-all duration-300`}>
+                    <step.icon className={`h-5 w-5 ${step.iconColor} group-hover:text-primary transition-colors duration-300`} />
                   </div>
                 </div>
 
@@ -343,10 +343,10 @@ function BenefitsDemo() {
             <motion.div
               key={b.title}
               variants={fadeUp}
-              className="landing-card p-6 group hover:shadow-premium-lg hover:border-primary/20 transition-all duration-300"
+              className="landing-card p-6 group hover:shadow-premium-lg hover:border-primary/20 transition-all duration-300 cursor-pointer"
             >
-              <div className="h-11 w-11 rounded-xl gradient-primary-subtle flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300">
-                <b.icon className="h-5 w-5 text-primary" />
+              <div className="h-11 w-11 rounded-xl gradient-primary-subtle flex items-center justify-center mb-4 group-hover:scale-110 transition-all duration-300">
+                <b.icon className="h-5 w-5 text-primary group-hover:text-primary transition-colors duration-300" />
               </div>
               <h3 className="font-bold font-display text-foreground mb-1.5">{b.title}</h3>
               <p className="text-sm text-muted-foreground leading-relaxed">{b.desc}</p>
@@ -375,9 +375,9 @@ function TrustSection() {
           <motion.div variants={fadeUp} className="rounded-2xl border border-border/40 bg-muted/30 p-8 sm:p-12">
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-6">
               {trustItems.map((t) => (
-                <div key={t.text} className="flex flex-col items-center gap-3 text-center">
-                  <div className="h-11 w-11 rounded-xl bg-primary/10 flex items-center justify-center">
-                    <t.icon className="h-5 w-5 text-primary" />
+                <div key={t.text} className="flex flex-col items-center gap-3 text-center cursor-pointer group">
+                  <div className="h-11 w-11 rounded-xl bg-primary/10 flex items-center justify-center group-hover:scale-110 transition-all duration-300">
+                    <t.icon className="h-5 w-5 text-primary group-hover:text-primary transition-colors duration-300" />
                   </div>
                   <span className="text-xs sm:text-sm font-medium text-muted-foreground leading-snug">{t.text}</span>
                 </div>
