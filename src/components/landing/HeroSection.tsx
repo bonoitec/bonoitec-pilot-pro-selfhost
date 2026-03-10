@@ -66,7 +66,7 @@ const HeroSection = () => (
           initial={{ opacity: 0, y: 40, scale: 0.95 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
           transition={{ duration: 0.8, delay: 0.3, ease: "easeOut" }}
-          className="hidden lg:block relative"
+          className="relative"
         >
           <div className="relative rounded-2xl overflow-hidden shadow-2xl border border-border/60">
             <img
