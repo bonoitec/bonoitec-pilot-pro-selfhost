@@ -23,13 +23,13 @@ const CTASection = () => {
               Prêt à simplifier la gestion de votre atelier ?
             </h2>
             <p className="text-primary-foreground/80 text-lg leading-relaxed">
-              Testez une solution pensée pour les réparateurs et gagnez du temps dès le premier jour.
+              Rejoignez les réparateurs qui gagnent du temps chaque jour avec BonoitecPilot.
             </p>
             <div className="flex flex-wrap justify-center gap-4 pt-2">
               <Button
                 size="lg"
                 asChild
-                className="rounded-full px-8 h-12 text-base bg-primary-foreground text-primary font-semibold hover:bg-primary-foreground/90 shadow-lg hover:shadow-xl transition-all"
+                className="rounded-full px-8 h-13 text-base font-bold bg-primary-foreground text-primary hover:bg-primary-foreground/90 shadow-xl hover:shadow-2xl hover:scale-[1.02] active:scale-[0.98] transition-all duration-200"
               >
                 <Link to="/auth">
                   Créer mon espace <ArrowRight className="h-4 w-4 ml-1" />
@@ -38,13 +38,16 @@ const CTASection = () => {
               <Button
                 size="lg"
                 asChild
-                className="rounded-full px-8 h-12 text-base bg-white/15 text-primary-foreground font-semibold border-2 border-white/30 hover:bg-white/25 hover:border-white/50 backdrop-blur-sm shadow-md transition-all"
+                className="rounded-full px-8 h-13 text-base font-bold bg-white/20 text-primary-foreground border-2 border-white/40 hover:bg-white/30 hover:border-white/60 backdrop-blur-sm shadow-lg hover:shadow-xl hover:scale-[1.02] active:scale-[0.98] transition-all duration-200"
               >
                 <Link to="/support">
                   <CalendarDays className="h-4 w-4 mr-1" /> Planifier une démo
                 </Link>
               </Button>
             </div>
+            <p className="text-primary-foreground/60 text-sm pt-2">
+              Essai gratuit 30 jours · Sans carte bancaire · Sans engagement
+            </p>
           </div>
         </motion.div>
       </div>

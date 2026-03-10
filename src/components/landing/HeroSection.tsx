@@ -42,12 +42,12 @@ const HeroSection = () => (
           </p>
 
           <div className="flex flex-wrap items-center gap-4">
-            <Button size="lg" asChild className="rounded-full px-8 h-12 text-base shadow-lg hover:shadow-xl transition-shadow">
+            <Button size="lg" asChild className="rounded-full px-8 h-13 text-base font-bold shadow-lg hover:shadow-xl hover:scale-[1.02] active:scale-[0.98] transition-all duration-200">
               <Link to="/auth">
                 Commencer gratuitement <ArrowRight className="h-4 w-4 ml-1" />
               </Link>
             </Button>
-            <Button size="lg" variant="outline" asChild className="rounded-full px-8 h-12 text-base">
+            <Button size="lg" variant="outline" asChild className="rounded-full px-8 h-13 text-base font-semibold border-2 border-primary/30 text-primary hover:bg-primary/5 hover:border-primary/50 transition-all duration-200">
               <Link to="/fonctionnalites">
                 <Play className="h-4 w-4 mr-1" /> Voir la démo
               </Link>

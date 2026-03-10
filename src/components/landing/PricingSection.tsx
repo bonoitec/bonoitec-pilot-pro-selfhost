@@ -20,6 +20,7 @@ const plans = [
       "Support email",
     ],
     highlight: false,
+    cta: "Démarrer gratuitement",
   },
   {
     name: "Pro",
@@ -37,6 +38,7 @@ const plans = [
     ],
     highlight: true,
     badge: "Le plus populaire",
+    cta: "Essayer gratuitement",
   },
   {
     name: "Business",
@@ -54,6 +56,7 @@ const plans = [
       "Formation personnalisée",
     ],
     highlight: false,
+    cta: "Contacter l'équipe",
   },
 ];
 
@@ -84,22 +87,22 @@ const PricingSection = () => {
 
         {/* Toggle */}
         <div className="flex justify-center mb-12">
-          <div className="inline-flex items-center gap-3 p-1 rounded-full bg-muted border border-border/60">
+          <div className="inline-flex items-center gap-1 p-1 rounded-full bg-muted border border-border/60">
             <button
               onClick={() => setAnnual(false)}
-              className={`px-5 py-2 rounded-full text-sm font-medium transition-all ${
-                !annual ? "bg-card shadow-sm text-foreground" : "text-muted-foreground"
+              className={`px-5 py-2.5 rounded-full text-sm font-semibold transition-all duration-200 ${
+                !annual ? "bg-primary text-primary-foreground shadow-md" : "text-muted-foreground hover:text-foreground"
               }`}
             >
               Mensuel
             </button>
             <button
               onClick={() => setAnnual(true)}
-              className={`px-5 py-2 rounded-full text-sm font-medium transition-all ${
-                annual ? "bg-card shadow-sm text-foreground" : "text-muted-foreground"
+              className={`px-5 py-2.5 rounded-full text-sm font-semibold transition-all duration-200 ${
+                annual ? "bg-primary text-primary-foreground shadow-md" : "text-muted-foreground hover:text-foreground"
               }`}
             >
-              Annuel <span className="text-success text-xs font-semibold ml-1">-17%</span>
+              Annuel <span className={`text-xs font-bold ml-1 ${annual ? "text-primary-foreground/80" : "text-success"}`}>-17%</span>
             </button>
           </div>
         </div>
@@ -111,14 +114,14 @@ const PricingSection = () => {
               initial={{ opacity: 0, y: 20 }}
               animate={isInView ? { opacity: 1, y: 0 } : {}}
               transition={{ duration: 0.4, delay: i * 0.1 }}
-              className={`relative rounded-2xl border p-8 ${
+              className={`relative rounded-2xl border p-8 transition-all duration-300 ${
                 plan.highlight
-                  ? "border-primary shadow-xl bg-card scale-[1.02]"
-                  : "border-border/60 bg-card shadow-sm"
+                  ? "border-primary shadow-xl bg-card scale-[1.02] ring-1 ring-primary/20"
+                  : "border-border/60 bg-card shadow-sm hover:shadow-lg hover:border-primary/20"
               }`}
             >
               {plan.badge && (
-                <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 bg-primary text-primary-foreground text-xs font-semibold px-4 py-1.5 rounded-full shadow-md">
+                <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 bg-primary text-primary-foreground text-xs font-bold px-4 py-1.5 rounded-full shadow-md">
                   {plan.badge}
                 </div>
               )}
@@ -134,10 +137,15 @@ const PricingSection = () => {
               </div>
               <Button
                 asChild
-                className={`w-full rounded-full mb-8 ${plan.highlight ? "shadow-md" : ""}`}
-                variant={plan.highlight ? "default" : "outline"}
+                size="lg"
+                className={`w-full rounded-full mb-8 font-bold transition-all duration-200 ${
+                  plan.highlight
+                    ? "shadow-lg hover:shadow-xl hover:scale-[1.02] active:scale-[0.98]"
+                    : "bg-foreground text-background hover:bg-foreground/90 shadow-md hover:shadow-lg hover:scale-[1.02] active:scale-[0.98]"
+                }`}
+                variant={plan.highlight ? "default" : "default"}
               >
-                <Link to="/auth">Commencer l'essai gratuit</Link>
+                <Link to="/auth">{plan.cta}</Link>
               </Button>
               <ul className="space-y-3">
                 {plan.features.map((f) => (

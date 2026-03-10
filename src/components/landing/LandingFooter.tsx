@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { Zap } from "lucide-react";
+import { Zap, Mail, Phone } from "lucide-react";
 
 const footerSections = [
   {
@@ -15,7 +15,7 @@ const footerSections = [
     title: "Ressources",
     links: [
       { label: "Centre d'aide", href: "/support" },
-      { label: "Roadmap", href: "/support" },
+      { label: "Premiers pas", href: "/support/premiers-pas" },
       { label: "Documentation", href: "/support" },
     ],
   },
@@ -41,11 +41,17 @@ const LandingFooter = () => (
             <span className="text-xl font-bold tracking-tight font-display">BonoitecPilot</span>
           </Link>
           <p className="text-sm text-muted-foreground max-w-xs leading-relaxed">
-            La plateforme de gestion tout-en-un pour les ateliers de réparation. Simple, rapide, efficace.
+            Le cockpit intelligent pour les ateliers de réparation. Gérez vos clients, réparations, devis et factures en un seul endroit.
           </p>
-          <div className="mt-6 space-y-1 text-sm text-muted-foreground">
-            <p>contact@bonoitecpilot.fr</p>
-            <p>04 65 96 95 85</p>
+          <div className="mt-6 space-y-2 text-sm text-muted-foreground">
+            <a href="mailto:contact@bonoitecpilot.fr" className="flex items-center gap-2 hover:text-primary transition-colors">
+              <Mail className="h-4 w-4" />
+              contact@bonoitecpilot.fr
+            </a>
+            <a href="tel:0465969585" className="flex items-center gap-2 hover:text-primary transition-colors">
+              <Phone className="h-4 w-4" />
+              04 65 96 95 85
+            </a>
           </div>
         </div>
 
@@ -70,7 +76,7 @@ const LandingFooter = () => (
 
       <div className="mt-16 pt-8 border-t border-border/60 flex flex-col sm:flex-row items-center justify-between gap-4">
         <p className="text-xs text-muted-foreground">
-          © {new Date().getFullYear()} BonoitecPilot. Tous droits réservés.
+          © {new Date().getFullYear()} BonoitecPilot — Bonoitec Repair. Tous droits réservés.
         </p>
         <div className="flex items-center gap-6">
           <a href="#" className="text-xs text-muted-foreground hover:text-primary transition-colors">Twitter</a>

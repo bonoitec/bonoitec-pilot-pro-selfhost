@@ -6,7 +6,7 @@ const testimonials = [
   {
     name: "Thomas L.",
     role: "Réparateur smartphone — Lyon",
-    text: "Depuis que j'utilise la plateforme, j'ai divisé par deux le temps passé sur la facturation. C'est un outil pensé pour notre métier, pas un logiciel générique.",
+    text: "Depuis que j'utilise BonoitecPilot, j'ai divisé par deux le temps passé sur la facturation. C'est un outil pensé pour notre métier, pas un logiciel générique.",
     rating: 5,
   },
   {
@@ -49,7 +49,7 @@ const TestimonialsSection = () => {
             Ils nous font confiance
           </h2>
           <p className="text-muted-foreground text-lg leading-relaxed">
-            Découvrez ce que nos utilisateurs disent de la plateforme.
+            Découvrez ce que nos utilisateurs disent de BonoitecPilot.
           </p>
         </motion.div>
 

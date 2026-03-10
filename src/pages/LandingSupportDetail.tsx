@@ -1,12 +1,12 @@
 import { useParams, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, ChevronRight, MessageSquare } from "lucide-react";
+import { ArrowLeft, ChevronRight, MessageSquare, Mail, Phone } from "lucide-react";
 import { supportCategories } from "@/components/landing/SupportSection";
 import { motion } from "framer-motion";
 
 const supportContent: Record<string, { intro: string; steps: { title: string; text: string; tips?: string }[] }> = {
   "premiers-pas": {
-    intro: "La plateforme est pensée pour vous simplifier la vie dès la prise en charge de vos clients. Chaque étape du parcours a été conçue pour vous faire gagner du temps, structurer votre activité et offrir une expérience fluide à vos clients.",
+    intro: "BonoitecPilot est pensé pour vous simplifier la vie dès la prise en charge de vos clients. Chaque étape du parcours a été conçue pour vous faire gagner du temps, structurer votre activité et offrir une expérience fluide à vos clients.",
     steps: [
       {
         title: "Créez votre compte et configurez votre atelier",
@@ -31,7 +31,7 @@ const supportContent: Record<string, { intro: string; steps: { title: string; te
     ],
   },
   "aide-contact": {
-    intro: "Notre équipe support est disponible pour répondre à toutes vos questions et vous accompagner dans l'utilisation de la plateforme.",
+    intro: "Notre équipe support est disponible pour répondre à toutes vos questions et vous accompagner dans l'utilisation de BonoitecPilot.",
     steps: [
       { title: "Par email", text: "Envoyez-nous un message à contact@bonoitecpilot.fr. Nous répondons sous 24h ouvrées." },
       { title: "Par chat", text: "Utilisez le chat en ligne disponible en bas à droite de votre écran pour une réponse rapide." },
@@ -39,15 +39,15 @@ const supportContent: Record<string, { intro: string; steps: { title: string; te
     ],
   },
   "pre-requis": {
-    intro: "Pour utiliser la plateforme dans les meilleures conditions, voici les pré-requis techniques recommandés.",
+    intro: "Pour utiliser BonoitecPilot dans les meilleures conditions, voici les pré-requis techniques recommandés.",
     steps: [
       { title: "Navigateur web", text: "Utilisez un navigateur récent : Chrome, Firefox, Safari ou Edge. La plateforme est 100% web, aucune installation requise." },
-      { title: "Connexion internet", text: "Une connexion internet stable est nécessaire. La plateforme fonctionne aussi bien en WiFi qu'en 4G/5G." },
+      { title: "Connexion internet", text: "Une connexion internet stable est nécessaire. BonoitecPilot fonctionne aussi bien en WiFi qu'en 4G/5G." },
       { title: "Appareils compatibles", text: "PC, Mac, tablette ou smartphone. L'interface s'adapte automatiquement à la taille de votre écran." },
     ],
   },
   "devis-factures": {
-    intro: "Créez, envoyez et suivez vos devis et factures directement depuis la plateforme.",
+    intro: "Créez, envoyez et suivez vos devis et factures directement depuis BonoitecPilot.",
     steps: [
       { title: "Créer un devis", text: "Depuis une réparation ou le menu Devis, ajoutez les lignes de prestation, pièces et services, puis envoyez le devis au client.", tips: "Le devis peut être converti en facture en un clic une fois accepté." },
       { title: "Générer une facture", text: "La facture est créée automatiquement à partir du devis ou de la réparation. Ajoutez un mode de paiement et validez." },
@@ -55,7 +55,7 @@ const supportContent: Record<string, { intro: string; steps: { title: string; te
     ],
   },
   "prise-en-charge": {
-    intro: "Découvrez comment prendre en charge un client et son appareil en quelques étapes simples.",
+    intro: "Découvrez comment prendre en charge un client et son appareil en quelques étapes simples avec BonoitecPilot.",
     steps: [
       { title: "Identifier le client", text: "Recherchez un client existant ou créez une nouvelle fiche en renseignant nom, téléphone et email." },
       { title: "Enregistrer l'appareil", text: "Ajoutez l'appareil du client : marque, modèle, numéro de série, état cosmétique." },
@@ -64,7 +64,7 @@ const supportContent: Record<string, { intro: string; steps: { title: string; te
     ],
   },
   "types-appareils": {
-    intro: "Personnalisez les types d'appareils que vous réparez pour adapter la plateforme à votre activité.",
+    intro: "Personnalisez les types d'appareils que vous réparez pour adapter BonoitecPilot à votre activité.",
     steps: [
       { title: "Accéder aux paramètres", text: "Rendez-vous dans Paramètres > Types d'appareils pour gérer votre catalogue." },
       { title: "Ajouter un type", text: "Créez un nouveau type d'appareil (ex : Trottinette électrique, Console de jeu) avec les champs spécifiques." },
@@ -85,7 +85,7 @@ const supportContent: Record<string, { intro: string; steps: { title: string; te
     ],
   },
   "statuts-reparation": {
-    intro: "Comprenez les différents statuts d'une réparation et comment les utiliser.",
+    intro: "Comprenez les différents statuts d'une réparation et comment les utiliser dans BonoitecPilot.",
     steps: [
       { title: "Nouveau", text: "La réparation vient d'être créée et n'a pas encore été prise en charge par un technicien." },
       { title: "Diagnostic", text: "Le technicien analyse le problème et prépare le devis." },
@@ -108,7 +108,7 @@ const supportContent: Record<string, { intro: string; steps: { title: string; te
     ],
   },
   "importer-donnees": {
-    intro: "Importez facilement vos données existantes dans la plateforme.",
+    intro: "Importez facilement vos données existantes dans BonoitecPilot.",
     steps: [
       { title: "Préparer le fichier", text: "Exportez vos données au format CSV depuis votre ancien logiciel ou tableur." },
       { title: "Importer via l'interface", text: "Rendez-vous dans Paramètres > Import et suivez l'assistant d'importation pas à pas.", tips: "Commencez par importer vos clients, puis vos produits et enfin vos réparations." },
@@ -125,7 +125,7 @@ const LandingSupportDetail = () => {
     return (
       <div className="landing-container landing-section text-center">
         <h1 className="text-2xl font-bold font-display mb-4">Page non trouvée</h1>
-        <Button variant="outline" asChild>
+        <Button variant="outline" asChild className="font-semibold">
           <Link to="/support">Retour au support</Link>
         </Button>
       </div>
@@ -139,7 +139,7 @@ const LandingSupportDetail = () => {
       transition={{ duration: 0.4 }}
       className="landing-container py-16 md:py-24"
     >
-      <Link to="/support" className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-primary transition-colors mb-8">
+      <Link to="/support" className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-primary transition-colors mb-8 font-medium">
         <ArrowLeft className="h-4 w-4" /> Retour au support
       </Link>
 
@@ -158,14 +158,14 @@ const LandingSupportDetail = () => {
             {content.steps.map((step, i) => (
               <div key={i} className="landing-card p-6">
                 <div className="flex items-start gap-4">
-                  <span className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10 text-primary text-sm font-bold shrink-0">
+                  <span className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-primary-foreground text-sm font-bold shrink-0">
                     {i + 1}
                   </span>
                   <div className="space-y-2">
                     <h3 className="font-semibold font-display">{step.title}</h3>
                     <p className="text-sm text-muted-foreground leading-relaxed">{step.text}</p>
                     {step.tips && (
-                      <div className="mt-3 rounded-xl bg-accent/50 border border-border/60 p-4 text-sm">
+                      <div className="mt-3 rounded-xl bg-accent/50 border border-primary/10 p-4 text-sm">
                         <span className="font-semibold text-primary text-xs uppercase tracking-wide">💡 Conseil</span>
                         <p className="mt-1 text-muted-foreground">{step.tips}</p>
                       </div>
@@ -176,23 +176,30 @@ const LandingSupportDetail = () => {
             ))}
           </div>
 
-          <div className="landing-card p-6 mt-8 flex items-center gap-4">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary shrink-0">
-              <MessageSquare className="h-5 w-5" />
+          <div className="landing-card p-6 mt-8">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary shrink-0">
+                <MessageSquare className="h-5 w-5" />
+              </div>
+              <div className="flex-1">
+                <p className="font-semibold text-sm">Besoin d'aide supplémentaire ?</p>
+                <p className="text-sm text-muted-foreground">
+                  Contactez-nous à{" "}
+                  <a href="mailto:contact@bonoitecpilot.fr" className="text-primary hover:underline font-medium">contact@bonoitecpilot.fr</a>
+                  {" "}ou au{" "}
+                  <a href="tel:0465969585" className="text-primary hover:underline font-medium">04 65 96 95 85</a>
+                </p>
+              </div>
+              <Button asChild size="sm" className="rounded-full font-bold shrink-0 shadow-md">
+                <a href="mailto:contact@bonoitecpilot.fr">Contacter le support</a>
+              </Button>
             </div>
-            <div className="flex-1">
-              <p className="font-semibold text-sm">Besoin d'aide supplémentaire ?</p>
-              <p className="text-sm text-muted-foreground">Notre équipe support est disponible pour vous accompagner.</p>
-            </div>
-            <Button variant="outline" size="sm" className="rounded-full shrink-0">
-              Contacter le support
-            </Button>
           </div>
         </div>
       ) : (
         <div className="landing-card p-8 max-w-3xl">
           <p className="text-muted-foreground">Le contenu de cette section sera bientôt disponible.</p>
-          <Button variant="outline" className="mt-4 rounded-full" asChild>
+          <Button variant="outline" className="mt-4 rounded-full font-semibold border-2" asChild>
             <Link to="/support">Retour au support</Link>
           </Button>
         </div>
