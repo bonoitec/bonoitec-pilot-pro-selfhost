@@ -20,6 +20,7 @@ const mainItems = [
   { title: "Devis", url: "/quotes", icon: FileText },
   { title: "Factures", url: "/invoices", icon: Receipt },
   { title: "Techniciens", url: "/technicians", icon: UserCog },
+  { title: "Ventes", url: "/sales", icon: BadgeDollarSign },
 ];
 
 const shopItems = [
