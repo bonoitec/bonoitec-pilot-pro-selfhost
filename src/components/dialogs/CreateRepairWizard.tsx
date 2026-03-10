@@ -657,6 +657,10 @@ export function CreateRepairWizard({ open, onOpenChange }: Props) {
                 <Label className="text-xs">Prix estimé (€){selectedServices.length > 0 ? " (calculé automatiquement)" : ""}</Label>
                 <Input type="number" step="0.01" value={estimatedPrice} onChange={e => setEstimatedPrice(e.target.value)} placeholder="0.00" />
               </div>
+              <div>
+                <Label className="text-xs">Coût main-d'œuvre (€)</Label>
+                <Input type="number" step="0.01" value={laborCost} onChange={e => setLaborCost(e.target.value)} placeholder="0.00" />
+              </div>
             </div>
           )}
 
