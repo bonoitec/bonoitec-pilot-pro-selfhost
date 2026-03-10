@@ -1,15 +1,19 @@
 import { motion, useInView } from "framer-motion";
-import { useRef, useState } from "react";
+import { useRef } from "react";
 import {
   Wrench, Users, FileText, Package, Calendar, Columns3,
   MessageSquare, BarChart3, UserCog, BookOpen, Smartphone, Shield,
 } from "lucide-react";
+import featureRepairs from "@/assets/feature-repairs.png";
+import featureCrm from "@/assets/feature-crm.png";
+import featureInvoices from "@/assets/feature-invoices.png";
+import featureStock from "@/assets/feature-stock.png";
 
 const features = [
-  { icon: Wrench, title: "Réparations & tickets", desc: "Suivez chaque réparation de la prise en charge à la restitution." },
-  { icon: Users, title: "CRM clients", desc: "Centralisez vos clients, leurs appareils et leur historique." },
-  { icon: FileText, title: "Devis, factures & acomptes", desc: "Facturez vite, correctement, et sans friction." },
-  { icon: Package, title: "Gestion des stocks", desc: "Suivez vos pièces, fournisseurs et seuils de réapprovisionnement." },
+  { icon: Wrench, title: "Réparations & tickets", desc: "Suivez chaque réparation de la prise en charge à la restitution.", illustration: featureRepairs },
+  { icon: Users, title: "CRM clients", desc: "Centralisez vos clients, leurs appareils et leur historique.", illustration: featureCrm },
+  { icon: FileText, title: "Devis, factures & acomptes", desc: "Facturez vite, correctement, et sans friction.", illustration: featureInvoices },
+  { icon: Package, title: "Gestion des stocks", desc: "Suivez vos pièces, fournisseurs et seuils de réapprovisionnement.", illustration: featureStock },
   { icon: Calendar, title: "Planning / calendrier", desc: "Organisez vos journées et visualisez votre charge de travail." },
   { icon: Columns3, title: "Kanban de suivi", desc: "Visualisez votre charge avec un Kanban et un calendrier clairs." },
   { icon: MessageSquare, title: "Messagerie client", desc: "Communiquez avec vos clients directement depuis la plateforme." },
@@ -54,9 +58,15 @@ const FeaturesSection = ({ expanded = false }: { expanded?: boolean }) => {
               transition={{ duration: 0.4, delay: i * 0.06 }}
               className="landing-card p-7 group cursor-default"
             >
-              <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-accent text-accent-foreground mb-4 group-hover:bg-primary group-hover:text-primary-foreground transition-colors duration-300">
-                <f.icon className="h-5 w-5" />
-              </div>
+              {f.illustration ? (
+                <div className="h-20 w-20 mb-4 flex items-center justify-center">
+                  <img src={f.illustration} alt={f.title} className="h-full w-full object-contain" loading="lazy" />
+                </div>
+              ) : (
+                <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-accent text-accent-foreground mb-4 group-hover:bg-primary group-hover:text-primary-foreground transition-colors duration-300">
+                  <f.icon className="h-5 w-5" />
+                </div>
+              )}
               <h3 className="font-semibold font-display mb-2">{f.title}</h3>
               <p className="text-sm text-muted-foreground leading-relaxed">{f.desc}</p>
             </motion.div>

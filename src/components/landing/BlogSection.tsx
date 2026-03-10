@@ -2,6 +2,9 @@ import { motion, useInView } from "framer-motion";
 import { useRef } from "react";
 import { Link } from "react-router-dom";
 import { ArrowRight } from "lucide-react";
+import blogOrganiser from "@/assets/blog-organiser-atelier.jpg";
+import blogFacturation from "@/assets/blog-facturation.jpg";
+import blogCentraliser from "@/assets/blog-centraliser.jpg";
 
 const articles = [
   {
@@ -9,18 +12,21 @@ const articles = [
     category: "Organisation",
     title: "Comment mieux organiser son atelier de réparation",
     excerpt: "Découvrez les meilleures pratiques pour structurer votre espace de travail et optimiser votre productivité au quotidien.",
+    image: blogOrganiser,
   },
   {
     slug: "erreurs-facturation",
     category: "Facturation",
     title: "5 erreurs qui ralentissent votre facturation",
     excerpt: "Évitez les pièges courants qui font perdre du temps et de l'argent à votre atelier lors de la facturation.",
+    image: blogFacturation,
   },
   {
     slug: "centraliser-gestion",
     category: "Gestion",
     title: "Pourquoi centraliser clients, stock et réparations",
     excerpt: "Un seul outil pour tout gérer : les avantages concrets d'une plateforme unifiée pour votre activité de réparation.",
+    image: blogCentraliser,
   },
 ];
 
@@ -57,8 +63,13 @@ const BlogSection = ({ expanded = false }: { expanded?: boolean }) => {
               transition={{ duration: 0.4, delay: i * 0.08 }}
               className="landing-card overflow-hidden group"
             >
-              <div className="h-44 bg-gradient-to-br from-primary/10 to-accent/60 flex items-center justify-center">
-                <div className="w-24 h-16 rounded-lg bg-card/80 shadow-sm border border-border/60" />
+              <div className="h-48 overflow-hidden">
+                <img
+                  src={a.image}
+                  alt={a.title}
+                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                  loading="lazy"
+                />
               </div>
               <div className="p-6 space-y-3">
                 <span className="text-xs font-semibold text-primary">{a.category}</span>
