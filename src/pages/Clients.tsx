@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -12,6 +13,15 @@ import { CreateClientDialog } from "@/components/dialogs/CreateClientDialog";
 const Clients = () => {
   const [search, setSearch] = useState("");
   const [showCreate, setShowCreate] = useState(false);
+  const [searchParams] = useSearchParams();
+  const highlightId = searchParams.get("highlight");
+  const highlightRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (highlightId && highlightRef.current) {
+      highlightRef.current.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
+  }, [highlightId]);
 
   const { data: clients = [], isLoading } = useQuery({
     queryKey: ["clients"],
@@ -56,7 +66,11 @@ const Clients = () => {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {filtered.map((client) => (
-            <Card key={client.id} className="hover:shadow-md transition-shadow cursor-pointer">
+            <Card
+              key={client.id}
+              ref={highlightId === client.id ? highlightRef : undefined}
+              className={`hover:shadow-md transition-all cursor-pointer ${highlightId === client.id ? "ring-2 ring-primary shadow-lg" : ""}`}
+            >
               <CardContent className="p-5">
                 <div className="flex items-start justify-between mb-3">
                   <div>

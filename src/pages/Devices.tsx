@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -19,6 +20,15 @@ const typeIcons: Record<string, any> = {
 const Devices = () => {
   const [search, setSearch] = useState("");
   const [showCreate, setShowCreate] = useState(false);
+  const [searchParams] = useSearchParams();
+  const highlightId = searchParams.get("highlight");
+  const highlightRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (highlightId && highlightRef.current) {
+      highlightRef.current.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
+  }, [highlightId]);
 
   const { data: devices = [], isLoading } = useQuery({
     queryKey: ["devices"],
@@ -63,7 +73,11 @@ const Devices = () => {
           {filtered.map((device) => {
             const Icon = typeIcons[device.type] || Smartphone;
             return (
-              <Card key={device.id} className="hover:shadow-md transition-shadow cursor-pointer">
+              <Card
+                key={device.id}
+                ref={highlightId === device.id ? highlightRef : undefined}
+                className={`hover:shadow-md transition-all cursor-pointer ${highlightId === device.id ? "ring-2 ring-primary shadow-lg" : ""}`}
+              >
                 <CardContent className="p-5">
                   <div className="flex items-start gap-3">
                     <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-secondary">
