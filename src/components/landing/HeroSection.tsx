@@ -56,7 +56,7 @@ const HeroSection = () => (
               </Link>
             </Button>
             <Button size="lg" variant="outline" asChild className="rounded-full px-10 h-14 text-base font-semibold border-2 border-primary/30 text-primary hover:bg-primary/5 hover:border-primary/50 transition-all duration-200">
-              <Link to="/fonctionnalites">
+              <Link to="/demo">
                 <Play className="h-5 w-5 mr-2" /> Voir la démo
               </Link>
             </Button>
