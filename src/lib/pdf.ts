@@ -343,7 +343,7 @@ export async function generatePDF(org: OrgInfo, data: DocData, options?: { previ
     margin: { left: PAGE_LEFT, right: 20, bottom: FOOTER_ZONE + 5 },
     tableLineColor: [...GRAY_200],
     tableLineWidth: 0.2,
-    didDrawPage: () => {
+    didDrawPage: (data: any) => {
       // redraw accent bar on new pages
       doc.setFillColor(...PRIMARY);
       doc.rect(0, 0, 210, 4, "F");
