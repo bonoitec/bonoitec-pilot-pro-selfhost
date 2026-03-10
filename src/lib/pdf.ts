@@ -277,6 +277,7 @@ export async function generatePDF(org: OrgInfo, data: DocData, options?: { previ
     if (intake.frameCondition) { doc.text(`Châssis : ${starText(intake.frameCondition)}`, PAGE_LEFT + 2, currentY); currentY += 4; }
     if (intake.backCondition) { doc.text(`Vitre arrière : ${starText(intake.backCondition)}`, PAGE_LEFT + 2, currentY); currentY += 4; }
     currentY += 6;
+  }
 
   // Checklist
   if (intake?.checklist && intake.checklist.length > 0) {
