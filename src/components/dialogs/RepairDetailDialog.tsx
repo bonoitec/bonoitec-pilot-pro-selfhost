@@ -84,6 +84,7 @@ export function RepairDetailDialog({ open, onOpenChange, repair }: Props) {
   const [techMessage, setTechMessage] = useState(repair?.technician_message || "");
   const [finalPrice, setFinalPrice] = useState(repair?.final_price?.toString() || "");
   const [paymentMethod, setPaymentMethod] = useState((repair as any)?.payment_method || "");
+  const [laborCost, setLaborCost] = useState((repair as any)?.labor_cost?.toString() || "0");
   const [showPayment, setShowPayment] = useState(false);
   const [showNotification, setShowNotification] = useState(false);
   const [pendingStatus, setPendingStatus] = useState("");
