@@ -55,10 +55,10 @@ const LandingHeader = () => {
         </nav>
 
         <div className="hidden md:flex items-center gap-3">
-          <Button variant="ghost" asChild className="text-sm">
+          <Button variant="ghost" asChild className="text-sm font-semibold text-foreground hover:text-primary">
             <Link to="/login">Se connecter</Link>
           </Button>
-          <Button asChild className="rounded-full px-6 shadow-md hover:shadow-lg transition-shadow">
+          <Button asChild className="rounded-full px-6 font-bold shadow-md hover:shadow-lg hover:scale-[1.02] active:scale-[0.98] transition-all duration-200">
             <Link to="/auth">Essai gratuit</Link>
           </Button>
         </div>
@@ -84,16 +84,16 @@ const LandingHeader = () => {
                 <Link
                   key={link.href}
                   to={link.href}
-                  className="text-sm py-3 px-3 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+                  className="text-sm py-3 px-3 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-colors font-medium"
                 >
                   {link.label}
                 </Link>
               ))}
               <div className="flex flex-col gap-2 pt-4 mt-2 border-t border-border/50">
-                <Button variant="outline" asChild className="w-full">
+                <Button variant="outline" asChild className="w-full font-semibold border-2">
                   <Link to="/login">Se connecter</Link>
                 </Button>
-                <Button asChild className="w-full rounded-full">
+                <Button asChild className="w-full rounded-full font-bold">
                   <Link to="/auth">Essai gratuit</Link>
                 </Button>
               </div>
