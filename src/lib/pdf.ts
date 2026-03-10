@@ -504,14 +504,18 @@ export async function generatePDF(org: OrgInfo, data: DocData, options?: { previ
   if (org.google_review_url && isInvoice) {
     const pageCount = doc.getNumberOfPages();
     doc.setPage(pageCount);
-    const qrY = Math.min(finalY + 4, 262);
-    doc.setFontSize(7.5);
-    doc.setFont("helvetica", "normal");
-    doc.setTextColor(...GRAY_500);
-    doc.text("⭐ Laissez-nous un avis Google :", PAGE_LEFT, qrY);
-    doc.setTextColor(...PRIMARY);
-    doc.textWithLink(org.google_review_url, PAGE_LEFT, qrY + 4, { url: org.google_review_url });
-    doc.setTextColor(0);
+    const pageH = doc.internal.pageSize.getHeight();
+    // Place above the footer zone, never overlapping
+    const qrY = Math.min(finalY + 4, pageH - FOOTER_ZONE - 2);
+    if (qrY > 14 && qrY < pageH - FOOTER_ZONE) {
+      doc.setFontSize(7.5);
+      doc.setFont("helvetica", "normal");
+      doc.setTextColor(...GRAY_500);
+      doc.text("⭐ Laissez-nous un avis Google :", PAGE_LEFT, qrY);
+      doc.setTextColor(...PRIMARY);
+      doc.textWithLink(org.google_review_url, PAGE_LEFT, qrY + 4, { url: org.google_review_url });
+      doc.setTextColor(0);
+    }
   }
 
   // ═══════════════════════════════════════════
