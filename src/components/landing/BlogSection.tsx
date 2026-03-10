@@ -78,7 +78,7 @@ const BlogSection = forwardRef<HTMLElement, { expanded?: boolean }>(({ expanded 
                 </h3>
                 <p className="text-sm text-muted-foreground leading-relaxed">{a.excerpt}</p>
                 <Link
-                  to="/blog"
+                  to={`/blog/${a.slug}`}
                   className="inline-flex items-center gap-1 text-sm font-medium text-primary hover:underline pt-1"
                 >
                   Lire l'article <ArrowRight className="h-3.5 w-3.5" />
