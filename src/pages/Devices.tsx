@@ -24,12 +24,6 @@ const Devices = () => {
   const highlightId = searchParams.get("highlight");
   const highlightRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    if (highlightId && highlightRef.current) {
-      highlightRef.current.scrollIntoView({ behavior: "smooth", block: "center" });
-    }
-  }, [highlightId]);
-
   const { data: devices = [], isLoading } = useQuery({
     queryKey: ["devices"],
     queryFn: async () => {
@@ -38,6 +32,14 @@ const Devices = () => {
       return data;
     },
   });
+
+  useEffect(() => {
+    if (highlightId && highlightRef.current && !isLoading) {
+      setTimeout(() => {
+        highlightRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+      }, 100);
+    }
+  }, [highlightId, isLoading]);
 
   const filtered = devices.filter(
     (d) =>

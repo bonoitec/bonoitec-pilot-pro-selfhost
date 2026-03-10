@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Download, X, Loader2, Printer } from "lucide-react";
 
@@ -29,6 +29,7 @@ export function PDFPreviewDialog({ open, onOpenChange, pdfUrl, loading, referenc
               Aperçu — {reference}
             </DialogTitle>
           </div>
+          <DialogDescription className="sr-only">Aperçu du document {reference}</DialogDescription>
         </DialogHeader>
 
         <div className="flex-1 min-h-0 bg-muted/30">

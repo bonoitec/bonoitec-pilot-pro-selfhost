@@ -1,7 +1,7 @@
 import { useState, useMemo } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -414,6 +414,7 @@ export function CreateRepairWizard({ open, onOpenChange }: Props) {
         <div className="border-b border-border px-6 pt-5 pb-4">
           <DialogHeader>
             <DialogTitle className="text-lg font-semibold">Nouvelle réparation</DialogTitle>
+            <DialogDescription className="sr-only">Assistant de création de réparation</DialogDescription>
           </DialogHeader>
           <div className="mt-3">
             <Progress value={progress} className="h-1.5" />

@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
@@ -165,6 +165,7 @@ export function RepairDetailDialog({ open, onOpenChange, repair }: Props) {
     onSuccess: () => {
       toast({ title: "Réparation mise à jour" });
       qc.invalidateQueries({ queryKey: ["repairs"] });
+      qc.invalidateQueries({ queryKey: ["sales-repairs"] });
       qc.invalidateQueries({ queryKey: ["dashboard-repairs"] });
       qc.invalidateQueries({ queryKey: ["inventory-for-parts"] });
       qc.invalidateQueries({ queryKey: ["inventory"] });
@@ -216,6 +217,7 @@ export function RepairDetailDialog({ open, onOpenChange, repair }: Props) {
               <Badge variant="outline" className="text-[10px] font-mono">Suivi: {repair.tracking_code}</Badge>
             )}
           </DialogTitle>
+          <DialogDescription className="sr-only">Détails de la réparation {repair.reference}</DialogDescription>
         </DialogHeader>
 
         {/* Notification suggestion after status change */}
