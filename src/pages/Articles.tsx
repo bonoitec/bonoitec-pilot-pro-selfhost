@@ -13,7 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Plus, Search, Pencil, Trash2, AlertTriangle, ShoppingBag } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
-const categories = ["Chargeur", "Câble", "Coque", "Protection écran", "Adaptateur", "Accessoire", "Autre"];
+const defaultCategories = ["Chargeur", "Câble", "Coque", "Protection écran", "Adaptateur", "Accessoire", "Autre"];
 
 interface ArticleForm {
   name: string; description: string; price: string; quantity: string; min_quantity: string; category: string; sku: string;
@@ -27,6 +27,20 @@ const Articles = () => {
   const [showDialog, setShowDialog] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState<ArticleForm>(emptyForm);
+
+  const { data: org } = useQuery({
+    queryKey: ["organization"],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("organizations").select("*").single();
+      if (error) throw error;
+      return data;
+    },
+    staleTime: 60000,
+  });
+
+  const categories = ((org as any)?.article_categories as string[] | undefined)?.length
+    ? (org as any).article_categories as string[]
+    : defaultCategories;
 
   const { data: articles = [], isLoading } = useQuery({
     queryKey: ["articles"],

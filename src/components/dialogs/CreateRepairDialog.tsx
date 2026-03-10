@@ -68,6 +68,7 @@ export function CreateRepairDialog({ open, onOpenChange }: Props) {
   });
 
   const checklistItems: string[] = (org as any)?.intake_checklist_items ?? defaultChecklist;
+  const checklistLabel: string = (org as any)?.checklist_label || "Checklist de prise en charge";
 
   const { data: clients = [] } = useQuery({
     queryKey: ["clients"],
@@ -193,7 +194,7 @@ export function CreateRepairDialog({ open, onOpenChange }: Props) {
           <Card className="border-border/60">
             <CardHeader className="pb-3 pt-4 px-4">
               <CardTitle className="text-sm font-medium flex items-center gap-2">
-                <ClipboardCheck className="h-4 w-4 text-primary" />Checklist d'intake
+                <ClipboardCheck className="h-4 w-4 text-primary" />{checklistLabel}
               </CardTitle>
             </CardHeader>
             <CardContent className="px-4 pb-4 space-y-2">
