@@ -97,6 +97,15 @@ export function MarginAnalysisCard({ repair }: Props) {
             <p className="font-medium">{fmt(partsCost)}</p>
           </div>
 
+          {servicesTotal > 0 && (
+            <div className="space-y-0.5">
+              <p className="text-[11px] text-muted-foreground flex items-center gap-1">
+                <WrenchIcon className="h-3 w-3" />Services
+              </p>
+              <p className="font-medium">{fmt(servicesTotal)}</p>
+            </div>
+          )}
+
           {laborCost > 0 && (
             <div className="space-y-0.5">
               <p className="text-[11px] text-muted-foreground flex items-center gap-1">
