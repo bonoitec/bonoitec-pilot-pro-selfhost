@@ -19,6 +19,7 @@ import { StatusNotificationSuggester } from "@/components/messaging/StatusNotifi
 import { MarginAnalysisCard } from "@/components/repairs/MarginAnalysisCard";
 import { PartsSelector, type PartUsed } from "@/components/repairs/PartsSelector";
 import { statusLabels, statusOrder } from "@/lib/repairStatuses";
+import { RestitutionDialog } from "@/components/dialogs/RestitutionDialog";
 
 const paymentMethods = [
   { value: "cb", label: "Carte bancaire" },
