@@ -89,7 +89,10 @@ export function CreateQuoteDialog({ open, onOpenChange }: Props) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-2xl max-h-[85vh]">
-        <DialogHeader><DialogTitle>Nouveau devis</DialogTitle></DialogHeader>
+        <DialogHeader>
+          <DialogTitle>Nouveau devis</DialogTitle>
+          <DialogDescription>Créez un devis pour un client avec les détails de prestation.</DialogDescription>
+        </DialogHeader>
         <div className="space-y-4 overflow-y-auto pr-1 pb-2" style={{ maxHeight: "calc(85vh - 140px)" }}>
           <Card className="border-border/60">
             <CardHeader className="pb-3 pt-4 px-4">
