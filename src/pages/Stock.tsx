@@ -117,6 +117,9 @@ const Stock = () => {
                         </td>
                         <td className="p-3 text-center">
                           <div className="flex justify-center gap-1">
+                            <Button variant="ghost" size="icon" className="h-7 w-7" title="Historique des prix" onClick={() => setHistoryPart(part)}>
+                              <History className="h-3 w-3" />
+                            </Button>
                             <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => { setEditingPart(part); setShowCreate(true); }}>
                               <Pencil className="h-3 w-3" />
                             </Button>
