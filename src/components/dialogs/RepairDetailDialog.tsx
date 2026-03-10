@@ -17,6 +17,7 @@ import { Timer, Star, ClipboardCheck, Camera, CreditCard, Upload, MessageSquare,
 import { RepairChat } from "@/components/messaging/RepairChat";
 import { StatusNotificationSuggester } from "@/components/messaging/StatusNotificationSuggester";
 import { MarginAnalysisCard } from "@/components/repairs/MarginAnalysisCard";
+import { PartsSelector, type PartUsed } from "@/components/repairs/PartsSelector";
 
 const statusLabels: Record<string, string> = {
   nouveau: "Nouveau", diagnostic: "Diagnostic", en_cours: "En cours",
@@ -85,6 +86,10 @@ export function RepairDetailDialog({ open, onOpenChange, repair }: Props) {
   const [finalPrice, setFinalPrice] = useState(repair?.final_price?.toString() || "");
   const [paymentMethod, setPaymentMethod] = useState((repair as any)?.payment_method || "");
   const [laborCost, setLaborCost] = useState((repair as any)?.labor_cost?.toString() || "0");
+  const [partsUsed, setPartsUsed] = useState<PartUsed[]>(() => {
+    const raw = repair?.parts_used;
+    return Array.isArray(raw) ? raw.map((p: any) => ({ inventory_id: p.inventory_id, name: p.name || "", buy_price: Number(p.buy_price ?? p.cost ?? 0), sell_price: Number(p.sell_price ?? 0), quantity: Number(p.quantity ?? 1) })) : [];
+  });
   const [showPayment, setShowPayment] = useState(false);
   const [showNotification, setShowNotification] = useState(false);
   const [pendingStatus, setPendingStatus] = useState("");
@@ -97,6 +102,8 @@ export function RepairDetailDialog({ open, onOpenChange, repair }: Props) {
       setFinalPrice(repair.final_price?.toString() || "");
       setPaymentMethod((repair as any)?.payment_method || "");
       setLaborCost((repair as any)?.labor_cost?.toString() || "0");
+      const raw = repair.parts_used;
+      setPartsUsed(Array.isArray(raw) ? raw.map((p: any) => ({ inventory_id: p.inventory_id, name: p.name || "", buy_price: Number(p.buy_price ?? p.cost ?? 0), sell_price: Number(p.sell_price ?? 0), quantity: Number(p.quantity ?? 1) })) : []);
       setShowPayment(false);
       setShowNotification(false);
       setPendingStatus("");
@@ -111,6 +118,7 @@ export function RepairDetailDialog({ open, onOpenChange, repair }: Props) {
         technician_message: techMessage.trim() || null,
         final_price: finalPrice ? parseFloat(finalPrice) : null,
         labor_cost: laborCost ? parseFloat(laborCost) : 0,
+        parts_used: partsUsed,
       };
       if (status === "en_cours" && repair.status !== "en_cours" && !(repair as any).repair_started_at) {
         updates.repair_started_at = new Date().toISOString();
@@ -286,6 +294,9 @@ export function RepairDetailDialog({ open, onOpenChange, repair }: Props) {
                 </Card>
               )}
 
+              {/* Parts from stock */}
+              <PartsSelector parts={partsUsed} onChange={setPartsUsed} />
+
               {/* Labor cost */}
               <div>
                 <Label className="text-xs">Coût main-d'œuvre (€)</Label>
@@ -293,7 +304,7 @@ export function RepairDetailDialog({ open, onOpenChange, repair }: Props) {
               </div>
 
               {/* Margin Analysis - uses live repair data + laborCost override */}
-              <MarginAnalysisCard repair={{ ...repair, labor_cost: laborCost ? parseFloat(laborCost) : 0, final_price: finalPrice ? parseFloat(finalPrice) : repair.final_price }} />
+              <MarginAnalysisCard repair={{ ...repair, parts_used: partsUsed, labor_cost: laborCost ? parseFloat(laborCost) : 0, final_price: finalPrice ? parseFloat(finalPrice) : repair.final_price }} />
 
               <Separator />
 
