@@ -296,9 +296,9 @@ export async function generatePDF(org: OrgInfo, data: DocData, options?: { previ
   }
 
   // Page break check
-  if (currentY > 220) {
+  if (currentY > PAGE_BOTTOM - 40) {
     doc.addPage();
-    currentY = 20;
+    currentY = 14;
   }
 
   // ═══════════════════════════════════════════
