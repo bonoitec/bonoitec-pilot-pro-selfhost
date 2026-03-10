@@ -10,6 +10,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Plus, Search, LayoutGrid, List, Timer, GripVertical } from "lucide-react";
 import { CreateRepairWizard } from "@/components/dialogs/CreateRepairWizard";
 import { RepairDetailDialog } from "@/components/dialogs/RepairDetailDialog";
+import { RestitutionDialog } from "@/components/dialogs/RestitutionDialog";
 import { DragDropContext, Droppable, Draggable, DropResult } from "@hello-pangea/dnd";
 import { useToast } from "@/hooks/use-toast";
 import { statusLabels, statusOrder, statusColors, statusHelpText } from "@/lib/repairStatuses";
@@ -27,6 +28,7 @@ const Repairs = () => {
   const [search, setSearch] = useState("");
   const [showCreate, setShowCreate] = useState(false);
   const [selectedRepair, setSelectedRepair] = useState<any>(null);
+  const [restitutionRepair, setRestitutionRepair] = useState<any>(null);
   const { toast } = useToast();
   const qc = useQueryClient();
 
@@ -90,6 +92,13 @@ const Repairs = () => {
     const repairId = result.draggableId;
     const repair = repairs.find(r => r.id === repairId);
     if (!repair || repair.status === newStatus) return;
+
+    // Intercept drag to "Restitué" → open restitution workflow
+    if (newStatus === "pret_a_recuperer") {
+      setRestitutionRepair(repair);
+      return;
+    }
+
     updateStatus.mutate({ id: repairId, status: newStatus });
   }, [repairs, updateStatus]);
 
@@ -249,6 +258,7 @@ const Repairs = () => {
 
       <CreateRepairWizard open={showCreate} onOpenChange={setShowCreate} />
       <RepairDetailDialog open={!!selectedRepair} onOpenChange={(o) => !o && setSelectedRepair(null)} repair={selectedRepair} />
+      <RestitutionDialog open={!!restitutionRepair} onOpenChange={(o) => !o && setRestitutionRepair(null)} repair={restitutionRepair} />
     </div>
   );
 };

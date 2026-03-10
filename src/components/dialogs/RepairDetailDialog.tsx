@@ -19,6 +19,7 @@ import { StatusNotificationSuggester } from "@/components/messaging/StatusNotifi
 import { MarginAnalysisCard } from "@/components/repairs/MarginAnalysisCard";
 import { PartsSelector, type PartUsed } from "@/components/repairs/PartsSelector";
 import { statusLabels, statusOrder } from "@/lib/repairStatuses";
+import { RestitutionDialog } from "@/components/dialogs/RestitutionDialog";
 
 const paymentMethods = [
   { value: "cb", label: "Carte bancaire" },
@@ -124,6 +125,7 @@ export function RepairDetailDialog({ open, onOpenChange, repair }: Props) {
     return Array.isArray(raw) ? raw.map((p: any) => ({ inventory_id: p.inventory_id, name: p.name || "", buy_price: Number(p.buy_price ?? p.cost ?? 0), sell_price: Number(p.sell_price ?? 0), quantity: Number(p.quantity ?? 1) })) : [];
   });
   const [showPayment, setShowPayment] = useState(false);
+  const [showRestitution, setShowRestitution] = useState(false);
   const { data: org } = useQuery({
     queryKey: ["organization"],
     queryFn: async () => {
@@ -213,13 +215,13 @@ export function RepairDetailDialog({ open, onOpenChange, repair }: Props) {
   });
 
   const handleStatusChange = (newStatus: string) => {
-    setStatus(newStatus);
-    // Show payment section for "Restitué" (pret_a_recuperer)
     if (newStatus === "pret_a_recuperer") {
-      setShowPayment(true);
-    } else {
-      setShowPayment(false);
+      // Open the restitution workflow instead of inline payment
+      setShowRestitution(true);
+      return;
     }
+    setStatus(newStatus);
+    setShowPayment(false);
   };
 
   const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -241,7 +243,8 @@ export function RepairDetailDialog({ open, onOpenChange, repair }: Props) {
   const photos = (repair.photos as string[]) || [];
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <>
+    <Dialog open={open && !showRestitution} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-3xl max-h-[90vh]">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
@@ -385,31 +388,12 @@ export function RepairDetailDialog({ open, onOpenChange, repair }: Props) {
                 </Select>
               </div>
 
-              {/* Payment section - shown when Restitué */}
-              {showPayment && (
-                <Card className="border-warning/30 bg-warning/5">
-                  <CardHeader className="pb-2 pt-3 px-4">
-                    <CardTitle className="text-sm flex items-center gap-2"><CreditCard className="h-4 w-4 text-warning" />Paiement & Facturation</CardTitle>
-                  </CardHeader>
-                  <CardContent className="px-4 pb-3 space-y-3">
-                    <div>
-                      <Label className="text-xs">Prix final (€)</Label>
-                      <Input type="number" step="0.01" value={finalPrice} onChange={e => setFinalPrice(e.target.value)} placeholder={repair.estimated_price?.toString() || "0.00"} />
-                    </div>
-                    <div>
-                      <Label className="text-xs">Mode de paiement</Label>
-                      <Select value={paymentMethod} onValueChange={setPaymentMethod}>
-                        <SelectTrigger><SelectValue placeholder="Sélectionner..." /></SelectTrigger>
-                        <SelectContent>
-                          {paymentMethods.map(pm => <SelectItem key={pm.value} value={pm.value}>{pm.label}</SelectItem>)}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <p className="text-[11px] text-muted-foreground">
-                      La facture sera automatiquement générée lors de l'enregistrement.
-                    </p>
-                  </CardContent>
-                </Card>
+              {/* Restitution button - shown when status is already pret_a_recuperer but no payment yet */}
+              {repair.status === "pret_a_recuperer" && !repair.payment_method && (
+                <Button variant="outline" className="w-full border-warning/30 text-warning hover:bg-warning/10" onClick={() => setShowRestitution(true)}>
+                  <CreditCard className="h-4 w-4 mr-2" />
+                  Finaliser le paiement & la facture
+                </Button>
               )}
 
               <div><Label>Diagnostic</Label><Textarea value={diagnostic} onChange={e => setDiagnostic(e.target.value)} placeholder="Résultat du diagnostic..." rows={3} /></div>
@@ -430,5 +414,19 @@ export function RepairDetailDialog({ open, onOpenChange, repair }: Props) {
         </div>
       </DialogContent>
     </Dialog>
+
+    <RestitutionDialog
+      open={showRestitution}
+      onOpenChange={(o) => {
+        setShowRestitution(o);
+        if (!o) {
+          // Refresh data after restitution
+          qc.invalidateQueries({ queryKey: ["repairs"] });
+          onOpenChange(false);
+        }
+      }}
+      repair={repair}
+    />
+    </>
   );
 }
