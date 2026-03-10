@@ -375,9 +375,9 @@ function TrustSection() {
           <motion.div variants={fadeUp} className="rounded-2xl border border-border/40 bg-muted/30 p-8 sm:p-12">
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-6">
               {trustItems.map((t) => (
-                <div key={t.text} className="flex flex-col items-center gap-3 text-center">
-                  <div className="h-11 w-11 rounded-xl bg-primary/10 flex items-center justify-center">
-                    <t.icon className="h-5 w-5 text-primary" />
+                <div key={t.text} className="flex flex-col items-center gap-3 text-center cursor-pointer group">
+                  <div className="h-11 w-11 rounded-xl bg-primary/10 flex items-center justify-center group-hover:scale-110 transition-all duration-300">
+                    <t.icon className="h-5 w-5 text-primary group-hover:text-primary transition-colors duration-300" />
                   </div>
                   <span className="text-xs sm:text-sm font-medium text-muted-foreground leading-snug">{t.text}</span>
                 </div>
