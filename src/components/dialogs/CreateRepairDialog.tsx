@@ -158,6 +158,7 @@ export function CreateRepairDialog({ open, onOpenChange }: Props) {
       <DialogContent className="sm:max-w-2xl max-h-[85vh]">
         <DialogHeader>
           <DialogTitle className="text-lg">Nouvelle réparation</DialogTitle>
+          <DialogDescription>Renseignez les informations de la réparation.</DialogDescription>
         </DialogHeader>
         <div className="space-y-4 overflow-y-auto pr-1 pb-2" style={{ maxHeight: "calc(85vh - 140px)" }}>
           {/* Client */}

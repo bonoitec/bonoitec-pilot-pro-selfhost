@@ -93,7 +93,10 @@ export const CreateDeviceDialog = forwardRef<HTMLDivElement, Props>(function Cre
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-lg">
-        <DialogHeader><DialogTitle>Nouvel appareil</DialogTitle></DialogHeader>
+        <DialogHeader>
+          <DialogTitle>Nouvel appareil</DialogTitle>
+          <DialogDescription>Ajoutez un appareil au client.</DialogDescription>
+        </DialogHeader>
         <div className="space-y-3 max-h-[65vh] overflow-y-auto pr-1">
           <div>
             <Label>Client *</Label>
