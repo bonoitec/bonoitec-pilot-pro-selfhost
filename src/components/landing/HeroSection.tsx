@@ -2,7 +2,7 @@ import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, CheckCircle2, Play } from "lucide-react";
 import { motion } from "framer-motion";
-import DashboardMockup from "./DashboardMockup";
+import heroDashboard from "@/assets/hero-dashboard.png";
 
 const trustBadges = [
   "Essai gratuit 30 jours",
@@ -13,13 +13,11 @@ const trustBadges = [
 
 const HeroSection = () => (
   <section className="relative overflow-hidden">
-    {/* Background gradient */}
     <div className="absolute inset-0 bg-gradient-to-b from-accent/40 via-background to-background" />
     <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-primary/5 rounded-full blur-[120px] -translate-y-1/2 translate-x-1/3" />
 
     <div className="landing-container relative pt-16 md:pt-24 pb-16 md:pb-20">
       <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
-        {/* Left */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -64,10 +62,22 @@ const HeroSection = () => (
           </div>
         </motion.div>
 
-        {/* Right - Dashboard mockup */}
-        <div className="hidden lg:block">
-          <DashboardMockup />
-        </div>
+        <motion.div
+          initial={{ opacity: 0, y: 40, scale: 0.95 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          transition={{ duration: 0.8, delay: 0.3, ease: "easeOut" }}
+          className="hidden lg:block relative"
+        >
+          <div className="relative rounded-2xl overflow-hidden shadow-2xl border border-border/60">
+            <img
+              src={heroDashboard}
+              alt="Tableau de bord BonoitecPilot — gestion d'atelier de réparation"
+              className="w-full h-auto"
+              loading="eager"
+            />
+          </div>
+          <div className="absolute -inset-4 -z-10 bg-gradient-to-r from-primary/10 via-transparent to-[hsl(280,80%,55%)]/10 blur-3xl rounded-3xl" />
+        </motion.div>
       </div>
     </div>
   </section>
