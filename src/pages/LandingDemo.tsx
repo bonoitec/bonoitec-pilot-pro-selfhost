@@ -151,7 +151,7 @@ function HeroDemo() {
           </motion.p>
 
           <motion.div variants={fadeUp} className="flex flex-col sm:flex-row justify-center gap-4 pt-2">
-            <Button variant="premium" size="lg" asChild className="rounded-full px-10 h-14 text-base font-bold">
+            <Button variant="premium" size="lg" asChild className="rounded-full px-10 h-14 text-base font-bold text-white">
               <Link to="/auth">
                 Créer mon espace <ArrowRight className="h-5 w-5 ml-2" />
               </Link>
