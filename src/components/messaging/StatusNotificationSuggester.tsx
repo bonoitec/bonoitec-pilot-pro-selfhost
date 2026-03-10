@@ -5,8 +5,9 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Send, MessageSquare, X } from "lucide-react";
+import { Send, MessageSquare, X, Mail } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { sendTransactionalEmail } from "@/lib/email";
 
 const defaultMessages: Record<string, { subject: string; body: string }> = {
   diagnostic: {
