@@ -50,6 +50,8 @@ const SettingsPage = () => {
         google_review_url: (org as any).google_review_url || "",
         vat_enabled: (org as any).vat_enabled ?? true, logo_url: org.logo_url || "",
         intake_checklist_items: (org as any).intake_checklist_items ?? ["Alimentation / charge", "Écran", "Boutons", "Caméra", "Son", "Réseau", "Face ID / empreinte", "Autres problèmes"],
+        checklist_label: (org as any).checklist_label || "Checklist de prise en charge",
+        article_categories: (org as any).article_categories ?? ["Chargeur", "Câble", "Coque", "Protection écran", "Adaptateur", "Accessoire", "Autre"],
       });
     }
   }, [org]);
