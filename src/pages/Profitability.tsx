@@ -130,10 +130,10 @@ const Profitability = () => {
             <Calculator className="h-6 w-6 text-primary" />
             Marges & Rentabilité
           </h1>
-          <p className="text-muted-foreground text-sm">
+          <div className="text-muted-foreground text-sm flex items-center gap-1">
             Analysez vos performances financières
-            {vatEnabled && <Badge variant="outline" className="ml-2 text-[10px]">TVA {vatRate}%</Badge>}
-          </p>
+            {vatEnabled && <Badge variant="outline" className="text-[10px]">TVA {vatRate}%</Badge>}
+          </div>
         </div>
         <div className="flex gap-1 bg-muted/50 rounded-xl p-1">
           {periods.map(p => (
