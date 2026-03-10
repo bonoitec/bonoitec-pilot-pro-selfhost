@@ -17,6 +17,7 @@ import LandingBlog from "./pages/LandingBlog";
 import LandingSupport from "./pages/LandingSupport";
 import LandingSupportDetail from "./pages/LandingSupportDetail";
 import LandingContact from "./pages/LandingContact";
+import LandingDemo from "./pages/LandingDemo";
 
 // App pages
 import Index from "./pages/Index";
