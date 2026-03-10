@@ -88,12 +88,12 @@ const PricingSection = () => {
         >
           {/* Billing toggle */}
           <div className="flex justify-center mb-10">
-            <div className="inline-flex items-center gap-1 p-1.5 rounded-2xl bg-muted border border-border/60">
+            <div className="inline-flex items-center gap-1 p-1.5 rounded-2xl bg-muted border border-border/60 w-full sm:w-auto">
               {billingOptions.map((opt) => (
                 <button
                   key={opt.id}
                   onClick={() => setSelected(opt.id)}
-                  className={`relative px-6 py-3 rounded-xl text-sm font-semibold transition-all duration-200 ${
+                  className={`relative flex-1 sm:flex-initial px-3 sm:px-6 py-3 rounded-xl text-xs sm:text-sm font-semibold transition-all duration-200 ${
                     selected === opt.id
                       ? "bg-primary text-primary-foreground shadow-lg"
                       : "text-muted-foreground hover:text-foreground"
@@ -101,7 +101,7 @@ const PricingSection = () => {
                 >
                   {opt.label}
                   {opt.popular && selected !== opt.id && (
-                    <span className="absolute -top-2 -right-1 bg-success text-success-foreground text-[10px] font-bold px-2 py-0.5 rounded-full">
+                    <span className="absolute -top-2 -right-1 bg-success text-success-foreground text-[10px] font-bold px-1.5 sm:px-2 py-0.5 rounded-full">
                       -29%
                     </span>
                   )}
