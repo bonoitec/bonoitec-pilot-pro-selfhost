@@ -40,6 +40,7 @@ import Articles from "./pages/Articles";
 import StockAlerts from "./pages/StockAlerts";
 import Messages from "./pages/Messages";
 import Auth from "./pages/Auth";
+import ResetPassword from "./pages/ResetPassword";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -66,6 +67,7 @@ const App = () => (
             {/* Auth pages */}
             <Route path="/auth" element={<Auth />} />
             <Route path="/login" element={<Auth />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="/repair/:code" element={<RepairTracking />} />
             <Route path="/deposit/:code" element={<DepositForm />} />
 
