@@ -103,20 +103,26 @@ export function PartsSelector({ parts, onChange }: Props) {
             {filteredInventory.length === 0 ? (
               <p className="text-xs text-muted-foreground p-2">Aucune pièce trouvée</p>
             ) : (
-              filteredInventory.slice(0, 8).map((item) => (
-                <button
-                  key={item.id}
-                  type="button"
-                  onClick={() => addPart(item.id)}
-                  className="w-full flex items-center justify-between px-3 py-1.5 text-xs hover:bg-accent transition-colors text-left"
-                >
-                  <span className="truncate font-medium">{item.name}</span>
-                  <span className="flex items-center gap-2 shrink-0 ml-2">
-                    <span className="text-muted-foreground">×{item.quantity}</span>
-                    <span className="font-mono">{item.buy_price.toFixed(2)} €</span>
-                  </span>
-                </button>
-              ))
+              filteredInventory.slice(0, 8).map((item) => {
+                const isLow = item.quantity <= item.min_quantity;
+                return (
+                  <button
+                    key={item.id}
+                    type="button"
+                    onClick={() => addPart(item.id)}
+                    className={`w-full flex items-center justify-between px-3 py-1.5 text-xs hover:bg-accent transition-colors text-left ${isLow ? "bg-warning/5" : ""}`}
+                  >
+                    <span className="truncate font-medium flex items-center gap-1.5">
+                      {item.name}
+                      {isLow && <AlertTriangle className="h-3 w-3 text-warning shrink-0" />}
+                    </span>
+                    <span className="flex items-center gap-2 shrink-0 ml-2">
+                      <span className={`${isLow ? "text-warning font-semibold" : "text-muted-foreground"}`}>×{item.quantity}</span>
+                      <span className="font-mono">{item.buy_price.toFixed(2)} €</span>
+                    </span>
+                  </button>
+                );
+              })
             )}
           </div>
         )}
