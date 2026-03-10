@@ -61,25 +61,40 @@ export function StatusNotificationSuggester({ repair, newStatus, onDismiss }: Pr
         organization_id: repair.organization_id,
         sender_type: "system",
         sender_name: "Notification",
-        channel: "internal",
+        channel: repair.clients?.email ? "email" : "internal",
         content: message.trim(),
       });
       if (error) throw error;
 
-      // Log the notification
-      const recipient = repair.clients?.email || repair.clients?.phone || "—";
-      await supabase.from("notification_logs").insert({
-        repair_id: repair.id,
-        organization_id: repair.organization_id,
-        channel: repair.clients?.email ? "email" : "sms",
-        recipient,
-        subject: fillTemplate(template.subject),
-        body: message.trim(),
-        status: "pending",
-      });
+      // Send real email if client has email
+      if (repair.clients?.email) {
+        const statusTemplateMap: Record<string, string> = {
+          termine: "repair_completed",
+          pret_a_recuperer: "repair_completed",
+        };
+        const emailTemplate = statusTemplateMap[newStatus] || "status_update";
+
+        await sendTransactionalEmail({
+          template: emailTemplate as any,
+          to: repair.clients.email,
+          data: {
+            clientName: repair.clients?.name || "",
+            reference: reference,
+            device: device,
+            status: newStatus,
+            statusLabel: fillTemplate(template.subject),
+            message: message.trim(),
+          },
+          organizationId: repair.organization_id,
+          repairId: repair.id,
+        });
+      }
     },
     onSuccess: () => {
-      toast({ title: "Notification enregistrée", description: "Le message a été ajouté à la conversation." });
+      const desc = repair.clients?.email
+        ? "Email envoyé et message ajouté à la conversation."
+        : "Le message a été ajouté à la conversation.";
+      toast({ title: "Notification envoyée", description: desc });
       qc.invalidateQueries({ queryKey: ["repair-messages", repair.id] });
       qc.invalidateQueries({ queryKey: ["all-messages"] });
       onDismiss();
