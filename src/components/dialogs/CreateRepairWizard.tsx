@@ -335,7 +335,7 @@ export function CreateRepairWizard({ open, onOpenChange }: Props) {
     setScreenCondition(5); setFrameCondition(5); setBackCondition(5);
     photos.forEach(p => URL.revokeObjectURL(p.preview));
     setPhotos([]);
-    setRepairType(""); setIssue(""); setEstimatedPrice(""); setSelectedServices([]);
+    setRepairType(""); setIssue(""); setEstimatedPrice(""); setLaborCost(""); setSelectedServices([]);
     setTechnicianId(""); setEstimatedTime(""); setPlannedDate("");
     setSignatureDataUrl(null); setCreatedRepair(null);
     onOpenChange(false);
