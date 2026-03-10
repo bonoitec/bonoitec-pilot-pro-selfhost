@@ -153,6 +153,8 @@ export function RepairDetailDialog({ open, onOpenChange, repair }: Props) {
       setLaborCost(repair.labor_cost?.toString() || "0");
       const raw = repair.parts_used;
       setPartsUsed(Array.isArray(raw) ? raw.map((p: any) => ({ inventory_id: p.inventory_id, name: p.name || "", buy_price: Number(p.buy_price ?? p.cost ?? 0), sell_price: Number(p.sell_price ?? 0), quantity: Number(p.quantity ?? 1) })) : []);
+      const rawSvc = repair.services_used;
+      setServicesUsed(Array.isArray(rawSvc) ? rawSvc.map((s: any) => ({ service_id: s.service_id, name: s.name || "", price: Number(s.price ?? 0), estimated_time_minutes: Number(s.estimated_time_minutes ?? 30) })) : []);
       setShowPayment(false);
       setShowNotification(false);
       setPendingStatus("");
