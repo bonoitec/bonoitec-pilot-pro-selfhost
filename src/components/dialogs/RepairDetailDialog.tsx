@@ -216,6 +216,7 @@ export function RepairDetailDialog({ open, onOpenChange, repair }: Props) {
               <Badge variant="outline" className="text-[10px] font-mono">Suivi: {repair.tracking_code}</Badge>
             )}
           </DialogTitle>
+          <DialogDescription className="sr-only">Détails de la réparation {repair.reference}</DialogDescription>
         </DialogHeader>
 
         {/* Notification suggestion after status change */}
