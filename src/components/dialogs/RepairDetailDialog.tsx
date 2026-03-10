@@ -374,7 +374,10 @@ export function RepairDetailDialog({ open, onOpenChange, repair }: Props) {
               )}
 
               {/* Parts from stock */}
-              <PartsSelector parts={partsUsed} onChange={setPartsUsed} />
+              <PartsSelector parts={partsUsed} onChange={setPartsUsed} deviceBrand={repair.devices?.brand} deviceModel={repair.devices?.model} />
+
+              {/* Services */}
+              <ServiceSelector services={servicesUsed} onChange={setServicesUsed} deviceBrand={repair.devices?.brand} deviceModel={repair.devices?.model} />
 
               {/* Labor cost */}
               <div>
@@ -383,7 +386,7 @@ export function RepairDetailDialog({ open, onOpenChange, repair }: Props) {
               </div>
 
               {/* Margin Analysis */}
-              <MarginAnalysisCard repair={{ ...repair, parts_used: partsUsed, labor_cost: laborCost ? parseFloat(laborCost) : 0, final_price: finalPrice ? parseFloat(finalPrice) : repair.final_price }} />
+              <MarginAnalysisCard repair={{ ...repair, parts_used: partsUsed, services_used: servicesUsed, labor_cost: laborCost ? parseFloat(laborCost) : 0, final_price: finalPrice ? parseFloat(finalPrice) : repair.final_price }} />
 
               <Separator />
 
