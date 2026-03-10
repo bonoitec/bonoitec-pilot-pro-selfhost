@@ -176,30 +176,23 @@ const templates: Record<string, (data: Record<string, string>) => { subject: str
 // ─── SMTP Send ───────────────────────────────────────────────────────
 
 async function sendSMTP(to: string, subject: string, html: string): Promise<void> {
-  const client = new SMTPClient({
-    connection: {
-      hostname: Deno.env.get("SMTP_HOST") || "smtp.hostinger.com",
-      port: Number(Deno.env.get("SMTP_PORT") || "587"),
-      tls: true,
-      auth: {
-        username: Deno.env.get("SMTP_USER") || "",
-        password: Deno.env.get("SMTP_PASS") || "",
-      },
+  const transporter = nodemailer.createTransport({
+    host: Deno.env.get("SMTP_HOST") || "smtp.hostinger.com",
+    port: Number(Deno.env.get("SMTP_PORT") || "587"),
+    secure: false, // STARTTLS
+    auth: {
+      user: Deno.env.get("SMTP_USER") || "",
+      pass: Deno.env.get("SMTP_PASS") || "",
     },
   });
 
-  await client.send({
-    from: `BonoitecPilot <${Deno.env.get("SMTP_USER") || "noreply@bonoitecrepair.fr"}>`,
+  await transporter.sendMail({
+    from: `"BonoitecPilot" <${Deno.env.get("SMTP_USER") || "noreply@bonoitecrepair.fr"}>`,
     to,
+    replyTo: Deno.env.get("SMTP_REPLY_TO") || "contact@bonoitecpilot.fr",
     subject,
-    content: "auto",
     html,
-    headers: {
-      "Reply-To": Deno.env.get("SMTP_REPLY_TO") || "contact@bonoitecpilot.fr",
-    },
   });
-
-  await client.close();
 }
 
 // ─── Handler ─────────────────────────────────────────────────────────
