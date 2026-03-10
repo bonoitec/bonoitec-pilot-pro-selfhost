@@ -223,7 +223,7 @@ function DiscoverSection() {
             >
               <div className="flex justify-center mb-5">
                 <div className="h-14 w-14 rounded-2xl gradient-primary flex items-center justify-center shadow-lg shadow-primary/20 group-hover:scale-110 transition-all duration-300">
-                  <card.icon className="h-6 w-6 text-primary-foreground group-hover:text-primary transition-colors duration-300" />
+                  <card.icon className="h-6 w-6 text-primary-foreground" />
                 </div>
               </div>
               <h3 className="font-bold font-display text-foreground mb-2">{card.title}</h3>
