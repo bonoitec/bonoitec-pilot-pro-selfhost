@@ -171,6 +171,10 @@ const Services = () => {
             <div><Label>Nom *</Label><Input value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} placeholder="Remplacement écran OLED..." /></div>
             <div><Label>Description</Label><Textarea value={form.description} onChange={e => setForm(f => ({ ...f, description: e.target.value }))} placeholder="Détails du service..." rows={2} /></div>
             <div className="grid grid-cols-2 gap-3">
+              <div><Label>Marque compatible</Label><Input value={form.compatible_brand} onChange={e => setForm(f => ({ ...f, compatible_brand: e.target.value }))} placeholder="Apple, Samsung..." /></div>
+              <div><Label>Modèle compatible</Label><Input value={form.compatible_model} onChange={e => setForm(f => ({ ...f, compatible_model: e.target.value }))} placeholder="iPhone XR..." /></div>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
               <div><Label>Prix par défaut (€)</Label><Input type="number" step="0.01" value={form.default_price} onChange={e => setForm(f => ({ ...f, default_price: e.target.value }))} placeholder="0.00" /></div>
               <div><Label>Durée estimée (min)</Label><Input type="number" value={form.estimated_time_minutes} onChange={e => setForm(f => ({ ...f, estimated_time_minutes: e.target.value }))} /></div>
             </div>
