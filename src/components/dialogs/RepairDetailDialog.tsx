@@ -96,6 +96,7 @@ export function RepairDetailDialog({ open, onOpenChange, repair }: Props) {
       setTechMessage(repair.technician_message || "");
       setFinalPrice(repair.final_price?.toString() || "");
       setPaymentMethod((repair as any)?.payment_method || "");
+      setLaborCost((repair as any)?.labor_cost?.toString() || "0");
       setShowPayment(false);
       setShowNotification(false);
       setPendingStatus("");
