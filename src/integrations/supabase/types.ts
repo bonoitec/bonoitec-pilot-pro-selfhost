@@ -249,6 +249,8 @@ export type Database = {
         Row: {
           buy_price: number
           category: string
+          compatible_brand: string | null
+          compatible_model: string | null
           created_at: string
           device_compatibility: string | null
           id: string
@@ -264,6 +266,8 @@ export type Database = {
         Insert: {
           buy_price?: number
           category?: string
+          compatible_brand?: string | null
+          compatible_model?: string | null
           created_at?: string
           device_compatibility?: string | null
           id?: string
@@ -279,6 +283,8 @@ export type Database = {
         Update: {
           buy_price?: number
           category?: string
+          compatible_brand?: string | null
+          compatible_model?: string | null
           created_at?: string
           device_compatibility?: string | null
           id?: string
@@ -831,6 +837,7 @@ export type Database = {
           repair_ended_at: string | null
           repair_started_at: string | null
           screen_condition: number | null
+          services_used: Json | null
           status: Database["public"]["Enums"]["repair_status"]
           technician_id: string | null
           technician_message: string | null
@@ -861,6 +868,7 @@ export type Database = {
           repair_ended_at?: string | null
           repair_started_at?: string | null
           screen_condition?: number | null
+          services_used?: Json | null
           status?: Database["public"]["Enums"]["repair_status"]
           technician_id?: string | null
           technician_message?: string | null
@@ -891,6 +899,7 @@ export type Database = {
           repair_ended_at?: string | null
           repair_started_at?: string | null
           screen_condition?: number | null
+          services_used?: Json | null
           status?: Database["public"]["Enums"]["repair_status"]
           technician_id?: string | null
           technician_message?: string | null
@@ -930,7 +939,9 @@ export type Database = {
       }
       services: {
         Row: {
+          compatible_brand: string | null
           compatible_categories: Json | null
+          compatible_model: string | null
           created_at: string
           default_price: number
           description: string | null
@@ -942,7 +953,9 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          compatible_brand?: string | null
           compatible_categories?: Json | null
+          compatible_model?: string | null
           created_at?: string
           default_price?: number
           description?: string | null
@@ -954,7 +967,9 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          compatible_brand?: string | null
           compatible_categories?: Json | null
+          compatible_model?: string | null
           created_at?: string
           default_price?: number
           description?: string | null

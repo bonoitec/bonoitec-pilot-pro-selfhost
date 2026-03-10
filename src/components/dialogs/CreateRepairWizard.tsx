@@ -615,21 +615,64 @@ export function CreateRepairWizard({ open, onOpenChange }: Props) {
           {/* Step 6: Service */}
           {step === 5 && (
             <div className="space-y-4">
-              {dbServices.length > 0 && (
+              {dbServices.length > 0 && (() => {
+                const devBrand = (selectedDeviceId ? existingDevices.find(d => d.id === selectedDeviceId)?.brand : device.brand) || "";
+                const devModel = (selectedDeviceId ? existingDevices.find(d => d.id === selectedDeviceId)?.model : device.model) || "";
+                const brandLower = devBrand.toLowerCase();
+                const modelLower = devModel.toLowerCase();
+
+                const scored = dbServices.map(svc => {
+                  const sb = ((svc as any).compatible_brand || "").toLowerCase();
+                  const sm = ((svc as any).compatible_model || "").toLowerCase();
+                  let score = 0;
+                  if (brandLower && sb && sb.includes(brandLower)) score += 2;
+                  if (modelLower && sm && sm.includes(modelLower)) score += 3;
+                  if (brandLower && svc.name.toLowerCase().includes(brandLower)) score += 1;
+                  if (modelLower && svc.name.toLowerCase().includes(modelLower)) score += 2;
+                  return { ...svc, _score: score };
+                }).sort((a, b) => b._score - a._score);
+
+                const suggested = scored.filter(s => s._score > 0);
+                const others = scored.filter(s => s._score === 0);
+
+                return (
                 <div>
-                  <Label className="text-xs mb-2 block">Services disponibles (cliquez pour sélectionner)</Label>
-                  <div className="grid grid-cols-2 gap-2 max-h-40 overflow-y-auto">
-                    {dbServices.map(svc => {
-                      const selected = selectedServices.find(s => s.id === svc.id);
-                      return (
-                        <button key={svc.id} type="button" onClick={() => toggleService(svc)}
-                          className={`text-left p-3 rounded-lg border transition-colors ${selected ? "border-primary bg-primary/5" : "border-border hover:bg-accent/30"}`}>
-                          <p className="text-sm font-medium">{svc.name}</p>
-                          <p className="text-xs text-muted-foreground">{Number(svc.default_price).toFixed(2)} € · {svc.estimated_time_minutes} min</p>
-                        </button>
-                      );
-                    })}
-                  </div>
+                  {suggested.length > 0 && (
+                    <div className="mb-3">
+                      <Label className="text-xs mb-2 block flex items-center gap-1">
+                        <span className="text-warning">✨</span> Services suggérés pour {devBrand} {devModel}
+                      </Label>
+                      <div className="grid grid-cols-2 gap-2 max-h-32 overflow-y-auto">
+                        {suggested.map(svc => {
+                          const selected = selectedServices.find(s => s.id === svc.id);
+                          return (
+                            <button key={svc.id} type="button" onClick={() => toggleService(svc)}
+                              className={`text-left p-3 rounded-lg border transition-colors ${selected ? "border-primary bg-primary/5" : "border-warning/30 bg-warning/5 hover:bg-warning/10"}`}>
+                              <p className="text-sm font-medium">{svc.name}</p>
+                              <p className="text-xs text-muted-foreground">{Number(svc.default_price).toFixed(2)} € · {svc.estimated_time_minutes} min</p>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+                  {others.length > 0 && (
+                    <div>
+                      <Label className="text-xs mb-2 block">Autres services disponibles</Label>
+                      <div className="grid grid-cols-2 gap-2 max-h-40 overflow-y-auto">
+                        {others.map(svc => {
+                          const selected = selectedServices.find(s => s.id === svc.id);
+                          return (
+                            <button key={svc.id} type="button" onClick={() => toggleService(svc)}
+                              className={`text-left p-3 rounded-lg border transition-colors ${selected ? "border-primary bg-primary/5" : "border-border hover:bg-accent/30"}`}>
+                              <p className="text-sm font-medium">{svc.name}</p>
+                              <p className="text-xs text-muted-foreground">{Number(svc.default_price).toFixed(2)} € · {svc.estimated_time_minutes} min</p>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
                   {selectedServices.length > 0 && (
                     <div className="flex flex-wrap gap-1 mt-2">
                       {selectedServices.map(s => (
@@ -639,7 +682,8 @@ export function CreateRepairWizard({ open, onOpenChange }: Props) {
                   )}
                   <div className="relative my-3"><div className="absolute inset-0 flex items-center"><span className="w-full border-t border-border" /></div><div className="relative flex justify-center text-xs"><span className="bg-background px-2 text-muted-foreground">ou saisie manuelle</span></div></div>
                 </div>
-              )}
+                );
+              })()}
               <div>
                 <Label className="text-xs">Type de réparation</Label>
                 <Select value={repairType} onValueChange={setRepairType}>

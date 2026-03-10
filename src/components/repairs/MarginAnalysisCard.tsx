@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { TrendingUp, TrendingDown, Minus, DollarSign, Percent, Calculator, Package, Wrench as WrenchIcon } from "lucide-react";
-import { calculateMargin, getPartsTotal, type MarginResult } from "@/lib/margin";
+import { calculateMargin, getPartsTotal, getServicesTotal, type MarginResult } from "@/lib/margin";
 
 interface Props {
   repair: any;
@@ -31,14 +31,18 @@ export function MarginAnalysisCard({ repair }: Props) {
   const sellingPrice = repair.final_price ?? repair.estimated_price ?? 0;
   const partsCost = getPartsTotal(repair.parts_used);
   const laborCost = Number(repair.labor_cost ?? 0);
+  const servicesTotal = getServicesTotal(repair.services_used);
 
-  if (sellingPrice <= 0 && partsCost <= 0 && laborCost <= 0) return null;
+  // If no selling price set but services exist, use services total as revenue
+  const effectiveSellingPrice = sellingPrice > 0 ? sellingPrice : servicesTotal;
+
+  if (effectiveSellingPrice <= 0 && partsCost <= 0 && laborCost <= 0) return null;
 
   const vatEnabled = org?.vat_enabled ?? false;
   const vatRate = org?.vat_rate ?? 20;
 
   const margin: MarginResult = calculateMargin({
-    sellingPrice,
+    sellingPrice: effectiveSellingPrice,
     partsCost,
     laborCost,
     vatEnabled,
@@ -75,7 +79,7 @@ export function MarginAnalysisCard({ repair }: Props) {
               <DollarSign className="h-3 w-3" />
               {vatEnabled ? "Prix de vente TTC" : "Prix de vente"}
             </p>
-            <p className="font-semibold">{fmt(sellingPrice)}</p>
+            <p className="font-semibold">{fmt(effectiveSellingPrice)}</p>
           </div>
 
           {vatEnabled && (
@@ -92,6 +96,15 @@ export function MarginAnalysisCard({ repair }: Props) {
             </p>
             <p className="font-medium">{fmt(partsCost)}</p>
           </div>
+
+          {servicesTotal > 0 && (
+            <div className="space-y-0.5">
+              <p className="text-[11px] text-muted-foreground flex items-center gap-1">
+                <WrenchIcon className="h-3 w-3" />Services
+              </p>
+              <p className="font-medium">{fmt(servicesTotal)}</p>
+            </div>
+          )}
 
           {laborCost > 0 && (
             <div className="space-y-0.5">

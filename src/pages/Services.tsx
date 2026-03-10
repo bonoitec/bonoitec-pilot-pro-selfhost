@@ -21,9 +21,11 @@ interface ServiceForm {
   default_price: string;
   estimated_time_minutes: string;
   compatible_categories: string[];
+  compatible_brand: string;
+  compatible_model: string;
 }
 
-const emptyForm: ServiceForm = { name: "", description: "", default_price: "", estimated_time_minutes: "30", compatible_categories: [] };
+const emptyForm: ServiceForm = { name: "", description: "", default_price: "", estimated_time_minutes: "30", compatible_categories: [], compatible_brand: "", compatible_model: "" };
 
 const Services = () => {
   const { toast } = useToast();
@@ -53,6 +55,8 @@ const Services = () => {
         default_price: parseFloat(form.default_price) || 0,
         estimated_time_minutes: parseInt(form.estimated_time_minutes) || 30,
         compatible_categories: form.compatible_categories,
+        compatible_brand: form.compatible_brand.trim() || null,
+        compatible_model: form.compatible_model.trim() || null,
       };
       if (editingId) {
         const { error } = await supabase.from("services").update(payload).eq("id", editingId);
@@ -90,6 +94,8 @@ const Services = () => {
       default_price: String(s.default_price),
       estimated_time_minutes: String(s.estimated_time_minutes),
       compatible_categories: (s.compatible_categories as string[]) || [],
+      compatible_brand: (s as any).compatible_brand || "",
+      compatible_model: (s as any).compatible_model || "",
     });
     setShowDialog(true);
   };
@@ -164,6 +170,10 @@ const Services = () => {
           <div className="space-y-3">
             <div><Label>Nom *</Label><Input value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} placeholder="Remplacement écran OLED..." /></div>
             <div><Label>Description</Label><Textarea value={form.description} onChange={e => setForm(f => ({ ...f, description: e.target.value }))} placeholder="Détails du service..." rows={2} /></div>
+            <div className="grid grid-cols-2 gap-3">
+              <div><Label>Marque compatible</Label><Input value={form.compatible_brand} onChange={e => setForm(f => ({ ...f, compatible_brand: e.target.value }))} placeholder="Apple, Samsung..." /></div>
+              <div><Label>Modèle compatible</Label><Input value={form.compatible_model} onChange={e => setForm(f => ({ ...f, compatible_model: e.target.value }))} placeholder="iPhone XR..." /></div>
+            </div>
             <div className="grid grid-cols-2 gap-3">
               <div><Label>Prix par défaut (€)</Label><Input type="number" step="0.01" value={form.default_price} onChange={e => setForm(f => ({ ...f, default_price: e.target.value }))} placeholder="0.00" /></div>
               <div><Label>Durée estimée (min)</Label><Input type="number" value={form.estimated_time_minutes} onChange={e => setForm(f => ({ ...f, estimated_time_minutes: e.target.value }))} /></div>

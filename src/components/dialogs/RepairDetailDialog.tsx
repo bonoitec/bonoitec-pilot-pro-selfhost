@@ -18,6 +18,7 @@ import { RepairChat } from "@/components/messaging/RepairChat";
 import { StatusNotificationSuggester } from "@/components/messaging/StatusNotificationSuggester";
 import { MarginAnalysisCard } from "@/components/repairs/MarginAnalysisCard";
 import { PartsSelector, type PartUsed } from "@/components/repairs/PartsSelector";
+import { ServiceSelector, type ServiceUsed } from "@/components/repairs/ServiceSelector";
 import { statusLabels, statusOrder } from "@/lib/repairStatuses";
 import { RestitutionDialog } from "@/components/dialogs/RestitutionDialog";
 
@@ -124,6 +125,10 @@ export function RepairDetailDialog({ open, onOpenChange, repair }: Props) {
     const raw = repair?.parts_used;
     return Array.isArray(raw) ? raw.map((p: any) => ({ inventory_id: p.inventory_id, name: p.name || "", buy_price: Number(p.buy_price ?? p.cost ?? 0), sell_price: Number(p.sell_price ?? 0), quantity: Number(p.quantity ?? 1) })) : [];
   });
+  const [servicesUsed, setServicesUsed] = useState<ServiceUsed[]>(() => {
+    const raw = repair?.services_used;
+    return Array.isArray(raw) ? raw.map((s: any) => ({ service_id: s.service_id, name: s.name || "", price: Number(s.price ?? 0), estimated_time_minutes: Number(s.estimated_time_minutes ?? 30) })) : [];
+  });
   const [showPayment, setShowPayment] = useState(false);
   const [showRestitution, setShowRestitution] = useState(false);
   const { data: org } = useQuery({
@@ -148,6 +153,8 @@ export function RepairDetailDialog({ open, onOpenChange, repair }: Props) {
       setLaborCost(repair.labor_cost?.toString() || "0");
       const raw = repair.parts_used;
       setPartsUsed(Array.isArray(raw) ? raw.map((p: any) => ({ inventory_id: p.inventory_id, name: p.name || "", buy_price: Number(p.buy_price ?? p.cost ?? 0), sell_price: Number(p.sell_price ?? 0), quantity: Number(p.quantity ?? 1) })) : []);
+      const rawSvc = repair.services_used;
+      setServicesUsed(Array.isArray(rawSvc) ? rawSvc.map((s: any) => ({ service_id: s.service_id, name: s.name || "", price: Number(s.price ?? 0), estimated_time_minutes: Number(s.estimated_time_minutes ?? 30) })) : []);
       setShowPayment(false);
       setShowNotification(false);
       setPendingStatus("");
@@ -163,6 +170,7 @@ export function RepairDetailDialog({ open, onOpenChange, repair }: Props) {
         final_price: finalPrice ? parseFloat(finalPrice) : null,
         labor_cost: laborCost ? parseFloat(laborCost) : 0,
         parts_used: partsUsed,
+        services_used: servicesUsed,
       };
       // Timer starts on "diagnostic" (Débuté)
       if (status === "diagnostic" && repair.status !== "diagnostic" && !repair.repair_started_at) {
@@ -366,7 +374,10 @@ export function RepairDetailDialog({ open, onOpenChange, repair }: Props) {
               )}
 
               {/* Parts from stock */}
-              <PartsSelector parts={partsUsed} onChange={setPartsUsed} />
+              <PartsSelector parts={partsUsed} onChange={setPartsUsed} deviceBrand={repair.devices?.brand} deviceModel={repair.devices?.model} />
+
+              {/* Services */}
+              <ServiceSelector services={servicesUsed} onChange={setServicesUsed} deviceBrand={repair.devices?.brand} deviceModel={repair.devices?.model} />
 
               {/* Labor cost */}
               <div>
@@ -375,7 +386,7 @@ export function RepairDetailDialog({ open, onOpenChange, repair }: Props) {
               </div>
 
               {/* Margin Analysis */}
-              <MarginAnalysisCard repair={{ ...repair, parts_used: partsUsed, labor_cost: laborCost ? parseFloat(laborCost) : 0, final_price: finalPrice ? parseFloat(finalPrice) : repair.final_price }} />
+              <MarginAnalysisCard repair={{ ...repair, parts_used: partsUsed, services_used: servicesUsed, labor_cost: laborCost ? parseFloat(laborCost) : 0, final_price: finalPrice ? parseFloat(finalPrice) : repair.final_price }} />
 
               <Separator />
 
