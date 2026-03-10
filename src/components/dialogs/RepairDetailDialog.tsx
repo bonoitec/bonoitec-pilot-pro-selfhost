@@ -294,6 +294,9 @@ export function RepairDetailDialog({ open, onOpenChange, repair }: Props) {
                 </Card>
               )}
 
+              {/* Parts from stock */}
+              <PartsSelector parts={partsUsed} onChange={setPartsUsed} />
+
               {/* Labor cost */}
               <div>
                 <Label className="text-xs">Coût main-d'œuvre (€)</Label>
@@ -301,7 +304,7 @@ export function RepairDetailDialog({ open, onOpenChange, repair }: Props) {
               </div>
 
               {/* Margin Analysis - uses live repair data + laborCost override */}
-              <MarginAnalysisCard repair={{ ...repair, labor_cost: laborCost ? parseFloat(laborCost) : 0, final_price: finalPrice ? parseFloat(finalPrice) : repair.final_price }} />
+              <MarginAnalysisCard repair={{ ...repair, parts_used: partsUsed, labor_cost: laborCost ? parseFloat(laborCost) : 0, final_price: finalPrice ? parseFloat(finalPrice) : repair.final_price }} />
 
               <Separator />
 
