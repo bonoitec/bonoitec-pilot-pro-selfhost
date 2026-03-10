@@ -36,7 +36,7 @@ export function MarginAnalysisCard({ repair }: Props) {
   // If no selling price set but services exist, use services total as revenue
   const effectiveSellingPrice = sellingPrice > 0 ? sellingPrice : servicesTotal;
 
-  if (sellingPrice <= 0 && partsCost <= 0 && laborCost <= 0) return null;
+  if (effectiveSellingPrice <= 0 && partsCost <= 0 && laborCost <= 0) return null;
 
   const vatEnabled = org?.vat_enabled ?? false;
   const vatRate = org?.vat_rate ?? 20;
