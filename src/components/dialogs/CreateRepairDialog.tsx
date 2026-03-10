@@ -68,6 +68,7 @@ export function CreateRepairDialog({ open, onOpenChange }: Props) {
   });
 
   const checklistItems: string[] = (org as any)?.intake_checklist_items ?? defaultChecklist;
+  const checklistLabel: string = (org as any)?.checklist_label || "Checklist de prise en charge";
 
   const { data: clients = [] } = useQuery({
     queryKey: ["clients"],

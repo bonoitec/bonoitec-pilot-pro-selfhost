@@ -261,7 +261,7 @@ export function RepairDetailDialog({ open, onOpenChange, repair }: Props) {
               {intakeChecklist && intakeChecklist.length > 0 && (
                 <Card className="border-border/60">
                   <CardHeader className="pb-2 pt-3 px-4">
-                    <CardTitle className="text-sm flex items-center gap-2"><ClipboardCheck className="h-4 w-4 text-primary" />Checklist d'intake</CardTitle>
+                    <CardTitle className="text-sm flex items-center gap-2"><ClipboardCheck className="h-4 w-4 text-primary" />{(org as any)?.checklist_label || "Checklist de prise en charge"}</CardTitle>
                   </CardHeader>
                   <CardContent className="px-4 pb-3">
                     <div className="flex flex-wrap gap-2">
