@@ -84,6 +84,7 @@ export function RepairDetailDialog({ open, onOpenChange, repair }: Props) {
   const [techMessage, setTechMessage] = useState(repair?.technician_message || "");
   const [finalPrice, setFinalPrice] = useState(repair?.final_price?.toString() || "");
   const [paymentMethod, setPaymentMethod] = useState((repair as any)?.payment_method || "");
+  const [laborCost, setLaborCost] = useState((repair as any)?.labor_cost?.toString() || "0");
   const [showPayment, setShowPayment] = useState(false);
   const [showNotification, setShowNotification] = useState(false);
   const [pendingStatus, setPendingStatus] = useState("");
@@ -95,6 +96,7 @@ export function RepairDetailDialog({ open, onOpenChange, repair }: Props) {
       setTechMessage(repair.technician_message || "");
       setFinalPrice(repair.final_price?.toString() || "");
       setPaymentMethod((repair as any)?.payment_method || "");
+      setLaborCost((repair as any)?.labor_cost?.toString() || "0");
       setShowPayment(false);
       setShowNotification(false);
       setPendingStatus("");
@@ -108,6 +110,7 @@ export function RepairDetailDialog({ open, onOpenChange, repair }: Props) {
         diagnostic: diagnostic.trim() || null,
         technician_message: techMessage.trim() || null,
         final_price: finalPrice ? parseFloat(finalPrice) : null,
+        labor_cost: laborCost ? parseFloat(laborCost) : 0,
       };
       if (status === "en_cours" && repair.status !== "en_cours" && !(repair as any).repair_started_at) {
         updates.repair_started_at = new Date().toISOString();
@@ -283,8 +286,14 @@ export function RepairDetailDialog({ open, onOpenChange, repair }: Props) {
                 </Card>
               )}
 
-              {/* Margin Analysis */}
-              <MarginAnalysisCard repair={repair} />
+              {/* Labor cost */}
+              <div>
+                <Label className="text-xs">Coût main-d'œuvre (€)</Label>
+                <Input type="number" step="0.01" value={laborCost} onChange={e => setLaborCost(e.target.value)} placeholder="0.00" />
+              </div>
+
+              {/* Margin Analysis - uses live repair data + laborCost override */}
+              <MarginAnalysisCard repair={{ ...repair, labor_cost: laborCost ? parseFloat(laborCost) : 0, final_price: finalPrice ? parseFloat(finalPrice) : repair.final_price }} />
 
               <Separator />
 

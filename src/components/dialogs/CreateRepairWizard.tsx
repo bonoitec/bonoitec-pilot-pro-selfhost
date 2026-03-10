@@ -94,6 +94,7 @@ export function CreateRepairWizard({ open, onOpenChange }: Props) {
   const [repairType, setRepairType] = useState("");
   const [issue, setIssue] = useState("");
   const [estimatedPrice, setEstimatedPrice] = useState("");
+  const [laborCost, setLaborCost] = useState("");
 
   // Step 7 — Planning
   const [technicianId, setTechnicianId] = useState("");
@@ -289,6 +290,7 @@ export function CreateRepairWizard({ open, onOpenChange }: Props) {
         technician_id: technicianId || null,
         issue: `${repairType ? repairType + " — " : ""}${issue.trim()}`,
         estimated_price: estimatedPrice ? parseFloat(estimatedPrice) : null,
+        labor_cost: laborCost ? parseFloat(laborCost) : 0,
         status: "nouveau",
         intake_checklist: intakeChecklist,
         screen_condition: screenCondition,
@@ -334,7 +336,7 @@ export function CreateRepairWizard({ open, onOpenChange }: Props) {
     setScreenCondition(5); setFrameCondition(5); setBackCondition(5);
     photos.forEach(p => URL.revokeObjectURL(p.preview));
     setPhotos([]);
-    setRepairType(""); setIssue(""); setEstimatedPrice(""); setSelectedServices([]);
+    setRepairType(""); setIssue(""); setEstimatedPrice(""); setLaborCost(""); setSelectedServices([]);
     setTechnicianId(""); setEstimatedTime(""); setPlannedDate("");
     setSignatureDataUrl(null); setCreatedRepair(null);
     onOpenChange(false);
@@ -655,6 +657,10 @@ export function CreateRepairWizard({ open, onOpenChange }: Props) {
               <div>
                 <Label className="text-xs">Prix estimé (€){selectedServices.length > 0 ? " (calculé automatiquement)" : ""}</Label>
                 <Input type="number" step="0.01" value={estimatedPrice} onChange={e => setEstimatedPrice(e.target.value)} placeholder="0.00" />
+              </div>
+              <div>
+                <Label className="text-xs">Coût main-d'œuvre (€)</Label>
+                <Input type="number" step="0.01" value={laborCost} onChange={e => setLaborCost(e.target.value)} placeholder="0.00" />
               </div>
             </div>
           )}
