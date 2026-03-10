@@ -125,6 +125,10 @@ export function RepairDetailDialog({ open, onOpenChange, repair }: Props) {
     const raw = repair?.parts_used;
     return Array.isArray(raw) ? raw.map((p: any) => ({ inventory_id: p.inventory_id, name: p.name || "", buy_price: Number(p.buy_price ?? p.cost ?? 0), sell_price: Number(p.sell_price ?? 0), quantity: Number(p.quantity ?? 1) })) : [];
   });
+  const [servicesUsed, setServicesUsed] = useState<ServiceUsed[]>(() => {
+    const raw = repair?.services_used;
+    return Array.isArray(raw) ? raw.map((s: any) => ({ service_id: s.service_id, name: s.name || "", price: Number(s.price ?? 0), estimated_time_minutes: Number(s.estimated_time_minutes ?? 30) })) : [];
+  });
   const [showPayment, setShowPayment] = useState(false);
   const [showRestitution, setShowRestitution] = useState(false);
   const { data: org } = useQuery({
