@@ -39,15 +39,15 @@ const HeroSection = () => (
             depuis une interface simple, rapide et pensée pour le terrain.
           </p>
 
-          <div className="flex flex-wrap items-center gap-4">
-            <Button size="lg" asChild className="rounded-full px-8 h-13 text-base font-bold shadow-lg hover:shadow-xl hover:scale-[1.02] active:scale-[0.98] transition-all duration-200">
+          <div className="flex flex-col sm:flex-row flex-wrap items-start sm:items-center gap-4">
+            <Button size="lg" asChild className="rounded-full px-10 h-14 text-base font-bold shadow-xl hover:shadow-2xl hover:scale-[1.03] active:scale-[0.97] transition-all duration-200">
               <Link to="/auth">
-                Commencer gratuitement <ArrowRight className="h-4 w-4 ml-1" />
+                Commencer gratuitement <ArrowRight className="h-5 w-5 ml-2" />
               </Link>
             </Button>
-            <Button size="lg" variant="outline" asChild className="rounded-full px-8 h-13 text-base font-semibold border-2 border-primary/30 text-primary hover:bg-primary/5 hover:border-primary/50 transition-all duration-200">
+            <Button size="lg" variant="outline" asChild className="rounded-full px-10 h-14 text-base font-semibold border-2 border-primary/30 text-primary hover:bg-primary/5 hover:border-primary/50 transition-all duration-200">
               <Link to="/fonctionnalites">
-                <Play className="h-4 w-4 mr-1" /> Voir la démo
+                <Play className="h-5 w-5 mr-2" /> Voir la démo
               </Link>
             </Button>
           </div>
