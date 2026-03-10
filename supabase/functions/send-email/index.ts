@@ -6,7 +6,7 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
-const FROM_EMAIL = "BonoitecPilot <noreply@send.bonoitecpilot.fr>";
+const FROM_EMAIL = "BonoitecPilot <noreply@bonoitecpilot.fr>";
 const REPLY_TO = "contact@bonoitecpilot.fr";
 
 // Brand colors
