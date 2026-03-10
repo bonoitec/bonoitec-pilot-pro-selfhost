@@ -9,7 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
-import { Upload, Building2, FileText, Globe, Star, ClipboardCheck, Plus, X } from "lucide-react";
+import { Upload, Building2, FileText, Globe, Star, ClipboardCheck, Plus, X, Smartphone, Tag } from "lucide-react";
 
 const SettingsPage = () => {
   const { toast } = useToast();
