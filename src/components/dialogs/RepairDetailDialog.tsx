@@ -214,13 +214,13 @@ export function RepairDetailDialog({ open, onOpenChange, repair }: Props) {
   });
 
   const handleStatusChange = (newStatus: string) => {
-    setStatus(newStatus);
-    // Show payment section for "Restitué" (pret_a_recuperer)
     if (newStatus === "pret_a_recuperer") {
-      setShowPayment(true);
-    } else {
-      setShowPayment(false);
+      // Open the restitution workflow instead of inline payment
+      setShowRestitution(true);
+      return;
     }
+    setStatus(newStatus);
+    setShowPayment(false);
   };
 
   const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
