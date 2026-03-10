@@ -6,7 +6,8 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Package, Plus, Trash2, Search } from "lucide-react";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { Package, Plus, Trash2, Search, AlertTriangle } from "lucide-react";
 
 export interface PartUsed {
   inventory_id?: string;
@@ -29,7 +30,7 @@ export function PartsSelector({ parts, onChange }: Props) {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("inventory")
-        .select("id, name, buy_price, sell_price, quantity, category, device_compatibility")
+        .select("id, name, buy_price, sell_price, quantity, min_quantity, category, device_compatibility")
         .gt("quantity", 0)
         .order("name");
       if (error) throw error;
@@ -102,20 +103,26 @@ export function PartsSelector({ parts, onChange }: Props) {
             {filteredInventory.length === 0 ? (
               <p className="text-xs text-muted-foreground p-2">Aucune pièce trouvée</p>
             ) : (
-              filteredInventory.slice(0, 8).map((item) => (
-                <button
-                  key={item.id}
-                  type="button"
-                  onClick={() => addPart(item.id)}
-                  className="w-full flex items-center justify-between px-3 py-1.5 text-xs hover:bg-accent transition-colors text-left"
-                >
-                  <span className="truncate font-medium">{item.name}</span>
-                  <span className="flex items-center gap-2 shrink-0 ml-2">
-                    <span className="text-muted-foreground">×{item.quantity}</span>
-                    <span className="font-mono">{item.buy_price.toFixed(2)} €</span>
-                  </span>
-                </button>
-              ))
+              filteredInventory.slice(0, 8).map((item) => {
+                const isLow = item.quantity <= item.min_quantity;
+                return (
+                  <button
+                    key={item.id}
+                    type="button"
+                    onClick={() => addPart(item.id)}
+                    className={`w-full flex items-center justify-between px-3 py-1.5 text-xs hover:bg-accent transition-colors text-left ${isLow ? "bg-warning/5" : ""}`}
+                  >
+                    <span className="truncate font-medium flex items-center gap-1.5">
+                      {item.name}
+                      {isLow && <AlertTriangle className="h-3 w-3 text-warning shrink-0" />}
+                    </span>
+                    <span className="flex items-center gap-2 shrink-0 ml-2">
+                      <span className={`${isLow ? "text-warning font-semibold" : "text-muted-foreground"}`}>×{item.quantity}</span>
+                      <span className="font-mono">{item.buy_price.toFixed(2)} €</span>
+                    </span>
+                  </button>
+                );
+              })
             )}
           </div>
         )}
@@ -123,11 +130,26 @@ export function PartsSelector({ parts, onChange }: Props) {
         {/* Parts list */}
         {parts.length > 0 && (
           <div className="space-y-2">
-            {parts.map((part, i) => (
-              <div key={i} className="flex items-center gap-2 p-2 rounded-md bg-muted/50 border border-border/40">
+            {parts.map((part, i) => {
+              const invItem = part.inventory_id ? inventory.find((it) => it.id === part.inventory_id) : null;
+              const stockLow = invItem ? invItem.quantity <= invItem.min_quantity : false;
+              return (
+              <div key={i} className={`flex items-center gap-2 p-2 rounded-md border ${stockLow ? "bg-warning/5 border-warning/30" : "bg-muted/50 border-border/40"}`}>
                 <div className="flex-1 min-w-0">
                   {part.inventory_id ? (
-                    <p className="text-xs font-medium truncate">{part.name}</p>
+                    <p className="text-xs font-medium truncate flex items-center gap-1.5">
+                      {part.name}
+                      {stockLow && (
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <AlertTriangle className="h-3 w-3 text-warning shrink-0" />
+                            </TooltipTrigger>
+                            <TooltipContent><p className="text-xs">Stock faible ({invItem?.quantity} restant·s)</p></TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+                      )}
+                    </p>
                   ) : (
                     <Input
                       value={part.name}
@@ -157,7 +179,8 @@ export function PartsSelector({ parts, onChange }: Props) {
                   <Trash2 className="h-3.5 w-3.5 text-destructive" />
                 </Button>
               </div>
-            ))}
+              );
+            })}
           </div>
         )}
 
