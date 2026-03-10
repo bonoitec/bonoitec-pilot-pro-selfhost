@@ -343,10 +343,10 @@ function BenefitsDemo() {
             <motion.div
               key={b.title}
               variants={fadeUp}
-              className="landing-card p-6 group hover:shadow-premium-lg hover:border-primary/20 transition-all duration-300"
+              className="landing-card p-6 group hover:shadow-premium-lg hover:border-primary/20 transition-all duration-300 cursor-pointer"
             >
-              <div className="h-11 w-11 rounded-xl gradient-primary-subtle flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300">
-                <b.icon className="h-5 w-5 text-primary" />
+              <div className="h-11 w-11 rounded-xl gradient-primary-subtle flex items-center justify-center mb-4 group-hover:scale-110 transition-all duration-300">
+                <b.icon className="h-5 w-5 text-primary group-hover:text-primary transition-colors duration-300" />
               </div>
               <h3 className="font-bold font-display text-foreground mb-1.5">{b.title}</h3>
               <p className="text-sm text-muted-foreground leading-relaxed">{b.desc}</p>
