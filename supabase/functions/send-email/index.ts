@@ -9,7 +9,6 @@ const corsHeaders = {
 const FROM_EMAIL = "BonoitecPilot <noreply@bonoitecpilot.fr>";
 const REPLY_TO = "contact@bonoitecpilot.fr";
 
-// Brand colors
 const BRAND = {
   primary: "#4338ca",
   primaryLight: "#eef2ff",
@@ -136,10 +135,10 @@ const templates: Record<string, (data: Record<string, string>) => { subject: str
   }),
 
   status_update: (d) => ({
-    subject: `Mise à jour de votre réparation ${d.reference}`,
+    subject: `Mise à jour — ${d.statusLabel || "Votre réparation"} (${d.reference})`,
     html: emailLayout(`
       <div class="body">
-        <h2>🔔 Mise à jour de réparation</h2>
+        <h2>🔔 ${d.statusLabel || "Mise à jour de réparation"}</h2>
         <p>Bonjour ${d.clientName || ""},</p>
         <p>${d.message || "Le statut de votre réparation a été mis à jour."}</p>
         <div class="info-box">
@@ -150,7 +149,7 @@ const templates: Record<string, (data: Record<string, string>) => { subject: str
         ${d.trackingUrl ? `<a href="${d.trackingUrl}" class="btn">Suivre ma réparation</a>` : ""}
         <p>Cordialement,<br><strong>L'équipe BonoitecPilot</strong></p>
       </div>
-    `, `Réparation ${d.reference} — mise à jour`),
+    `, `Réparation ${d.reference} — ${d.statusLabel || "mise à jour"}`),
   }),
 
   client_notification: (d) => ({
