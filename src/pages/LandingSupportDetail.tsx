@@ -1,3 +1,4 @@
+import { forwardRef } from "react";
 import { useParams, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, ChevronRight, MessageSquare, Mail, Phone } from "lucide-react";
@@ -116,7 +117,7 @@ const supportContent: Record<string, { intro: string; steps: { title: string; te
   },
 };
 
-const LandingSupportDetail = () => {
+const LandingSupportDetail = forwardRef<HTMLDivElement>((_, ref) => {
   const { slug } = useParams<{ slug: string }>();
   const category = supportCategories.find((c) => c.slug === slug);
   const content = slug ? supportContent[slug] : undefined;
@@ -206,6 +207,8 @@ const LandingSupportDetail = () => {
       )}
     </motion.div>
   );
-};
+});
+
+LandingSupportDetail.displayName = "LandingSupportDetail";
 
 export default LandingSupportDetail;

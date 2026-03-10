@@ -1,5 +1,5 @@
 import { motion, useInView } from "framer-motion";
-import { useRef } from "react";
+import { forwardRef, useRef } from "react";
 import { Link } from "react-router-dom";
 import { ArrowRight } from "lucide-react";
 import blogOrganiser from "@/assets/blog-organiser-atelier.jpg";
@@ -30,7 +30,7 @@ const articles = [
   },
 ];
 
-const BlogSection = ({ expanded = false }: { expanded?: boolean }) => {
+const BlogSection = forwardRef<HTMLElement, { expanded?: boolean }>(({ expanded = false }, forwardedRef) => {
   const ref = useRef(null);
   const isInView = useInView(ref, { once: true, margin: "-80px" });
 
@@ -90,6 +90,8 @@ const BlogSection = ({ expanded = false }: { expanded?: boolean }) => {
       </div>
     </section>
   );
-};
+});
+
+BlogSection.displayName = "BlogSection";
 
 export default BlogSection;
