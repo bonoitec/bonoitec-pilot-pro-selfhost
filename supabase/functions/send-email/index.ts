@@ -187,7 +187,7 @@ async function sendSMTP(to: string, subject: string, html: string): Promise<void
   });
 
   await transporter.sendMail({
-    from: `"BonoitecPilot" <${Deno.env.get("SMTP_USER") || "noreply@bonoitecrepair.fr"}>`,
+    from: `"BonoitecPilot" <${Deno.env.get("SMTP_USER") || "noreply@bonoitecpilot.fr"}>`,
     to,
     replyTo: Deno.env.get("SMTP_REPLY_TO") || "contact@bonoitecpilot.fr",
     subject,
