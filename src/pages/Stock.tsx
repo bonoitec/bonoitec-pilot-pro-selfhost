@@ -17,6 +17,7 @@ const Stock = () => {
   const [search, setSearch] = useState("");
   const [showCreate, setShowCreate] = useState(false);
   const [editingPart, setEditingPart] = useState<any>(null);
+  const [historyPart, setHistoryPart] = useState<any>(null);
 
   const { data: parts = [], isLoading } = useQuery({
     queryKey: ["inventory"],
