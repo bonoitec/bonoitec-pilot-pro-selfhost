@@ -21,9 +21,11 @@ interface ServiceForm {
   default_price: string;
   estimated_time_minutes: string;
   compatible_categories: string[];
+  compatible_brand: string;
+  compatible_model: string;
 }
 
-const emptyForm: ServiceForm = { name: "", description: "", default_price: "", estimated_time_minutes: "30", compatible_categories: [] };
+const emptyForm: ServiceForm = { name: "", description: "", default_price: "", estimated_time_minutes: "30", compatible_categories: [], compatible_brand: "", compatible_model: "" };
 
 const Services = () => {
   const { toast } = useToast();
