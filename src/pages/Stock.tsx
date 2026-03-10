@@ -139,6 +139,7 @@ const Stock = () => {
       )}
 
       <CreateStockDialog open={showCreate} onOpenChange={setShowCreate} editingPart={editingPart} />
+      <PriceHistoryDialog open={!!historyPart} onOpenChange={(o) => !o && setHistoryPart(null)} part={historyPart} />
     </div>
   );
 };
