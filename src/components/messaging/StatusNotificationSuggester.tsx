@@ -112,7 +112,6 @@ export function StatusNotificationSuggester({ repair, newStatus, onDismiss }: Pr
             <Badge variant="outline" className={`text-[10px] ${repair.clients?.email ? 'border-primary/40 text-primary' : ''}`}>
               {repair.clients?.email ? <><Mail className="h-3 w-3 mr-1 inline" />Email</> : repair.clients?.phone ? "SMS" : "Interne"}
             </Badge>
-            </Badge>
           </div>
           <Button variant="ghost" size="icon" className="h-6 w-6" onClick={onDismiss}>
             <X className="h-3 w-3" />
