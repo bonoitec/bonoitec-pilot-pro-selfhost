@@ -7,6 +7,9 @@ import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { TrialBanner } from "@/components/TrialBanner";
+import { TrialExpiredWall } from "@/components/TrialExpiredWall";
+import { useTrialStatus } from "@/hooks/useTrialStatus";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -17,6 +20,7 @@ import {
 export function AppLayout() {
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
+  const { isExpired, isLoading: trialLoading } = useTrialStatus();
 
   const handleSignOut = async () => {
     await signOut();
@@ -26,6 +30,11 @@ export function AppLayout() {
   const initials = user?.user_metadata?.full_name
     ? user.user_metadata.full_name.split(" ").map((n: string) => n[0]).join("").toUpperCase().slice(0, 2)
     : user?.email?.slice(0, 2).toUpperCase() ?? "?";
+
+  // Block access if trial expired
+  if (!trialLoading && isExpired) {
+    return <TrialExpiredWall />;
+  }
 
   return (
     <SidebarProvider>
@@ -66,7 +75,8 @@ export function AppLayout() {
               </DropdownMenu>
             </div>
           </header>
-          <main className="flex-1 p-4 md:p-6 overflow-auto">
+          <main className="flex-1 p-4 md:p-6 overflow-auto space-y-4">
+            <TrialBanner />
             <Outlet />
           </main>
         </div>
