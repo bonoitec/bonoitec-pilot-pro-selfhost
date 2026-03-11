@@ -239,7 +239,20 @@ Deno.serve(async (req) => {
       );
     }
 
-    const { subject, html } = templateFn(data || {});
+    // Fetch organization contact info for dynamic footer
+    let orgContact: { phone?: string; email?: string } | undefined;
+    if (organization_id) {
+      const { data: orgData } = await supabase
+        .from("organizations")
+        .select("phone, email")
+        .eq("id", organization_id)
+        .single();
+      if (orgData && (orgData.phone || orgData.email)) {
+        orgContact = { phone: orgData.phone || undefined, email: orgData.email || undefined };
+      }
+    }
+
+    const { subject, html } = templateFn(data || {}, orgContact);
 
     let status = "sent";
     let errorMessage: string | null = null;
