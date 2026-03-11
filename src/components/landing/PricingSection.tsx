@@ -1,9 +1,12 @@
 import { useState } from "react";
 import { motion, useInView } from "framer-motion";
 import { useRef } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Check, Shield, Headphones, Zap, Sparkles } from "lucide-react";
+import { Check, Shield, Headphones, Zap, Sparkles, Loader2 } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 const features = [
   "Gestion complète des réparations",
@@ -59,9 +62,32 @@ const reassurance = [
 
 const PricingSection = () => {
   const [selected, setSelected] = useState("annual");
+  const [checkoutLoading, setCheckoutLoading] = useState(false);
   const ref = useRef(null);
   const isInView = useInView(ref, { once: true, margin: "-80px" });
   const current = billingOptions.find((b) => b.id === selected)!;
+  const { user, session } = useAuth();
+  const navigate = useNavigate();
+
+  const handleSubscribe = async () => {
+    if (!user || !session) {
+      navigate("/auth");
+      return;
+    }
+    setCheckoutLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("create-checkout", {
+        body: { plan: selected },
+        headers: { Authorization: `Bearer ${session.access_token}` },
+      });
+      if (error) throw error;
+      if (data?.url) window.open(data.url, "_blank");
+    } catch {
+      toast.error("Erreur lors de la création de la session de paiement.");
+    } finally {
+      setCheckoutLoading(false);
+    }
+  };
 
   return (
     <section className="landing-section" id="tarifs" ref={ref}>
@@ -145,16 +171,31 @@ const PricingSection = () => {
                 </div>
 
                 <div className="flex flex-col items-center lg:items-end gap-3">
-                  <Button
-                    variant="premium"
-                    size="lg"
-                    asChild
-                    className="rounded-full px-10 h-14 text-base font-bold w-full lg:w-auto"
-                  >
-                    <Link to="/auth">Commencer l'essai gratuit</Link>
-                  </Button>
+                  {user ? (
+                    <Button
+                      variant="premium"
+                      size="lg"
+                      className="rounded-full px-10 h-14 text-base font-bold w-full lg:w-auto"
+                      onClick={handleSubscribe}
+                      disabled={checkoutLoading}
+                    >
+                      {checkoutLoading ? (
+                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      ) : null}
+                      Souscrire maintenant
+                    </Button>
+                  ) : (
+                    <Button
+                      variant="premium"
+                      size="lg"
+                      asChild
+                      className="rounded-full px-10 h-14 text-base font-bold w-full lg:w-auto"
+                    >
+                      <Link to="/auth">Commencer l'essai gratuit</Link>
+                    </Button>
+                  )}
                   <p className="text-xs text-muted-foreground text-center lg:text-right">
-                    30 jours gratuits · Sans carte bancaire
+                    {user ? "Paiement sécurisé via Stripe" : "30 jours gratuits · Sans carte bancaire"}
                   </p>
                 </div>
               </div>

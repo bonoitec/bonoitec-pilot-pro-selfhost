@@ -558,9 +558,12 @@ export type Database = {
           logo_url: string | null
           name: string
           phone: string | null
+          plan_name: string | null
           postal_code: string | null
           quote_prefix: string
           siret: string | null
+          stripe_customer_id: string | null
+          stripe_subscription_id: string | null
           subscription_status: string
           trial_end_date: string | null
           trial_start_date: string | null
@@ -588,9 +591,12 @@ export type Database = {
           logo_url?: string | null
           name: string
           phone?: string | null
+          plan_name?: string | null
           postal_code?: string | null
           quote_prefix?: string
           siret?: string | null
+          stripe_customer_id?: string | null
+          stripe_subscription_id?: string | null
           subscription_status?: string
           trial_end_date?: string | null
           trial_start_date?: string | null
@@ -618,9 +624,12 @@ export type Database = {
           logo_url?: string | null
           name?: string
           phone?: string | null
+          plan_name?: string | null
           postal_code?: string | null
           quote_prefix?: string
           siret?: string | null
+          stripe_customer_id?: string | null
+          stripe_subscription_id?: string | null
           subscription_status?: string
           trial_end_date?: string | null
           trial_start_date?: string | null
