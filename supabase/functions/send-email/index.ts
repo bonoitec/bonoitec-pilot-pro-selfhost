@@ -19,7 +19,18 @@ const BRAND = {
   border: "#e2e8f0",
 };
 
-function emailLayout(content: string, preheader = ""): string {
+function emailLayout(content: string, preheader = "", orgContact?: { phone?: string; email?: string }): string {
+  const footerLines: string[] = [];
+  if (orgContact?.email) {
+    footerLines.push(`<a href="mailto:${orgContact.email}">${orgContact.email}</a>`);
+  }
+  if (orgContact?.phone) {
+    footerLines.push(orgContact.phone);
+  }
+  const contactLine = footerLines.length > 0
+    ? footerLines.join(" · ")
+    : `<a href="mailto:contact@bonoitecpilot.fr">contact@bonoitecpilot.fr</a>`;
+
   return `<!DOCTYPE html>
 <html lang="fr">
 <head>
@@ -63,7 +74,7 @@ function emailLayout(content: string, preheader = ""): string {
       <div class="footer">
         <p>
           BonoitecPilot — Votre atelier connecté<br>
-          <a href="mailto:contact@bonoitecpilot.fr">contact@bonoitecpilot.fr</a> · 04 65 96 95 85
+          ${contactLine}
         </p>
         <p style="margin-top:12px;font-size:11px;color:#94a3b8;">
           Cet email a été envoyé automatiquement. Merci de ne pas y répondre directement.
