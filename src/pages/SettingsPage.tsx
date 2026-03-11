@@ -358,4 +358,50 @@ const SettingsPage = () => {
   );
 };
 
+function SubscriptionCard() {
+  const { subscribed, planName, subscriptionEnd, isLoading, openCustomerPortal } = useSubscription();
+  const [portalLoading, setPortalLoading] = useState(false);
+
+  const handlePortal = async () => {
+    setPortalLoading(true);
+    await openCustomerPortal();
+    setPortalLoading(false);
+  };
+
+  return (
+    <Card>
+      <CardHeader>
+        <div className="flex items-center gap-2">
+          <CreditCard className="h-4 w-4 text-primary" />
+          <CardTitle className="text-base">Abonnement</CardTitle>
+        </div>
+        <CardDescription>Gérez votre plan et vos paiements</CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-3">
+        {isLoading ? (
+          <p className="text-sm text-muted-foreground">Chargement...</p>
+        ) : subscribed ? (
+          <>
+            <div className="flex items-center gap-2">
+              <span className="inline-flex items-center rounded-full bg-green-100 dark:bg-green-900/30 px-2.5 py-0.5 text-xs font-medium text-green-700 dark:text-green-400">Actif</span>
+              {planName && <span className="text-sm font-medium">{planName}</span>}
+            </div>
+            {subscriptionEnd && (
+              <p className="text-xs text-muted-foreground">
+                Prochain renouvellement : {new Date(subscriptionEnd).toLocaleDateString("fr-FR")}
+              </p>
+            )}
+            <Button variant="outline" size="sm" onClick={handlePortal} disabled={portalLoading}>
+              {portalLoading ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <CreditCard className="h-4 w-4 mr-2" />}
+              Gérer mon abonnement
+            </Button>
+          </>
+        ) : (
+          <p className="text-sm text-muted-foreground">Aucun abonnement actif. Utilisez le bouton "S'abonner" dans la bannière d'essai.</p>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
 export default SettingsPage;
