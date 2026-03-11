@@ -62,9 +62,32 @@ const reassurance = [
 
 const PricingSection = () => {
   const [selected, setSelected] = useState("annual");
+  const [checkoutLoading, setCheckoutLoading] = useState(false);
   const ref = useRef(null);
   const isInView = useInView(ref, { once: true, margin: "-80px" });
   const current = billingOptions.find((b) => b.id === selected)!;
+  const { user, session } = useAuth();
+  const navigate = useNavigate();
+
+  const handleSubscribe = async () => {
+    if (!user || !session) {
+      navigate("/auth");
+      return;
+    }
+    setCheckoutLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("create-checkout", {
+        body: { plan: selected },
+        headers: { Authorization: `Bearer ${session.access_token}` },
+      });
+      if (error) throw error;
+      if (data?.url) window.open(data.url, "_blank");
+    } catch {
+      toast.error("Erreur lors de la création de la session de paiement.");
+    } finally {
+      setCheckoutLoading(false);
+    }
+  };
 
   return (
     <section className="landing-section" id="tarifs" ref={ref}>
