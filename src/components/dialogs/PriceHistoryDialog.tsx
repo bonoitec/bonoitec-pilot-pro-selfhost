@@ -6,6 +6,7 @@ import { TrendingUp, TrendingDown, Minus } from "lucide-react";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { Skeleton } from "@/components/ui/skeleton";
+import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from "recharts";
 
 interface Props {
   open: boolean;
@@ -28,6 +29,14 @@ export function PriceHistoryDialog({ open, onOpenChange, part }: Props) {
     },
   });
 
+  // Chart data: chronological order
+  const chartData = [...history]
+    .reverse()
+    .map((h: any) => ({
+      date: format(new Date(h.created_at), "dd/MM/yy", { locale: fr }),
+      prix: Number(h.new_price),
+    }));
+
   const getDiffIcon = (oldP: number, newP: number) => {
     if (newP > oldP) return <TrendingUp className="h-3.5 w-3.5 text-destructive" />;
     if (newP < oldP) return <TrendingDown className="h-3.5 w-3.5 text-green-500" />;
@@ -36,8 +45,7 @@ export function PriceHistoryDialog({ open, onOpenChange, part }: Props) {
 
   const getDiffPercent = (oldP: number, newP: number) => {
     if (oldP === 0) return null;
-    const pct = ((newP - oldP) / oldP) * 100;
-    return pct;
+    return ((newP - oldP) / oldP) * 100;
   };
 
   return (
@@ -47,7 +55,26 @@ export function PriceHistoryDialog({ open, onOpenChange, part }: Props) {
           <DialogTitle>Historique des prix d'achat</DialogTitle>
           <DialogDescription>{part?.name} — Prix actuel : {Number(part?.buy_price ?? 0).toFixed(2)} €</DialogDescription>
         </DialogHeader>
-        <div className="max-h-[50vh] overflow-y-auto">
+
+        {/* Chart */}
+        {!isLoading && chartData.length >= 2 && (
+          <div className="h-48 w-full mb-2">
+            <ResponsiveContainer width="100%" height="100%">
+              <LineChart data={chartData} margin={{ top: 5, right: 10, left: 0, bottom: 5 }}>
+                <CartesianGrid strokeDasharray="3 3" className="stroke-border/40" />
+                <XAxis dataKey="date" tick={{ fontSize: 11 }} className="text-muted-foreground" />
+                <YAxis tick={{ fontSize: 11 }} className="text-muted-foreground" unit=" €" width={60} />
+                <Tooltip
+                  contentStyle={{ borderRadius: 12, fontSize: 13, border: "1px solid hsl(var(--border))", background: "hsl(var(--card))" }}
+                  formatter={(value: number) => [`${value.toFixed(2)} €`, "Prix d'achat"]}
+                />
+                <Line type="monotone" dataKey="prix" stroke="hsl(var(--primary))" strokeWidth={2} dot={{ r: 4, fill: "hsl(var(--primary))" }} activeDot={{ r: 6 }} />
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
+        )}
+
+        <div className="max-h-[40vh] overflow-y-auto">
           {isLoading ? (
             <div className="space-y-3 p-2">
               <Skeleton className="h-12 w-full" />
