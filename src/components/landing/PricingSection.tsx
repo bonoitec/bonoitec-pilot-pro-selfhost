@@ -171,16 +171,31 @@ const PricingSection = () => {
                 </div>
 
                 <div className="flex flex-col items-center lg:items-end gap-3">
-                  <Button
-                    variant="premium"
-                    size="lg"
-                    asChild
-                    className="rounded-full px-10 h-14 text-base font-bold w-full lg:w-auto"
-                  >
-                    <Link to="/auth">Commencer l'essai gratuit</Link>
-                  </Button>
+                  {user ? (
+                    <Button
+                      variant="premium"
+                      size="lg"
+                      className="rounded-full px-10 h-14 text-base font-bold w-full lg:w-auto"
+                      onClick={handleSubscribe}
+                      disabled={checkoutLoading}
+                    >
+                      {checkoutLoading ? (
+                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      ) : null}
+                      Souscrire maintenant
+                    </Button>
+                  ) : (
+                    <Button
+                      variant="premium"
+                      size="lg"
+                      asChild
+                      className="rounded-full px-10 h-14 text-base font-bold w-full lg:w-auto"
+                    >
+                      <Link to="/auth">Commencer l'essai gratuit</Link>
+                    </Button>
+                  )}
                   <p className="text-xs text-muted-foreground text-center lg:text-right">
-                    30 jours gratuits · Sans carte bancaire
+                    {user ? "Paiement sécurisé via Stripe" : "30 jours gratuits · Sans carte bancaire"}
                   </p>
                 </div>
               </div>
