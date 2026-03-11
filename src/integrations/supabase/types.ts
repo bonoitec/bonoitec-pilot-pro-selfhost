@@ -561,6 +561,9 @@ export type Database = {
           postal_code: string | null
           quote_prefix: string
           siret: string | null
+          subscription_status: string
+          trial_end_date: string | null
+          trial_start_date: string | null
           updated_at: string
           vat_enabled: boolean
           vat_number: string | null
@@ -588,6 +591,9 @@ export type Database = {
           postal_code?: string | null
           quote_prefix?: string
           siret?: string | null
+          subscription_status?: string
+          trial_end_date?: string | null
+          trial_start_date?: string | null
           updated_at?: string
           vat_enabled?: boolean
           vat_number?: string | null
@@ -615,6 +621,9 @@ export type Database = {
           postal_code?: string | null
           quote_prefix?: string
           siret?: string | null
+          subscription_status?: string
+          trial_end_date?: string | null
+          trial_start_date?: string | null
           updated_at?: string
           vat_enabled?: boolean
           vat_number?: string | null
