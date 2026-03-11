@@ -334,6 +334,9 @@ const SettingsPage = () => {
         </CardContent>
       </Card>
 
+      {/* Subscription */}
+      <SubscriptionCard />
+
       {/* Account */}
       <Card>
         <CardHeader>
