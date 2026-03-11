@@ -65,13 +65,6 @@ export type Database = {
             referencedRelation: "organizations"
             referencedColumns: ["id"]
           },
-          {
-            foreignKeyName: "articles_organization_id_fkey"
-            columns: ["organization_id"]
-            isOneToOne: false
-            referencedRelation: "organizations_safe"
-            referencedColumns: ["id"]
-          },
         ]
       }
       clients: {
@@ -116,13 +109,6 @@ export type Database = {
             referencedRelation: "organizations"
             referencedColumns: ["id"]
           },
-          {
-            foreignKeyName: "clients_organization_id_fkey"
-            columns: ["organization_id"]
-            isOneToOne: false
-            referencedRelation: "organizations_safe"
-            referencedColumns: ["id"]
-          },
         ]
       }
       deposit_codes: {
@@ -153,13 +139,6 @@ export type Database = {
             columns: ["organization_id"]
             isOneToOne: false
             referencedRelation: "organizations"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "deposit_codes_organization_id_fkey"
-            columns: ["organization_id"]
-            isOneToOne: false
-            referencedRelation: "organizations_safe"
             referencedColumns: ["id"]
           },
         ]
@@ -264,13 +243,6 @@ export type Database = {
             referencedRelation: "organizations"
             referencedColumns: ["id"]
           },
-          {
-            foreignKeyName: "devices_organization_id_fkey"
-            columns: ["organization_id"]
-            isOneToOne: false
-            referencedRelation: "organizations_safe"
-            referencedColumns: ["id"]
-          },
         ]
       }
       inventory: {
@@ -333,13 +305,6 @@ export type Database = {
             referencedRelation: "organizations"
             referencedColumns: ["id"]
           },
-          {
-            foreignKeyName: "inventory_organization_id_fkey"
-            columns: ["organization_id"]
-            isOneToOne: false
-            referencedRelation: "organizations_safe"
-            referencedColumns: ["id"]
-          },
         ]
       }
       inventory_price_history: {
@@ -383,13 +348,6 @@ export type Database = {
             columns: ["organization_id"]
             isOneToOne: false
             referencedRelation: "organizations"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "inventory_price_history_organization_id_fkey"
-            columns: ["organization_id"]
-            isOneToOne: false
-            referencedRelation: "organizations_safe"
             referencedColumns: ["id"]
           },
         ]
@@ -468,13 +426,6 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "invoices_organization_id_fkey"
-            columns: ["organization_id"]
-            isOneToOne: false
-            referencedRelation: "organizations_safe"
-            referencedColumns: ["id"]
-          },
-          {
             foreignKeyName: "invoices_quote_id_fkey"
             columns: ["quote_id"]
             isOneToOne: false
@@ -536,13 +487,6 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "notification_logs_organization_id_fkey"
-            columns: ["organization_id"]
-            isOneToOne: false
-            referencedRelation: "organizations_safe"
-            referencedColumns: ["id"]
-          },
-          {
             foreignKeyName: "notification_logs_repair_id_fkey"
             columns: ["repair_id"]
             isOneToOne: false
@@ -591,13 +535,6 @@ export type Database = {
             columns: ["organization_id"]
             isOneToOne: false
             referencedRelation: "organizations"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "notification_templates_organization_id_fkey"
-            columns: ["organization_id"]
-            isOneToOne: false
-            referencedRelation: "organizations_safe"
             referencedColumns: ["id"]
           },
         ]
@@ -740,13 +677,6 @@ export type Database = {
             referencedRelation: "organizations"
             referencedColumns: ["id"]
           },
-          {
-            foreignKeyName: "profiles_organization_id_fkey"
-            columns: ["organization_id"]
-            isOneToOne: false
-            referencedRelation: "organizations_safe"
-            referencedColumns: ["id"]
-          },
         ]
       }
       quotes: {
@@ -824,13 +754,6 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "quotes_organization_id_fkey"
-            columns: ["organization_id"]
-            isOneToOne: false
-            referencedRelation: "organizations_safe"
-            referencedColumns: ["id"]
-          },
-          {
             foreignKeyName: "quotes_repair_id_fkey"
             columns: ["repair_id"]
             isOneToOne: false
@@ -879,13 +802,6 @@ export type Database = {
             columns: ["organization_id"]
             isOneToOne: false
             referencedRelation: "organizations"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "repair_messages_organization_id_fkey"
-            columns: ["organization_id"]
-            isOneToOne: false
-            referencedRelation: "organizations_safe"
             referencedColumns: ["id"]
           },
           {
@@ -955,13 +871,6 @@ export type Database = {
             columns: ["organization_id"]
             isOneToOne: false
             referencedRelation: "organizations"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "repair_templates_organization_id_fkey"
-            columns: ["organization_id"]
-            isOneToOne: false
-            referencedRelation: "organizations_safe"
             referencedColumns: ["id"]
           },
         ]
@@ -1083,13 +992,6 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "repairs_organization_id_fkey"
-            columns: ["organization_id"]
-            isOneToOne: false
-            referencedRelation: "organizations_safe"
-            referencedColumns: ["id"]
-          },
-          {
             foreignKeyName: "repairs_technician_id_fkey"
             columns: ["technician_id"]
             isOneToOne: false
@@ -1149,13 +1051,6 @@ export type Database = {
             referencedRelation: "organizations"
             referencedColumns: ["id"]
           },
-          {
-            foreignKeyName: "services_organization_id_fkey"
-            columns: ["organization_id"]
-            isOneToOne: false
-            referencedRelation: "organizations_safe"
-            referencedColumns: ["id"]
-          },
         ]
       }
       technicians: {
@@ -1198,13 +1093,6 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "technicians_organization_id_fkey"
-            columns: ["organization_id"]
-            isOneToOne: false
-            referencedRelation: "organizations_safe"
-            referencedColumns: ["id"]
-          },
-          {
             foreignKeyName: "technicians_profile_id_fkey"
             columns: ["profile_id"]
             isOneToOne: false
@@ -1233,108 +1121,7 @@ export type Database = {
       }
     }
     Views: {
-      organizations_safe: {
-        Row: {
-          address: string | null
-          ape_code: string | null
-          article_categories: Json | null
-          checklist_label: string | null
-          city: string | null
-          country: string | null
-          created_at: string | null
-          email: string | null
-          google_review_url: string | null
-          id: string | null
-          intake_checklist_items: Json | null
-          invoice_footer: string | null
-          invoice_prefix: string | null
-          legal_status: string | null
-          logo_url: string | null
-          name: string | null
-          phone: string | null
-          plan_name: string | null
-          postal_code: string | null
-          quote_prefix: string | null
-          siret: string | null
-          stripe_customer_id: string | null
-          stripe_subscription_id: string | null
-          subscription_status: string | null
-          trial_end_date: string | null
-          trial_start_date: string | null
-          updated_at: string | null
-          vat_enabled: boolean | null
-          vat_number: string | null
-          vat_rate: number | null
-          website: string | null
-        }
-        Insert: {
-          address?: string | null
-          ape_code?: string | null
-          article_categories?: Json | null
-          checklist_label?: string | null
-          city?: string | null
-          country?: string | null
-          created_at?: string | null
-          email?: string | null
-          google_review_url?: string | null
-          id?: string | null
-          intake_checklist_items?: Json | null
-          invoice_footer?: string | null
-          invoice_prefix?: string | null
-          legal_status?: string | null
-          logo_url?: string | null
-          name?: string | null
-          phone?: string | null
-          plan_name?: string | null
-          postal_code?: string | null
-          quote_prefix?: string | null
-          siret?: string | null
-          stripe_customer_id?: never
-          stripe_subscription_id?: never
-          subscription_status?: string | null
-          trial_end_date?: string | null
-          trial_start_date?: string | null
-          updated_at?: string | null
-          vat_enabled?: boolean | null
-          vat_number?: string | null
-          vat_rate?: number | null
-          website?: string | null
-        }
-        Update: {
-          address?: string | null
-          ape_code?: string | null
-          article_categories?: Json | null
-          checklist_label?: string | null
-          city?: string | null
-          country?: string | null
-          created_at?: string | null
-          email?: string | null
-          google_review_url?: string | null
-          id?: string | null
-          intake_checklist_items?: Json | null
-          invoice_footer?: string | null
-          invoice_prefix?: string | null
-          legal_status?: string | null
-          logo_url?: string | null
-          name?: string | null
-          phone?: string | null
-          plan_name?: string | null
-          postal_code?: string | null
-          quote_prefix?: string | null
-          siret?: string | null
-          stripe_customer_id?: never
-          stripe_subscription_id?: never
-          subscription_status?: string | null
-          trial_end_date?: string | null
-          trial_start_date?: string | null
-          updated_at?: string | null
-          vat_enabled?: boolean | null
-          vat_number?: string | null
-          vat_rate?: number | null
-          website?: string | null
-        }
-        Relationships: []
-      }
+      [_ in never]: never
     }
     Functions: {
       create_deposit_repair: {
