@@ -1,24 +1,24 @@
 import { useTrialStatus } from "@/hooks/useTrialStatus";
-import { Clock, CheckCircle2, AlertTriangle } from "lucide-react";
+import { useSubscription } from "@/hooks/useSubscription";
+import { Clock, CreditCard } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 
 export function TrialBanner() {
   const { isTrialActive, isSubscribed, daysRemaining, trialEndDate, isLoading } = useTrialStatus();
+  const { startCheckout } = useSubscription();
 
   if (isLoading) return null;
-
-  // Subscribed users see nothing
   if (isSubscribed) return null;
 
-  // Trial active
   if (isTrialActive) {
     const endFormatted = trialEndDate
       ? format(new Date(trialEndDate), "d MMMM yyyy", { locale: fr })
       : "";
 
     return (
-      <div className="flex items-center gap-2 px-4 py-2 bg-primary/10 border border-primary/20 rounded-xl text-sm">
+      <div className="flex items-center gap-2 px-4 py-2 bg-primary/10 border border-primary/20 rounded-xl text-sm flex-wrap">
         <Clock className="h-4 w-4 text-primary shrink-0" />
         <span className="text-foreground font-medium">Essai gratuit en cours</span>
         <span className="text-muted-foreground">—</span>
@@ -35,6 +35,15 @@ export function TrialBanner() {
             </span>
           </>
         )}
+        <Button
+          variant="premium"
+          size="sm"
+          className="ml-auto rounded-full text-xs px-4"
+          onClick={() => startCheckout("annual")}
+        >
+          <CreditCard className="h-3 w-3 mr-1" />
+          S'abonner
+        </Button>
       </div>
     );
   }

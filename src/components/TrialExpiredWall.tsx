@@ -1,16 +1,26 @@
-import { AlertTriangle, CreditCard, LogOut } from "lucide-react";
+import { AlertTriangle, CreditCard, LogOut, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
+import { useSubscription } from "@/hooks/useSubscription";
+import { useState } from "react";
 
 export function TrialExpiredWall() {
   const { signOut } = useAuth();
   const navigate = useNavigate();
+  const { startCheckout } = useSubscription();
+  const [loading, setLoading] = useState(false);
 
   const handleSignOut = async () => {
     await signOut();
     navigate("/auth");
+  };
+
+  const handleSubscribe = async () => {
+    setLoading(true);
+    await startCheckout("annual");
+    setLoading(false);
   };
 
   return (
@@ -36,10 +46,15 @@ export function TrialExpiredWall() {
               variant="premium"
               size="lg"
               className="rounded-xl"
-              onClick={() => window.open("https://bonoitecpilot.com/tarifs", "_blank")}
+              onClick={handleSubscribe}
+              disabled={loading}
             >
-              <CreditCard className="h-4 w-4 mr-2" />
-              Voir les abonnements
+              {loading ? (
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+              ) : (
+                <CreditCard className="h-4 w-4 mr-2" />
+              )}
+              Souscrire — 14,99 €/mois
             </Button>
             <Button
               variant="outline"
