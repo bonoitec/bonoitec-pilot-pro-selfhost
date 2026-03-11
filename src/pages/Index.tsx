@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -8,11 +9,24 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Wrench, Clock, CheckCircle2, DollarSign, AlertTriangle, TrendingUp, Plus } from "lucide-react";
 import { CreateRepairWizard } from "@/components/dialogs/CreateRepairWizard";
 import { ProfitabilitySection } from "@/components/dashboard/ProfitabilitySection";
+import { useSubscription } from "@/hooks/useSubscription";
+import { toast } from "sonner";
 
 import { statusLabels, statusColors } from "@/lib/repairStatuses";
 
 const Index = () => {
   const [showWizard, setShowWizard] = useState(false);
+  const [searchParams, setSearchParams] = useSearchParams();
+  const { checkSubscription } = useSubscription();
+
+  // Handle checkout success return
+  useEffect(() => {
+    if (searchParams.get("checkout") === "success") {
+      toast.success("Paiement réussi ! Votre abonnement est maintenant actif.");
+      checkSubscription();
+      setSearchParams({}, { replace: true });
+    }
+  }, [searchParams, checkSubscription, setSearchParams]);
   const { data: repairs = [], isLoading: loadingRepairs } = useQuery({
     queryKey: ["dashboard-repairs"],
     queryFn: async () => {
