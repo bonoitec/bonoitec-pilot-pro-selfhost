@@ -88,8 +88,8 @@ function emailLayout(content: string, preheader = "", orgContact?: { phone?: str
 
 // ─── Templates ───────────────────────────────────────────────────────
 
-const templates: Record<string, (data: Record<string, string>) => { subject: string; html: string }> = {
-  quote_ready: (d) => ({
+const templates: Record<string, (data: Record<string, string>, orgContact?: { phone?: string; email?: string }) => { subject: string; html: string }> = {
+  quote_ready: (d, oc) => ({
     subject: `Votre devis ${d.reference} est disponible`,
     html: emailLayout(`
       <div class="body">
@@ -104,10 +104,10 @@ const templates: Record<string, (data: Record<string, string>) => { subject: str
         <p>Ce devis est valable 30 jours. N'hésitez pas à nous contacter pour toute question.</p>
         <p>Cordialement,<br><strong>L'équipe BonoitecPilot</strong></p>
       </div>
-    `, `Votre devis ${d.reference} est disponible`),
+    `, `Votre devis ${d.reference} est disponible`, oc),
   }),
 
-  repair_completed: (d) => ({
+  repair_completed: (d, oc) => ({
     subject: `Réparation ${d.reference} terminée — Appareil prêt`,
     html: emailLayout(`
       <div class="body">
@@ -123,10 +123,10 @@ const templates: Record<string, (data: Record<string, string>) => { subject: str
         ${d.trackingUrl ? `<a href="${d.trackingUrl}" class="btn">Suivre ma réparation</a>` : ""}
         <p>Merci de votre confiance !<br><strong>L'équipe BonoitecPilot</strong></p>
       </div>
-    `, `Votre réparation ${d.reference} est terminée`),
+    `, `Votre réparation ${d.reference} est terminée`, oc),
   }),
 
-  invoice_sent: (d) => ({
+  invoice_sent: (d, oc) => ({
     subject: `Facture ${d.reference} — BonoitecPilot`,
     html: emailLayout(`
       <div class="body">
@@ -142,10 +142,10 @@ const templates: Record<string, (data: Record<string, string>) => { subject: str
         <p>Pour toute question concernant cette facture, n'hésitez pas à nous contacter.</p>
         <p>Cordialement,<br><strong>L'équipe BonoitecPilot</strong></p>
       </div>
-    `, `Facture ${d.reference}`),
+    `, `Facture ${d.reference}`, oc),
   }),
 
-  status_update: (d) => ({
+  status_update: (d, oc) => ({
     subject: `Mise à jour — ${d.statusLabel || "Votre réparation"} (${d.reference})`,
     html: emailLayout(`
       <div class="body">
@@ -166,10 +166,10 @@ const templates: Record<string, (data: Record<string, string>) => { subject: str
         ` : ""}
         <p>Cordialement,<br><strong>L'équipe BonoitecPilot</strong></p>
       </div>
-    `, `Réparation ${d.reference} — ${d.statusLabel || "mise à jour"}`),
+    `, `Réparation ${d.reference} — ${d.statusLabel || "mise à jour"}`, oc),
   }),
 
-  client_notification: (d) => ({
+  client_notification: (d, oc) => ({
     subject: d.subject || "Notification — BonoitecPilot",
     html: emailLayout(`
       <div class="body">
@@ -179,7 +179,7 @@ const templates: Record<string, (data: Record<string, string>) => { subject: str
         ${d.trackingUrl ? `<a href="${d.trackingUrl}" class="btn">Accéder à mon espace</a>` : ""}
         <p>Cordialement,<br><strong>L'équipe BonoitecPilot</strong></p>
       </div>
-    `),
+    `, "", oc),
   }),
 };
 
