@@ -219,7 +219,7 @@ export function generateInsights(
       const pct = (topMethod[1] / paidInvoices.reduce((s, i) => s + Number(i.paid_amount || 0), 0) * 100).toFixed(0);
       insights.push({
         icon: "💳",
-        title: `${methodLabels[topMethod[0]] || topMethod[0]} domine`,
+        title: `Paiement principal : ${methodLabels[topMethod[0]] || topMethod[0]}`,
         description: `${pct}% des encaissements se font par ${methodLabels[topMethod[0]] || topMethod[0]}.`,
         metric: `${topMethod[1].toFixed(0)} €`,
         trend: "stable",
