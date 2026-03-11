@@ -1,9 +1,12 @@
 import { useState } from "react";
 import { motion, useInView } from "framer-motion";
 import { useRef } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Check, Shield, Headphones, Zap, Sparkles } from "lucide-react";
+import { Check, Shield, Headphones, Zap, Sparkles, Loader2 } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 const features = [
   "Gestion complète des réparations",
