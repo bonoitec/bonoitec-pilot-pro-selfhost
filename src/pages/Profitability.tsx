@@ -13,6 +13,8 @@ import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer,
   CartesianGrid, PieChart, Pie, Cell, LineChart, Line,
 } from "recharts";
+import { ClientSection } from "@/components/profitability/ClientSection";
+import { EncaissementSection } from "@/components/profitability/EncaissementSection";
 
 const periods = [
   { key: "7d", label: "7 jours" },
@@ -40,6 +42,7 @@ const COLORS = ["hsl(var(--success))", "hsl(var(--warning))", "hsl(var(--destruc
 
 const Profitability = () => {
   const [period, setPeriod] = useState<string>("30d");
+  const dateFrom = getDateFilter(period);
 
   const { data: org } = useQuery({
     queryKey: ["org-vat-settings"],
@@ -58,11 +61,10 @@ const Profitability = () => {
   const { data: repairs = [], isLoading } = useQuery({
     queryKey: ["profitability-full", period],
     queryFn: async () => {
-      const from = getDateFilter(period);
       const { data, error } = await supabase
         .from("repairs")
         .select("id, reference, final_price, estimated_price, parts_used, labor_cost, status, created_at, clients(name), devices(brand, model)")
-        .gte("created_at", from)
+        .gte("created_at", dateFrom)
         .order("created_at", { ascending: false });
       if (error) throw error;
       return data;
@@ -106,7 +108,6 @@ const Profitability = () => {
 
   const sorted = [...marginData].sort((a, b) => b.margin.grossMargin - a.margin.grossMargin);
 
-  // Timeline chart
   const timelineData = (() => {
     const groups: Record<string, { label: string; revenue: number; margin: number; count: number }> = {};
     marginData.forEach(r => {
@@ -164,7 +165,7 @@ const Profitability = () => {
         </Card>
       ) : (
         <>
-          {/* KPI Row */}
+          {/* KPI Row - Évaluation des ventes */}
           <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
             {[
               { label: vatEnabled ? "CA HT" : "Chiffre d'affaires", value: fmt(totalRevenue), icon: DollarSign, gradient: true },
@@ -185,9 +186,14 @@ const Profitability = () => {
             ))}
           </div>
 
+          {/* Encaissement */}
+          <EncaissementSection period={period} dateFrom={dateFrom} />
+
+          {/* Client Section */}
+          <ClientSection period={period} dateFrom={dateFrom} />
+
           {/* Charts row */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {/* Timeline */}
             <Card className="md:col-span-2">
               <CardHeader className="pb-2">
                 <CardTitle className="text-sm font-display">Évolution</CardTitle>
@@ -223,7 +229,6 @@ const Profitability = () => {
               </CardContent>
             </Card>
 
-            {/* Pie */}
             <Card>
               <CardHeader className="pb-2">
                 <CardTitle className="text-sm font-display">Répartition</CardTitle>
