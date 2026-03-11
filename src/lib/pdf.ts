@@ -1,5 +1,6 @@
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
+import QRCode from "qrcode";
 
 interface OrgInfo {
   name: string;
@@ -499,23 +500,38 @@ export async function generatePDF(org: OrgInfo, data: DocData, options?: { previ
   }
 
   // ═══════════════════════════════════════════
-  // GOOGLE REVIEW LINK
+  // GOOGLE REVIEW QR CODE
   // ═══════════════════════════════════════════
 
   if (org.google_review_url && isInvoice) {
     const pageCount = doc.getNumberOfPages();
     doc.setPage(pageCount);
     const pageH = doc.internal.pageSize.getHeight();
-    // Place above the footer zone, never overlapping
-    const qrY = Math.min(finalY + 4, pageH - FOOTER_ZONE - 2);
-    if (qrY > 14 && qrY < pageH - FOOTER_ZONE) {
-      doc.setFontSize(7.5);
-      doc.setFont("helvetica", "normal");
-      doc.setTextColor(...GRAY_500);
-      doc.text("⭐ Laissez-nous un avis Google :", PAGE_LEFT, qrY);
-      doc.setTextColor(...PRIMARY);
-      doc.textWithLink(org.google_review_url, PAGE_LEFT, qrY + 4, { url: org.google_review_url });
-      doc.setTextColor(0);
+    const qrBlockH = 32;
+    const qrY = Math.min(finalY + 4, pageH - FOOTER_ZONE - qrBlockH - 2);
+    if (qrY > 14 && qrY < pageH - FOOTER_ZONE - qrBlockH) {
+      try {
+        const qrDataUrl = await QRCode.toDataURL(org.google_review_url, {
+          width: 200,
+          margin: 1,
+          color: { dark: "#1e40af", light: "#ffffff" },
+        });
+        const qrSize = 24;
+        doc.addImage(qrDataUrl, "PNG", PAGE_LEFT, qrY, qrSize, qrSize);
+        
+        doc.setFontSize(8);
+        doc.setFont("helvetica", "bold");
+        doc.setTextColor(...GRAY_700);
+        doc.text("Votre avis compte !", PAGE_LEFT + qrSize + 6, qrY + 8);
+        
+        doc.setFontSize(7.5);
+        doc.setFont("helvetica", "normal");
+        doc.setTextColor(...GRAY_500);
+        doc.text("Scannez ce code pour nous laisser", PAGE_LEFT + qrSize + 6, qrY + 14);
+        doc.text("votre avis. Merci de votre confiance.", PAGE_LEFT + qrSize + 6, qrY + 19);
+      } catch (e) {
+        console.error("QR code generation error:", e);
+      }
     }
   }
 

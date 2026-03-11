@@ -147,6 +147,12 @@ const templates: Record<string, (data: Record<string, string>) => { subject: str
           <p><strong>Nouveau statut :</strong> ${d.statusLabel || d.status || "—"}</p>
         </div>
         ${d.trackingUrl ? `<a href="${d.trackingUrl}" class="btn">Suivre ma réparation</a>` : ""}
+        ${d.googleReviewUrl ? `
+        <hr class="divider">
+        <p style="text-align:center;">⭐ <strong>Votre avis compte beaucoup pour nous</strong></p>
+        <p style="text-align:center;">Si vous êtes satisfait de notre service, n'hésitez pas à nous laisser un petit avis :</p>
+        <p style="text-align:center;"><a href="${d.googleReviewUrl}" class="btn" style="background:${BRAND.primary};">Laisser un avis</a></p>
+        ` : ""}
         <p>Cordialement,<br><strong>L'équipe BonoitecPilot</strong></p>
       </div>
     `, `Réparation ${d.reference} — ${d.statusLabel || "mise à jour"}`),

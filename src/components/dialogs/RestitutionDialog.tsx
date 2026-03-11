@@ -112,6 +112,7 @@ export function RestitutionDialog({ open, onOpenChange, repair }: Props) {
               status: "pret_a_recuperer",
               statusLabel: statusLabels["pret_a_recuperer"],
               message: `Votre ${device} vous a été restitué. L'intervention est clôturée. Merci de votre confiance !`,
+              googleReviewUrl: org?.google_review_url || "",
             },
             organizationId: repair.organization_id,
             repairId: repair.id,
