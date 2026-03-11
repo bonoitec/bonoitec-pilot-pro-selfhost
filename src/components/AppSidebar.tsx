@@ -34,7 +34,7 @@ const shopItems = [
 
 const toolsItems = [
   { title: "Bibliothèque", url: "/repair-library", icon: BookOpen },
-  { title: "QR Dépôt", url: "/qr-deposit", icon: QrCode },
+  
   { title: "Scanner IMEI", url: "/imei-scanner", icon: Cpu },
   { title: "Assistant IA", url: "/ai-assistant", icon: Bot },
   { title: "Statistiques", url: "/statistics", icon: BarChart3 },
