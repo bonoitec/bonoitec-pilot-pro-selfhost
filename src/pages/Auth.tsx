@@ -1,7 +1,8 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable/index";
+import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -21,7 +22,15 @@ import heroDashboard from "@/assets/hero-dashboard.png";
 
 const Auth = () => {
   const navigate = useNavigate();
+  const { session, loading: authLoading } = useAuth();
   const [loading, setLoading] = useState(false);
+
+  // Redirect to dashboard if already authenticated
+  useEffect(() => {
+    if (!authLoading && session) {
+      navigate("/dashboard", { replace: true });
+    }
+  }, [session, authLoading, navigate]);
   const [activeTab, setActiveTab] = useState<"login" | "signup">("signup");
 
   const [loginEmail, setLoginEmail] = useState("");
@@ -85,7 +94,7 @@ const Auth = () => {
 
   const handleGoogleLogin = async () => {
     setLoading(true);
-    const { error } = await lovable.auth.signInWithOAuth("google", { redirect_uri: window.location.origin });
+    const { error } = await lovable.auth.signInWithOAuth("google", { redirect_uri: `${window.location.origin}/auth` });
     setLoading(false);
     if (error) toast.error("Erreur lors de la connexion Google");
   };
