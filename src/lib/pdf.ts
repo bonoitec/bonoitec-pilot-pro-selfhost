@@ -1,6 +1,7 @@
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import QRCode from "qrcode";
+import { getSignedFileUrl } from "@/lib/storage";
 
 interface OrgInfo {
   name: string;
