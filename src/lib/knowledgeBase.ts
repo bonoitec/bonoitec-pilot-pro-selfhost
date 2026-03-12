@@ -45,7 +45,7 @@ export const knowledgeBase = {
   ],
 
   support: {
-    email: "contact@bonoitecpilot.fr",
+    email: "contact@app.bonoitecpilot.fr",
     phone: "04 65 96 95 85",
     pages: {
       contact: "/contact",
