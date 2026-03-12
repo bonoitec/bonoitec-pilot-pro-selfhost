@@ -1,4 +1,5 @@
 import { forwardRef, useRef } from "react";
+import PageMeta from "@/components/PageMeta";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { motion, useInView } from "framer-motion";
