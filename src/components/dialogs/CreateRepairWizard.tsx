@@ -341,66 +341,77 @@ export function CreateRepairWizard({ open, onOpenChange }: Props) {
   };
 
   const handleGenerateQuote = async () => {
-    if (!createdRepair || !org) return;
-    const vatRate = org.vat_rate ?? 20;
-
-    // Build lines from selected services or fallback to single line
-    let lines: { description: string; quantity: number; unit_price: number }[];
-    if (selectedServices.length > 0) {
-      lines = selectedServices.map(s => ({
-        description: s.name + (s.description ? ` — ${s.description}` : ""),
-        quantity: 1,
-        unit_price: Number(s.default_price) || 0,
-      }));
-    } else {
-      const price = estimatedPrice ? parseFloat(estimatedPrice) : 0;
-      lines = [{ description: `${repairType ? repairType + " — " : ""}${issue}`, quantity: 1, unit_price: price }];
+    if (!createdRepair || !org) {
+      toast({ title: "Erreur", description: "Données de réparation ou organisation manquantes", variant: "destructive" });
+      return;
     }
+    try {
+      const vatRate = org.vat_rate ?? 20;
 
-    const totalHT = lines.reduce((s, l) => s + l.quantity * l.unit_price, 0);
-    const totalTTC = org.vat_enabled ? totalHT * (1 + vatRate / 100) : totalHT;
+      // Build lines from selected services or fallback to single line
+      let lines: { description: string; quantity: number; unit_price: number }[];
+      if (selectedServices.length > 0) {
+        lines = selectedServices.map(s => ({
+          description: s.name + (s.description ? ` — ${s.description}` : ""),
+          quantity: 1,
+          unit_price: Number(s.default_price) || 0,
+        }));
+      } else {
+        const price = estimatedPrice ? parseFloat(estimatedPrice) : 0;
+        lines = [{ description: `${repairType ? repairType + " — " : ""}${issue}`, quantity: 1, unit_price: price }];
+      }
 
-    // Save quote to DB
-    const { data: orgId } = await supabase.rpc("get_user_org_id");
-    const qRef = (org.quote_prefix || "DEV-") + new Date().toISOString().slice(0, 10).replace(/-/g, "") + "-" + Math.random().toString(36).slice(2, 5).toUpperCase();
+      const totalHT = lines.reduce((s, l) => s + l.quantity * l.unit_price, 0);
+      const totalTTC = org.vat_enabled ? totalHT * (1 + vatRate / 100) : totalHT;
 
-    await supabase.from("quotes").insert({
-      organization_id: orgId!, reference: qRef,
-      client_id: createdRepair.client_id, device_id: createdRepair.device_id,
-      repair_id: createdRepair.id,
-      lines: lines as any, total_ht: totalHT, total_ttc: totalTTC, vat_rate: vatRate,
-      status: "brouillon",
-    } as any);
+      // Save quote to DB
+      const { data: orgId } = await supabase.rpc("get_user_org_id");
+      if (!orgId) throw new Error("Organisation introuvable");
 
-    qc.invalidateQueries({ queryKey: ["quotes"] });
+      const qRef = (org.quote_prefix || "DEV-") + new Date().toISOString().slice(0, 10).replace(/-/g, "") + "-" + Math.random().toString(36).slice(2, 5).toUpperCase();
 
-    // Build intake info for PDF
-    const intakeChecklist = Object.entries(checklist).filter(([, v]) => v).map(([k]) => k === "Diagnostic impossible" ? `${k}: ${diagnosticReason}` : k);
-    const photoUrls = (createdRepair.photos as string[]) || [];
+      const { error: insertError } = await supabase.from("quotes").insert({
+        organization_id: orgId, reference: qRef,
+        client_id: createdRepair.client_id, device_id: createdRepair.device_id,
+        repair_id: createdRepair.id,
+        lines: lines as any, total_ht: totalHT, total_ttc: totalTTC, vat_rate: vatRate,
+        status: "brouillon",
+      } as any);
+      if (insertError) throw insertError;
 
-    // Generate PDF with full intake info
-    await generatePDF(org as any, {
-      type: "quote", reference: qRef,
-      date: new Date().toLocaleDateString("fr-FR"),
-      clientName: createdRepair.clients?.name,
-      clientAddress: createdRepair.clients?.address,
-      clientPhone: createdRepair.clients?.phone,
-      clientEmail: createdRepair.clients?.email,
-      lines, totalHT, totalTTC, vatRate,
-      intake: {
-        deviceBrand: createdRepair.devices?.brand || device.brand,
-        deviceModel: createdRepair.devices?.model || device.model,
-        serialNumber: device.serial_number || undefined,
-        deviceCategory: device.category,
-        checklist: intakeChecklist,
-        screenCondition,
-        frameCondition,
-        backCondition,
-        photoUrls,
-        signatureUrl: createdRepair.customer_signature_url,
-      },
-    });
-    toast({ title: "Devis généré et téléchargé" });
+      qc.invalidateQueries({ queryKey: ["quotes"] });
+
+      // Build intake info for PDF
+      const intakeChecklist = Object.entries(checklist).filter(([, v]) => v).map(([k]) => k === "Diagnostic impossible" ? `${k}: ${diagnosticReason}` : k);
+      const photoUrls = (createdRepair.photos as string[]) || [];
+
+      // Generate PDF with full intake info
+      await generatePDF(org as any, {
+        type: "quote", reference: qRef,
+        date: new Date().toLocaleDateString("fr-FR"),
+        clientName: createdRepair.clients?.name,
+        clientAddress: createdRepair.clients?.address,
+        clientPhone: createdRepair.clients?.phone,
+        clientEmail: createdRepair.clients?.email,
+        lines, totalHT, totalTTC, vatRate,
+        intake: {
+          deviceBrand: createdRepair.devices?.brand || device.brand,
+          deviceModel: createdRepair.devices?.model || device.model,
+          serialNumber: device.serial_number || undefined,
+          deviceCategory: device.category,
+          checklist: intakeChecklist,
+          screenCondition,
+          frameCondition,
+          backCondition,
+          photoUrls,
+          signatureUrl: createdRepair.customer_signature_url,
+        },
+      });
+      toast({ title: "Devis généré et téléchargé" });
+    } catch (e: any) {
+      console.error("Erreur génération devis:", e);
+      toast({ title: "Erreur lors de la génération du devis", description: e?.message || "Erreur inconnue", variant: "destructive" });
+    }
   };
 
   const progress = step < 8 ? ((step + 1) / 8) * 100 : 100;
