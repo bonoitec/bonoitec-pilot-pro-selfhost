@@ -133,23 +133,6 @@ const Quotes = () => {
     },
   });
 
-  const buildPdfParams = (quote: any) => {
-    const lines = Array.isArray(quote.lines) ? quote.lines : [];
-    return {
-      type: "quote" as const,
-      reference: quote.reference,
-      date: format(new Date(quote.created_at), "dd/MM/yyyy"),
-      clientName: quote.clients?.name,
-      clientAddress: quote.clients?.address,
-      clientPhone: quote.clients?.phone,
-      clientEmail: quote.clients?.email,
-      lines,
-      totalHT: Number(quote.total_ht),
-      totalTTC: Number(quote.total_ttc),
-      vatRate: Number(quote.vat_rate),
-      notes: quote.notes,
-    };
-  };
 
   const previewPDF = async (quote: any) => {
     setPreviewRef(quote.reference);
