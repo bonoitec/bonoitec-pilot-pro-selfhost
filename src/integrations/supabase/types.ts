@@ -1136,6 +1136,40 @@ export type Database = {
         }
         Returns: Json
       }
+      get_org_safe_data: {
+        Args: never
+        Returns: {
+          address: string
+          ape_code: string
+          article_categories: Json
+          checklist_label: string
+          city: string
+          country: string
+          created_at: string
+          email: string
+          google_review_url: string
+          id: string
+          intake_checklist_items: Json
+          invoice_footer: string
+          invoice_prefix: string
+          legal_status: string
+          logo_url: string
+          name: string
+          phone: string
+          plan_name: string
+          postal_code: string
+          quote_prefix: string
+          siret: string
+          subscription_status: string
+          trial_end_date: string
+          trial_start_date: string
+          updated_at: string
+          vat_enabled: boolean
+          vat_number: string
+          vat_rate: number
+          website: string
+        }[]
+      }
       get_repair_by_tracking_code: { Args: { _code: string }; Returns: Json }
       get_repair_messages_by_tracking: {
         Args: { _tracking_code: string }
