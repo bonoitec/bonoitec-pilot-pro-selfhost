@@ -12,7 +12,7 @@ const sections = [
           <li><strong>Forme juridique :</strong> Entreprise individuelle</li>
           <li><strong>Adresse du siège social :</strong> 17 place Paul Arène, 04200 Sisteron, France</li>
           <li><strong>SIRET :</strong> 95106548100032</li>
-          <li><strong>Email :</strong> contact@bonoitecpilot.fr</li>
+          <li><strong>Email :</strong> contact@app.bonoitecpilot.fr</li>
           <li><strong>Téléphone :</strong> 04 65 96 95 85</li>
         </ul>
       </>
@@ -22,7 +22,7 @@ const sections = [
     id: "responsable",
     title: "2. Responsable de publication",
     content: (
-      <p>Le responsable de la publication du site est le représentant légal de la société Bonoitec Repair, joignable à l'adresse email : contact@bonoitecpilot.fr.</p>
+      <p>Le responsable de la publication du site est le représentant légal de la société Bonoitec Repair, joignable à l'adresse email : contact@app.bonoitecpilot.fr.</p>
     ),
   },
   {
@@ -71,7 +71,7 @@ const sections = [
     id: "contact",
     title: "7. Contact",
     content: (
-      <p>Pour toute question relative aux présentes mentions légales, vous pouvez nous contacter à l'adresse email <a href="mailto:contact@bonoitecpilot.fr" className="text-primary hover:underline font-medium">contact@bonoitecpilot.fr</a> ou par téléphone au <a href="tel:0465969585" className="text-primary hover:underline font-medium">04 65 96 95 85</a>.</p>
+      <p>Pour toute question relative aux présentes mentions légales, vous pouvez nous contacter à l'adresse email <a href="mailto:contact@app.bonoitecpilot.fr" className="text-primary hover:underline font-medium">contact@app.bonoitecpilot.fr</a> ou par téléphone au <a href="tel:0465969585" className="text-primary hover:underline font-medium">04 65 96 95 85</a>.</p>
     ),
   },
 ];

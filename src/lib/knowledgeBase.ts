@@ -45,7 +45,7 @@ export const knowledgeBase = {
   ],
 
   support: {
-    email: "contact@bonoitecpilot.fr",
+    email: "contact@app.bonoitecpilot.fr",
     phone: "04 65 96 95 85",
     pages: {
       contact: "/contact",
@@ -89,7 +89,7 @@ export const knowledgeBase = {
     {
       question: "Comment contacter le support ?",
       answer:
-        "Vous pouvez nous joindre par email à contact@bonoitecpilot.fr ou par téléphone au 04 65 96 95 85.",
+        "Vous pouvez nous joindre par email à contact@app.bonoitecpilot.fr ou par téléphone au 04 65 96 95 85.",
     },
     {
       question: "À qui s'adresse BonoitecPilot ?",

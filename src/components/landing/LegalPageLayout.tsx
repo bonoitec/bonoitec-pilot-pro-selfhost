@@ -49,10 +49,10 @@ export function LegalPageLayout({ title, lastUpdated, sections }: LegalPageLayou
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
             <a
-              href="mailto:contact@bonoitecpilot.fr"
+              href="mailto:contact@app.bonoitecpilot.fr"
               className="inline-flex items-center gap-2 rounded-xl bg-primary text-primary-foreground px-5 py-2.5 text-sm font-medium hover:opacity-90 transition-opacity"
             >
-              <Mail className="h-4 w-4" /> contact@bonoitecpilot.fr
+              <Mail className="h-4 w-4" /> contact@app.bonoitecpilot.fr
             </a>
             <a
               href="tel:0465969585"

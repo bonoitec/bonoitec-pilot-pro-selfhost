@@ -90,7 +90,7 @@ const sections = [
     title: "8. Résiliation",
     content: (
       <>
-        <p><strong>L'abonnement est sans engagement.</strong> L'utilisateur peut résilier son abonnement à tout moment depuis son espace client ou en contactant le support à l'adresse contact@bonoitecpilot.fr.</p>
+        <p><strong>L'abonnement est sans engagement.</strong> L'utilisateur peut résilier son abonnement à tout moment depuis son espace client ou en contactant le support à l'adresse contact@app.bonoitecpilot.fr.</p>
         <p>La résiliation prend effet à la fin de la période de facturation en cours. L'utilisateur conserve l'accès au service jusqu'à cette date. Aucun remboursement au prorata ne sera effectué pour la période restante.</p>
         <p>Bonoitec Repair se réserve le droit de suspendre ou de résilier l'accès au service en cas de violation des présentes CGU/CGV, après mise en demeure restée sans effet pendant 15 jours.</p>
       </>
@@ -121,7 +121,7 @@ const sections = [
     id: "contact",
     title: "12. Contact",
     content: (
-      <p>Pour toute question relative aux présentes CGU/CGV, contactez-nous à <a href="mailto:contact@bonoitecpilot.fr" className="text-primary hover:underline font-medium">contact@bonoitecpilot.fr</a> ou par courrier : Bonoitec Repair, 17 place Paul Arène, 04200 Sisteron, France.</p>
+      <p>Pour toute question relative aux présentes CGU/CGV, contactez-nous à <a href="mailto:contact@app.bonoitecpilot.fr" className="text-primary hover:underline font-medium">contact@app.bonoitecpilot.fr</a> ou par courrier : Bonoitec Repair, 17 place Paul Arène, 04200 Sisteron, France.</p>
     ),
   },
 ];
