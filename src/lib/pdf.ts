@@ -129,7 +129,8 @@ export async function generatePDF(org: OrgInfo, data: DocData, options?: { previ
 
   // Logo — preserve aspect ratio
   if (org.logo_url) {
-    const logoImg = await loadImageWithDimensions(org.logo_url);
+    const resolvedLogoUrl = await getSignedFileUrl(org.logo_url);
+    const logoImg = await loadImageWithDimensions(resolvedLogoUrl);
     if (logoImg) {
       const maxW = 38;
       const maxH = 28;
