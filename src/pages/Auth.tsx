@@ -22,7 +22,15 @@ import heroDashboard from "@/assets/hero-dashboard.png";
 
 const Auth = () => {
   const navigate = useNavigate();
+  const { session, loading: authLoading } = useAuth();
   const [loading, setLoading] = useState(false);
+
+  // Redirect to dashboard if already authenticated
+  useEffect(() => {
+    if (!authLoading && session) {
+      navigate("/dashboard", { replace: true });
+    }
+  }, [session, authLoading, navigate]);
   const [activeTab, setActiveTab] = useState<"login" | "signup">("signup");
 
   const [loginEmail, setLoginEmail] = useState("");
