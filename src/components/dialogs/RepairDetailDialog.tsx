@@ -367,9 +367,9 @@ export function RepairDetailDialog({ open, onOpenChange, repair }: Props) {
                   <CardTitle className="text-sm flex items-center gap-2"><Camera className="h-4 w-4 text-primary" />Photos</CardTitle>
                 </CardHeader>
                 <CardContent className="px-4 pb-3">
-                  {photos.length > 0 && (
+                  {resolvedPhotos.length > 0 && (
                     <div className="grid grid-cols-3 gap-2 mb-3">
-                      {photos.map((url, i) => (
+                      {resolvedPhotos.map((url, i) => (
                         <img key={i} src={url} alt={`Photo ${i + 1}`} className="w-full h-24 object-cover rounded-lg border border-border" />
                       ))}
                     </div>
