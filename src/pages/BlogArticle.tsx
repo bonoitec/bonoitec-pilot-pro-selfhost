@@ -253,6 +253,43 @@ const articles: Article[] = [
       },
     ],
   },
+  {
+    slug: "allie-gestion-boutique",
+    category: "Application",
+    title: "BonoitecPilot, votre allié pour mieux gérer votre boutique de réparation",
+    excerpt: "Découvrez comment BonoitecPilot aide les réparateurs et boutiques à piloter leur activité au quotidien avec simplicité et efficacité.",
+    image: blogAllieGestion,
+    date: "30 mars 2025",
+    readTime: "8 min",
+    author: "Équipe BonoitecPilot",
+    sections: [
+      {
+        id: "introduction",
+        title: "Introduction",
+        content: "Gérer une boutique de réparation mobile ou informatique, c'est jongler chaque jour entre les diagnostics, les clients, les pièces détachées, les devis et la facturation. Sans outil adapté, cette charge mentale finit par peser sur la qualité du service et la rentabilité de l'activité.\n\nBonoitecPilot a été pensé pour répondre exactement à cette réalité. Ce n'est pas un logiciel générique : c'est un outil conçu par et pour les professionnels de la réparation, qui comprend vos contraintes et vous aide à les dépasser."
+      },
+      {
+        id: "pourquoi-choisir",
+        title: "Pourquoi choisir BonoitecPilot ?",
+        content: "BonoitecPilot n'est pas juste un logiciel de plus. C'est un véritable copilote pour votre activité. Là où d'autres solutions vous imposent des workflows rigides ou des fonctionnalités pensées pour d'autres métiers, BonoitecPilot s'adapte à votre façon de travailler.\n\nQue vous soyez un réparateur indépendant ou une boutique avec plusieurs techniciens, l'outil s'ajuste à votre volume d'activité. Vous n'avez pas besoin d'être un expert en informatique pour l'utiliser : l'interface est claire, intuitive et pensée pour être prise en main en quelques minutes.\n\nEt surtout, tout est centralisé. Fini les cahiers, les fichiers Excel et les post-it. Vos clients, vos réparations, votre stock et vos factures vivent au même endroit."
+      },
+      {
+        id: "fonctionnalites",
+        title: "Les points forts de BonoitecPilot",
+        content: "BonoitecPilot regroupe toutes les fonctionnalités essentielles pour piloter votre boutique :\n\n• Gestion complète des réparations : créez un ticket en quelques clics, suivez chaque étape du diagnostic à la restitution, et gardez un historique complet pour chaque appareil.\n\n• Suivi client personnalisé : chaque client dispose d'une fiche avec ses appareils, ses réparations passées et ses coordonnées. Vous le reconnaissez dès qu'il franchit la porte.\n\n• Statuts des appareils en temps réel : nouveau, en diagnostic, en cours, en attente de pièce, terminé, prêt à récupérer. Vous savez exactement où en est chaque réparation.\n\n• Gestion du stock intelligente : suivez vos pièces détachées, définissez des seuils d'alerte et ne soyez plus jamais pris au dépourvu par une rupture de stock.\n\n• Devis et facturation intégrés : générez des devis professionnels, transformez-les en factures en un clic, et suivez vos paiements sans effort.\n\n• Organisation de l'atelier : attribuez les réparations à vos techniciens, visualisez la charge de travail et priorisez intelligemment."
+      },
+      {
+        id: "benefices",
+        title: "Les bénéfices concrets pour votre boutique",
+        content: "Au-delà des fonctionnalités, ce qui compte vraiment, ce sont les résultats. Voici ce que BonoitecPilot change concrètement dans le quotidien des boutiques qui l'utilisent :\n\n• Un gain de temps significatif : en automatisant les tâches répétitives (création de devis, notifications clients, mise à jour du stock), vous récupérez en moyenne 1 à 2 heures par jour.\n\n• Moins d'erreurs : quand tout est centralisé et automatisé, les oublis et les erreurs de saisie disparaissent. Les bons prix, les bonnes pièces, les bonnes informations client : tout est toujours à jour.\n\n• Une meilleure expérience client : vos clients reçoivent des notifications automatiques à chaque étape de la réparation et peuvent suivre l'avancement en ligne grâce à un code de suivi unique.\n\n• Une vision claire de votre activité : grâce au tableau de bord et aux statistiques intégrées, vous savez exactement combien de réparations vous traitez, quel est votre chiffre d'affaires et où se trouvent vos marges.\n\n• Une image professionnelle renforcée : des devis soignés, des factures conformes, un suivi client impeccable. BonoitecPilot vous aide à projeter une image sérieuse et moderne."
+      },
+      {
+        id: "conclusion",
+        title: "Prêt à passer au niveau supérieur ?",
+        content: "BonoitecPilot n'est pas un outil de plus à apprendre. C'est le partenaire qui va simplifier votre quotidien, structurer votre activité et vous permettre de vous concentrer sur votre expertise : la réparation.\n\nDes centaines de boutiques font déjà confiance à BonoitecPilot pour gérer leurs réparations, leurs clients et leur stock. Pourquoi pas vous ?\n\nEssayez BonoitecPilot gratuitement et découvrez par vous-même la différence. Votre boutique mérite un outil à la hauteur de votre savoir-faire."
+      },
+    ],
+  },
 ];
 
 function TableOfContents({ sections, activeId }: { sections: ArticleSection[]; activeId: string }) {
