@@ -1,14 +1,29 @@
-User-agent: Googlebot
-Allow: /
-
-User-agent: Bingbot
-Allow: /
-
-User-agent: Twitterbot
-Allow: /
-
-User-agent: facebookexternalhit
-Allow: /
-
 User-agent: *
 Allow: /
+
+Disallow: /dashboard
+Disallow: /repairs
+Disallow: /clients
+Disallow: /devices
+Disallow: /stock
+Disallow: /quotes
+Disallow: /invoices
+Disallow: /technicians
+Disallow: /statistics
+Disallow: /ai-assistant
+Disallow: /repair-library
+Disallow: /qr-deposit
+Disallow: /imei-scanner
+Disallow: /device-catalog
+Disallow: /services
+Disallow: /articles
+Disallow: /stock-alerts
+Disallow: /messages
+Disallow: /profitability
+Disallow: /sales
+Disallow: /settings
+Disallow: /auth
+Disallow: /login
+Disallow: /reset-password
+
+Sitemap: https://bonoitecpilot.fr/sitemap.xml
