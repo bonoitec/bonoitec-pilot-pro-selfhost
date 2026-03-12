@@ -125,7 +125,8 @@ export function CustomerChat({ trackingCode }: CustomerChatProps) {
               type="text"
               placeholder="Votre nom..."
               value={customerName}
-              onChange={(e) => setCustomerName(e.target.value)}
+              onChange={(e) => setCustomerName(e.target.value.slice(0, 100))}
+              maxLength={100}
               className="w-full text-sm rounded-lg border border-input bg-background px-3 py-2 placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
             />
           </div>
@@ -134,9 +135,10 @@ export function CustomerChat({ trackingCode }: CustomerChatProps) {
         <div className="flex gap-2">
           <Textarea
             value={newMessage}
-            onChange={(e) => setNewMessage(e.target.value)}
+            onChange={(e) => setNewMessage(e.target.value.slice(0, 2000))}
             onKeyDown={handleKeyDown}
-            placeholder="Écrire un message..."
+            placeholder="Écrire un message... (max 2000 car.)"
+            maxLength={2000}
             className="min-h-[40px] max-h-[80px] resize-none text-sm"
             rows={1}
           />
