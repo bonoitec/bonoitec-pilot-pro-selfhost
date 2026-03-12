@@ -7,7 +7,7 @@ const corsHeaders = {
 };
 
 const FROM_EMAIL = "BonoitecPilot <noreply@bonoitecpilot.fr>";
-const REPLY_TO = "contact@bonoitecpilot.fr";
+const REPLY_TO = "contact@app.bonoitecpilot.fr";
 
 const BRAND = {
   primary: "#4338ca",
