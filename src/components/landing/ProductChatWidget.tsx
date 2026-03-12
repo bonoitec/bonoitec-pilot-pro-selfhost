@@ -154,7 +154,7 @@ export function ProductChatWidget() {
       </AnimatePresence>
 
       {/* Chat panel */}
-      <AnimatePresence>
+      <AnimatePresence mode="wait">
         {open && (
           <motion.div
             initial={{ opacity: 0, y: 20, scale: 0.95 }}
