@@ -49,7 +49,12 @@ export default function AIAssistant() {
 
     try {
       const { data: sessionData } = await supabase.auth.getSession();
-      const token = sessionData?.session?.access_token || import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+      const token = sessionData?.session?.access_token;
+      if (!token) {
+        toast({ title: "Erreur", description: "Vous devez être connecté pour utiliser l'assistant IA.", variant: "destructive" });
+        setIsLoading(false);
+        return;
+      }
       
       const resp = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/ai-diagnostic`, {
         method: "POST",
