@@ -134,9 +134,10 @@ export function ProductChatWidget() {
   return (
     <>
       {/* Floating button */}
-      <AnimatePresence>
-        {!open && (
+      <AnimatePresence mode="wait">
+        {!open ? (
           <motion.button
+            key="chat-fab"
             initial={{ scale: 0, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             exit={{ scale: 0, opacity: 0 }}
@@ -149,11 +150,11 @@ export function ProductChatWidget() {
             <span className="absolute inset-0 rounded-full bg-primary/40 animate-ping" style={{ animationDuration: "2s" }} />
             <MessageSquare className="h-6 w-6 relative z-10" />
           </motion.button>
-        )}
+        ) : null}
       </AnimatePresence>
 
       {/* Chat panel */}
-      <AnimatePresence>
+      <AnimatePresence mode="wait">
         {open && (
           <motion.div
             initial={{ opacity: 0, y: 20, scale: 0.95 }}
