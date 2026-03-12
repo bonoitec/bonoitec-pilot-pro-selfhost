@@ -382,13 +382,13 @@ export function RepairDetailDialog({ open, onOpenChange, repair }: Props) {
               </Card>
 
               {/* Customer Signature */}
-              {repair.customer_signature_url && (
+              {resolvedSignature && (
                 <Card className="border-border/60">
                   <CardHeader className="pb-2 pt-3 px-4">
                     <CardTitle className="text-sm flex items-center gap-2"><PenTool className="h-4 w-4 text-primary" />Signature du client</CardTitle>
                   </CardHeader>
                   <CardContent className="px-4 pb-3">
-                    <img src={repair.customer_signature_url} alt="Signature client" className="max-h-[100px] border border-border rounded-lg p-2 bg-card" />
+                    <img src={resolvedSignature} alt="Signature client" className="max-h-[100px] border border-border rounded-lg p-2 bg-card" />
                   </CardContent>
                 </Card>
               )}
