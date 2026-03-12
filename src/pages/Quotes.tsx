@@ -24,8 +24,14 @@ const statusColors: Record<string, string> = {
   refuse: "bg-destructive/10 text-destructive",
 };
 
+const allStatuses = ["tous", "brouillon", "envoye", "accepte", "refuse"] as const;
+const filterLabels: Record<string, string> = {
+  tous: "Tous", brouillon: "Brouillon", envoye: "Envoyé", accepte: "Accepté", refuse: "Refusé",
+};
+
 const Quotes = () => {
   const [showCreate, setShowCreate] = useState(false);
+  const [statusFilter, setStatusFilter] = useState<string>("tous");
   const [previewOpen, setPreviewOpen] = useState(false);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [previewRef, setPreviewRef] = useState("");
@@ -185,13 +191,25 @@ const Quotes = () => {
         <Button onClick={() => setShowCreate(true)}><Plus className="h-4 w-4 mr-2" />Nouveau devis</Button>
       </div>
 
+      <div className="flex gap-2 flex-wrap">
+        {allStatuses.map((s) => (
+          <Button
+            key={s}
+            variant={statusFilter === s ? "default" : "outline"}
+            size="sm"
+            onClick={() => setStatusFilter(s)}
+          >
+            {filterLabels[s]}
+          </Button>
+        ))}
+      </div>
+
       {isLoading ? (
         <div className="space-y-3">{[1, 2, 3].map((i) => <Skeleton key={i} className="h-20 w-full" />)}</div>
-      ) : quotes.length === 0 ? (
-        <Card><CardContent className="p-8 text-center text-muted-foreground">Aucun devis trouvé</CardContent></Card>
-      ) : (
-        (() => {
-          const grouped = quotes.reduce<Record<string, typeof quotes>>((acc, q) => {
+      ) : (() => {
+        const filtered = statusFilter === "tous" ? quotes : quotes.filter((q) => q.status === statusFilter);
+        if (filtered.length === 0) return <Card><CardContent className="p-8 text-center text-muted-foreground">Aucun devis trouvé</CardContent></Card>;
+        const grouped = filtered.reduce<Record<string, typeof quotes>>((acc, q) => {
             const year = new Date(q.created_at).getFullYear().toString();
             (acc[year] = acc[year] || []).push(q);
             return acc;
@@ -270,7 +288,7 @@ const Quotes = () => {
             </div>
           );
         })()
-      )}
+      }
 
       <CreateQuoteDialog open={showCreate} onOpenChange={setShowCreate} />
       <PDFPreviewDialog
