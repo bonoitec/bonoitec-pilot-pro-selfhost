@@ -256,7 +256,7 @@ Deno.serve(async (req) => {
     // ── Parse request body ────────────────────────────────────────
     const supabase = createClient(supabaseUrl, serviceKey);
 
-    const { template, to, data, organization_id, repair_id } = await req.json();
+    const { template, to, data, organization_id, repair_id, attachments } = await req.json();
 
     if (!template || !to) {
       return new Response(
