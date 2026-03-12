@@ -5,7 +5,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Plus, Download, CheckCircle2, Mail, Eye } from "lucide-react";
+import { Plus, Download, CheckCircle2, Mail, Eye, FileSpreadsheet } from "lucide-react";
 import { format } from "date-fns";
 import { CreateInvoiceDialog } from "@/components/dialogs/CreateInvoiceDialog";
 import { PDFPreviewDialog } from "@/components/dialogs/PDFPreviewDialog";
