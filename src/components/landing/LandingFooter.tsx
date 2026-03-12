@@ -45,9 +45,9 @@ const LandingFooter = () => (
             Le cockpit intelligent pour les ateliers de réparation. Gérez vos clients, réparations, devis et factures en un seul endroit.
           </p>
           <div className="mt-6 space-y-2 text-sm text-muted-foreground">
-            <a href="mailto:contact@bonoitecpilot.fr" className="flex items-center gap-2 hover:text-primary transition-colors">
+            <a href="mailto:contact@app.bonoitecpilot.fr" className="flex items-center gap-2 hover:text-primary transition-colors">
               <Mail className="h-4 w-4" />
-              contact@bonoitecpilot.fr
+              contact@app.bonoitecpilot.fr
             </a>
             <a href="tel:0465969585" className="flex items-center gap-2 hover:text-primary transition-colors">
               <Phone className="h-4 w-4" />

@@ -140,13 +140,13 @@ const LandingContact = forwardRef<HTMLDivElement>((_, ref) => {
               <div className="landing-card p-6 space-y-5">
                 <h3 className="font-semibold font-display text-sm">Nos coordonnées</h3>
                 <a
-                  href="mailto:contact@bonoitecpilot.fr"
+                  href="mailto:contact@app.bonoitecpilot.fr"
                   className="flex items-center gap-3 text-sm text-muted-foreground hover:text-primary transition-colors group"
                 >
                   <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10 text-primary group-hover:bg-primary group-hover:text-primary-foreground transition-colors shrink-0">
                     <Mail className="h-4 w-4" />
                   </div>
-                  <span className="font-medium">contact@bonoitecpilot.fr</span>
+                  <span className="font-medium">contact@app.bonoitecpilot.fr</span>
                 </a>
                 <a
                   href="tel:0465969585"
