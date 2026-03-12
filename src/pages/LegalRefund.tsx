@@ -26,7 +26,7 @@ const sections = [
         <p>Vous pouvez annuler votre abonnement à tout moment, facilement et sans frais :</p>
         <ul>
           <li><strong>Depuis votre espace client :</strong> rendez-vous dans les paramètres de votre compte et cliquez sur « Annuler l'abonnement »</li>
-          <li><strong>Par email :</strong> envoyez votre demande à <a href="mailto:contact@bonoitecpilot.fr" className="text-primary hover:underline font-medium">contact@bonoitecpilot.fr</a></li>
+          <li><strong>Par email :</strong> envoyez votre demande à <a href="mailto:contact@app.bonoitecpilot.fr" className="text-primary hover:underline font-medium">contact@app.bonoitecpilot.fr</a></li>
           <li><strong>Par téléphone :</strong> appelez-nous au <a href="tel:0465969585" className="text-primary hover:underline font-medium">04 65 96 95 85</a></li>
         </ul>
         <p>L'annulation prend effet à la fin de votre période de facturation en cours. Vous conservez l'accès complet à toutes les fonctionnalités jusqu'à cette date.</p>
