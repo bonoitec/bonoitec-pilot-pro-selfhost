@@ -587,5 +587,8 @@ export async function generatePDF(org: OrgInfo, data: DocData, options?: { previ
     const blob = doc.output("blob");
     return URL.createObjectURL(blob);
   }
+  if (options?.base64) {
+    return doc.output("datauristring").split(",")[1];
+  }
   doc.save(`${data.reference}.pdf`);
 }
