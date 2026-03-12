@@ -190,56 +190,86 @@ const Quotes = () => {
       ) : quotes.length === 0 ? (
         <Card><CardContent className="p-8 text-center text-muted-foreground">Aucun devis trouvé</CardContent></Card>
       ) : (
-        <div className="space-y-3">
-          {quotes.map((quote) => (
-            <Card key={quote.id} className="hover:shadow-md transition-shadow">
-              <CardContent className="p-4 flex items-center justify-between">
-                <div>
-                  <div className="flex items-center gap-2">
-                    <span className="font-mono text-sm font-medium">{quote.reference}</span>
-                    <Badge variant="secondary" className={statusColors[quote.status]}>{statusLabels[quote.status]}</Badge>
+        (() => {
+          const grouped = quotes.reduce<Record<string, typeof quotes>>((acc, q) => {
+            const year = new Date(q.created_at).getFullYear().toString();
+            (acc[year] = acc[year] || []).push(q);
+            return acc;
+          }, {});
+          const years = Object.keys(grouped).sort((a, b) => Number(b) - Number(a));
+          return (
+            <div className="space-y-6">
+              {years.map((year) => (
+                <div key={year}>
+                  <h2 className="text-lg font-semibold mb-3 text-muted-foreground">{year}</h2>
+                  <div className="space-y-3">
+                    {grouped[year].map((quote) => (
+                      <Card key={quote.id} className="hover:shadow-md transition-shadow">
+                        <CardContent className="p-4 flex items-center justify-between">
+                          <div>
+                            <div className="flex items-center gap-2">
+                              <span className="font-mono text-sm font-medium">{quote.reference}</span>
+                              <Badge variant="secondary" className={statusColors[quote.status]}>{statusLabels[quote.status]}</Badge>
+                            </div>
+                            <p className="text-sm mt-1">{quote.clients?.name ?? "—"} — {quote.devices ? `${quote.devices.brand} ${quote.devices.model}` : "—"}</p>
+                          </div>
+                          <div className="flex items-center gap-4">
+                            <div className="text-right">
+                              <p className="text-lg font-bold">{Number(quote.total_ttc).toFixed(2)} €</p>
+                              <p className="text-xs text-muted-foreground">{format(new Date(quote.created_at), "dd/MM/yyyy")}</p>
+                            </div>
+                            <div className="flex gap-1">
+                              <Button variant="ghost" size="icon" title="Aperçu PDF" onClick={() => previewPDF(quote)}>
+                                <Eye className="h-4 w-4 text-primary" />
+                              </Button>
+                              <Button variant="ghost" size="icon" title="Télécharger PDF" onClick={() => downloadPDF(quote)}>
+                                <Download className="h-4 w-4" />
+                              </Button>
+                              {quote.clients?.email && (
+                                <Button variant="ghost" size="icon" title="Envoyer par email" onClick={() => emailMutation.mutate(quote)} disabled={emailMutation.isPending}>
+                                  <Mail className="h-4 w-4 text-primary" />
+                                </Button>
+                              )}
+                              {quote.status === "brouillon" && (
+                                <>
+                                  <Button variant="ghost" size="icon" title="Marquer envoyé" onClick={() => sendMutation.mutate(quote.id)}>
+                                    <Send className="h-4 w-4 text-info" />
+                                  </Button>
+                                  <AlertDialog>
+                                    <AlertDialogTrigger asChild>
+                                      <Button variant="ghost" size="icon" title="Supprimer">
+                                        <Trash2 className="h-4 w-4 text-destructive" />
+                                      </Button>
+                                    </AlertDialogTrigger>
+                                    <AlertDialogContent>
+                                      <AlertDialogHeader>
+                                        <AlertDialogTitle>Supprimer ce devis ?</AlertDialogTitle>
+                                        <AlertDialogDescription>Le devis {quote.reference} sera définitivement supprimé. Cette action est irréversible.</AlertDialogDescription>
+                                      </AlertDialogHeader>
+                                      <AlertDialogFooter>
+                                        <AlertDialogCancel>Annuler</AlertDialogCancel>
+                                        <AlertDialogAction onClick={() => deleteMutation.mutate(quote.id)} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">Supprimer</AlertDialogAction>
+                                      </AlertDialogFooter>
+                                    </AlertDialogContent>
+                                  </AlertDialog>
+                                </>
+                              )}
+                              {(quote.status === "brouillon" || quote.status === "envoye") && (
+                                <Button variant="ghost" size="icon" title="Convertir en réparation" onClick={() => convertMutation.mutate(quote)}>
+                                  <ArrowRight className="h-4 w-4" />
+                                </Button>
+                              )}
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))}
                   </div>
-                  <p className="text-sm mt-1">{quote.clients?.name ?? "—"} — {quote.devices ? `${quote.devices.brand} ${quote.devices.model}` : "—"}</p>
                 </div>
-                <div className="flex items-center gap-4">
-                  <div className="text-right">
-                    <p className="text-lg font-bold">{Number(quote.total_ttc).toFixed(2)} €</p>
-                    <p className="text-xs text-muted-foreground">{format(new Date(quote.created_at), "dd/MM/yyyy")}</p>
-                  </div>
-                  <div className="flex gap-1">
-                    <Button variant="ghost" size="icon" title="Aperçu PDF" onClick={() => previewPDF(quote)}>
-                      <Eye className="h-4 w-4 text-primary" />
-                    </Button>
-                    <Button variant="ghost" size="icon" title="Télécharger PDF" onClick={() => downloadPDF(quote)}>
-                      <Download className="h-4 w-4" />
-                    </Button>
-                    {quote.clients?.email && (
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        title="Envoyer par email"
-                        onClick={() => emailMutation.mutate(quote)}
-                        disabled={emailMutation.isPending}
-                      >
-                        <Mail className="h-4 w-4 text-primary" />
-                      </Button>
-                    )}
-                    {quote.status === "brouillon" && (
-                      <Button variant="ghost" size="icon" title="Marquer envoyé" onClick={() => sendMutation.mutate(quote.id)}>
-                        <Send className="h-4 w-4 text-info" />
-                      </Button>
-                    )}
-                    {(quote.status === "brouillon" || quote.status === "envoye") && (
-                      <Button variant="ghost" size="icon" title="Convertir en réparation" onClick={() => convertMutation.mutate(quote)}>
-                        <ArrowRight className="h-4 w-4" />
-                      </Button>
-                    )}
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
+              ))}
+            </div>
+          );
+        })()
       )}
 
       <CreateQuoteDialog open={showCreate} onOpenChange={setShowCreate} />
