@@ -287,8 +287,8 @@ const Quotes = () => {
               ))}
             </div>
           );
-        })()
-      )}
+        })();
+      })()}
 
       <CreateQuoteDialog open={showCreate} onOpenChange={setShowCreate} />
       <PDFPreviewDialog
