@@ -187,19 +187,28 @@ async function sendResend(to: string, subject: string, html: string): Promise<vo
   const apiKey = Deno.env.get("RESEND_API_KEY");
   if (!apiKey) throw new Error("RESEND_API_KEY is not configured");
 
+  const payload: Record<string, unknown> = {
+    from: FROM_EMAIL,
+    to: [to],
+    reply_to: REPLY_TO,
+    subject,
+    html,
+  };
+
+  if (attachments && Array.isArray(attachments) && attachments.length > 0) {
+    payload.attachments = attachments.map((a: { filename: string; content: string }) => ({
+      filename: a.filename,
+      content: a.content,
+    }));
+  }
+
   const res = await fetch("https://api.resend.com/emails", {
     method: "POST",
     headers: {
       "Authorization": `Bearer ${apiKey}`,
       "Content-Type": "application/json",
     },
-    body: JSON.stringify({
-      from: FROM_EMAIL,
-      to: [to],
-      reply_to: REPLY_TO,
-      subject,
-      html,
-    }),
+    body: JSON.stringify(payload),
   });
 
   const body = await res.text();
