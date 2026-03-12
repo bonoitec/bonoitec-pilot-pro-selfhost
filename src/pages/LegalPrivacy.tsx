@@ -98,7 +98,7 @@ const sections = [
           <li><strong>Droit à la portabilité :</strong> recevoir vos données dans un format structuré</li>
           <li><strong>Droit d'opposition :</strong> vous opposer au traitement de vos données</li>
         </ul>
-        <p>Pour exercer vos droits, contactez-nous à <a href="mailto:contact@bonoitecpilot.fr" className="text-primary hover:underline font-medium">contact@bonoitecpilot.fr</a>. Vous pouvez également introduire une réclamation auprès de la CNIL (www.cnil.fr).</p>
+        <p>Pour exercer vos droits, contactez-nous à <a href="mailto:contact@app.bonoitecpilot.fr" className="text-primary hover:underline font-medium">contact@app.bonoitecpilot.fr</a>. Vous pouvez également introduire une réclamation auprès de la CNIL (www.cnil.fr).</p>
       </>
     ),
   },
