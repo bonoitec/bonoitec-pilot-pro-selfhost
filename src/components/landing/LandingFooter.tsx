@@ -80,9 +80,9 @@ const LandingFooter = () => (
           © {new Date().getFullYear()} BonoitecPilot — Bonoitec Repair. Tous droits réservés.
         </p>
         <div className="flex items-center gap-6">
-          <a href="https://twitter.com" target="_blank" rel="noopener noreferrer" className="text-xs text-muted-foreground hover:text-primary transition-colors">Twitter</a>
+          <a href="https://www.instagram.com/bonoitec.repair/" target="_blank" rel="noopener noreferrer" className="text-xs text-muted-foreground hover:text-primary transition-colors">Instagram</a>
           <a href="https://linkedin.com" target="_blank" rel="noopener noreferrer" className="text-xs text-muted-foreground hover:text-primary transition-colors">LinkedIn</a>
-          <a href="https://youtube.com" target="_blank" rel="noopener noreferrer" className="text-xs text-muted-foreground hover:text-primary transition-colors">YouTube</a>
+          <a href="https://www.youtube.com/channel/UCB-VB5VhK_0TwgNyw29dBng" target="_blank" rel="noopener noreferrer" className="text-xs text-muted-foreground hover:text-primary transition-colors">YouTube</a>
         </div>
       </div>
     </div>
