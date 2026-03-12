@@ -5,7 +5,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Plus, Send, ArrowRight, Download, Mail, Eye, Trash2 } from "lucide-react";
+import { Plus, Send, ArrowRight, Download, Mail, Eye, Trash2, FileSpreadsheet } from "lucide-react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { format } from "date-fns";
 import { CreateQuoteDialog } from "@/components/dialogs/CreateQuoteDialog";
@@ -13,6 +13,7 @@ import { PDFPreviewDialog } from "@/components/dialogs/PDFPreviewDialog";
 import { useToast } from "@/hooks/use-toast";
 import { generatePDF } from "@/lib/pdf";
 import { sendTransactionalEmail } from "@/lib/email";
+import { exportQuotesCsv } from "@/lib/csvExport";
 
 const statusLabels: Record<string, string> = {
   brouillon: "Brouillon", envoye: "Envoyé", accepte: "Accepté", refuse: "Refusé",
@@ -188,7 +189,14 @@ const Quotes = () => {
           <h1 className="text-2xl font-bold">Devis</h1>
           <p className="text-muted-foreground text-sm">Créez et gérez vos devis</p>
         </div>
-        <Button onClick={() => setShowCreate(true)}><Plus className="h-4 w-4 mr-2" />Nouveau devis</Button>
+        <div className="flex gap-2">
+          {quotes.length > 0 && (
+            <Button variant="outline" onClick={() => exportQuotesCsv(quotes)}>
+              <FileSpreadsheet className="h-4 w-4 mr-2" />Export CSV
+            </Button>
+          )}
+          <Button onClick={() => setShowCreate(true)}><Plus className="h-4 w-4 mr-2" />Nouveau devis</Button>
+        </div>
       </div>
 
       <div className="flex gap-2 flex-wrap">
