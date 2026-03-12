@@ -1,6 +1,15 @@
 import { supabase } from "@/integrations/supabase/client";
 
-const BUCKET = "logos";
+const BUCKET_LOGOS = "logos";
+const BUCKET_REPAIRS = "repair-photos";
+
+/**
+ * Determine the correct bucket from the storage path.
+ */
+function bucketFor(path: string): string {
+  if (path.startsWith("repairs/") || path.startsWith("signatures/")) return BUCKET_REPAIRS;
+  return BUCKET_LOGOS;
+}
 
 /**
  * Upload a file and return only the storage path (not a public URL).
@@ -10,7 +19,8 @@ export async function uploadFile(
   file: Blob,
   options?: { contentType?: string; upsert?: boolean }
 ): Promise<string> {
-  const { error } = await supabase.storage.from(BUCKET).upload(path, file, options);
+  const bucket = bucketFor(path);
+  const { error } = await supabase.storage.from(bucket).upload(path, file, options);
   if (error) throw error;
   return path;
 }
@@ -23,24 +33,29 @@ export async function getSignedFileUrl(
   pathOrUrl: string,
   expiresIn = 3600
 ): Promise<string> {
-  // Legacy: full public URL → extract the storage path
+  // Legacy: full public URL → extract the storage path + bucket
+  let bucket = bucketFor(pathOrUrl);
   if (pathOrUrl.startsWith("http")) {
-    const match = pathOrUrl.match(/\/storage\/v1\/object\/public\/logos\/(.+)$/);
-    if (match) {
-      pathOrUrl = decodeURIComponent(match[1]);
+    const matchLogos = pathOrUrl.match(/\/storage\/v1\/object\/public\/logos\/(.+)$/);
+    const matchRepairs = pathOrUrl.match(/\/storage\/v1\/object\/public\/repair-photos\/(.+)$/);
+    if (matchRepairs) {
+      pathOrUrl = decodeURIComponent(matchRepairs[1]);
+      bucket = BUCKET_REPAIRS;
+    } else if (matchLogos) {
+      pathOrUrl = decodeURIComponent(matchLogos[1]);
+      bucket = BUCKET_LOGOS;
     } else {
       return pathOrUrl; // external URL, return as-is
     }
   }
 
   const { data, error } = await supabase.storage
-    .from(BUCKET)
+    .from(bucket)
     .createSignedUrl(pathOrUrl, expiresIn);
 
   if (error || !data?.signedUrl) {
     console.error("Failed to create signed URL:", error);
-    // Fallback: try public URL (will work while bucket is still public)
-    const { data: pub } = supabase.storage.from(BUCKET).getPublicUrl(pathOrUrl);
+    const { data: pub } = supabase.storage.from(bucket).getPublicUrl(pathOrUrl);
     return pub.publicUrl;
   }
 
