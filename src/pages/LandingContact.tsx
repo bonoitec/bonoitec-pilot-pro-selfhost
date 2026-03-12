@@ -1,4 +1,5 @@
 import { forwardRef, useState, useRef } from "react";
+import PageMeta from "@/components/PageMeta";
 import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -132,6 +133,10 @@ const LandingContact = forwardRef<HTMLDivElement>((_, ref) => {
 
   return (
     <div ref={ref}>
+      <PageMeta
+        title="Contact – BonoitecPilot | Nous contacter"
+        description="Contactez l'équipe BonoitecPilot pour toute question, demande de démo ou assistance. Réponse rapide garantie."
+      />
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
