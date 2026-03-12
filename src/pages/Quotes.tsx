@@ -24,8 +24,14 @@ const statusColors: Record<string, string> = {
   refuse: "bg-destructive/10 text-destructive",
 };
 
+const allStatuses = ["tous", "brouillon", "envoye", "accepte", "refuse"] as const;
+const filterLabels: Record<string, string> = {
+  tous: "Tous", brouillon: "Brouillon", envoye: "Envoyé", accepte: "Accepté", refuse: "Refusé",
+};
+
 const Quotes = () => {
   const [showCreate, setShowCreate] = useState(false);
+  const [statusFilter, setStatusFilter] = useState<string>("tous");
   const [previewOpen, setPreviewOpen] = useState(false);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [previewRef, setPreviewRef] = useState("");
