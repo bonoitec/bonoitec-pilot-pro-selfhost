@@ -96,11 +96,13 @@ const SettingsPage = () => {
     if (!file || !org) return;
     const ext = file.name.split(".").pop();
     const path = `${org.id}/logo.${ext}`;
-    const { error } = await supabase.storage.from("logos").upload(path, file, { upsert: true });
-    if (error) { toast({ title: "Erreur upload", description: error.message, variant: "destructive" }); return; }
-    const { data: urlData } = supabase.storage.from("logos").getPublicUrl(path);
-    setForm(f => ({ ...f, logo_url: urlData.publicUrl }));
-    toast({ title: "Logo uploadé" });
+    try {
+      const storedPath = await uploadFile(path, file, { upsert: true });
+      setForm(f => ({ ...f, logo_url: storedPath }));
+      toast({ title: "Logo uploadé" });
+    } catch (err: any) {
+      toast({ title: "Erreur upload", description: err.message, variant: "destructive" });
+    }
   };
 
   const set = (key: string) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
