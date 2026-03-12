@@ -123,24 +123,6 @@ const Invoices = () => {
     onError: (e: Error) => toast({ title: "Erreur d'envoi", description: e.message, variant: "destructive" }),
   });
 
-  const buildPdfParams = (inv: any) => {
-    const lines = Array.isArray(inv.lines) ? inv.lines : [];
-    return {
-      type: "invoice" as const,
-      reference: inv.reference,
-      date: format(new Date(inv.created_at), "dd/MM/yyyy"),
-      clientName: inv.clients?.name,
-      clientAddress: inv.clients?.address,
-      clientPhone: inv.clients?.phone,
-      clientEmail: inv.clients?.email,
-      lines,
-      totalHT: Number(inv.total_ht),
-      totalTTC: Number(inv.total_ttc),
-      vatRate: Number(inv.vat_rate),
-      paymentMethod: inv.payment_method ? paymentLabels[inv.payment_method] || inv.payment_method : undefined,
-      notes: inv.notes,
-    };
-  };
 
   const previewPDF = async (inv: any) => {
     setPreviewRef(inv.reference);
