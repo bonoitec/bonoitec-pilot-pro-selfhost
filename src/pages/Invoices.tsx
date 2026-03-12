@@ -63,35 +63,6 @@ const Invoices = () => {
     onSuccess: () => { toast({ title: "Facture marquée payée" }); qc.invalidateQueries({ queryKey: ["invoices"] }); },
   });
 
-  const emailMutation = useMutation({
-    mutationFn: async (inv: any) => {
-      const email = inv.clients?.email;
-      if (!email) throw new Error("Ce client n'a pas d'adresse email.");
-      const { data: orgId } = await supabase.rpc("get_user_org_id");
-      if (!orgId) throw new Error("Organisation introuvable");
-      await sendTransactionalEmail({
-        template: "invoice_sent",
-        to: email,
-        data: {
-          clientName: inv.clients?.name || "",
-          reference: inv.reference,
-          totalHT: Number(inv.total_ht).toFixed(2),
-          totalTTC: Number(inv.total_ttc).toFixed(2),
-          paymentMethod: inv.payment_method ? paymentLabels[inv.payment_method] || inv.payment_method : "",
-        },
-        organizationId: orgId,
-      });
-      if (inv.status === "brouillon") {
-        await supabase.from("invoices").update({ status: "envoyee" as any }).eq("id", inv.id);
-      }
-    },
-    onSuccess: () => {
-      toast({ title: "Facture envoyée par email", description: "Le client a reçu la facture par email." });
-      qc.invalidateQueries({ queryKey: ["invoices"] });
-    },
-    onError: (e: Error) => toast({ title: "Erreur d'envoi", description: e.message, variant: "destructive" }),
-  });
-
   const buildPdfParams = (inv: any) => {
     const lines = Array.isArray(inv.lines) ? inv.lines : [];
     return {
@@ -110,6 +81,48 @@ const Invoices = () => {
       notes: inv.notes,
     };
   };
+
+  const emailMutation = useMutation({
+    mutationFn: async (inv: any) => {
+      const email = inv.clients?.email;
+      if (!email) throw new Error("Ce client n'a pas d'adresse email.");
+      const { data: orgId } = await supabase.rpc("get_user_org_id");
+      if (!orgId) throw new Error("Organisation introuvable");
+      const { data: org } = await supabase.from("organizations").select("*").single();
+      if (!org) throw new Error("Organisation introuvable");
+
+      // Generate PDF as base64
+      const pdfBase64 = await generatePDF(org, buildPdfParams(inv), { base64: true }) as string;
+
+      await sendTransactionalEmail({
+        template: "invoice_sent",
+        to: email,
+        data: {
+          clientName: inv.clients?.name || "",
+          reference: inv.reference,
+          totalHT: Number(inv.total_ht).toFixed(2),
+          totalTTC: Number(inv.total_ttc).toFixed(2),
+          paymentMethod: inv.payment_method ? paymentLabels[inv.payment_method] || inv.payment_method : "",
+        },
+        organizationId: orgId,
+        attachments: [
+          {
+            filename: `${inv.reference}.pdf`,
+            content: pdfBase64,
+          },
+        ],
+      });
+      if (inv.status === "brouillon") {
+        await supabase.from("invoices").update({ status: "envoyee" as any }).eq("id", inv.id);
+      }
+    },
+    onSuccess: () => {
+      toast({ title: "Facture envoyée par email", description: "Le client a reçu la facture avec le PDF en pièce jointe." });
+      qc.invalidateQueries({ queryKey: ["invoices"] });
+    },
+    onError: (e: Error) => toast({ title: "Erreur d'envoi", description: e.message, variant: "destructive" }),
+  });
+
 
   const previewPDF = async (inv: any) => {
     setPreviewRef(inv.reference);

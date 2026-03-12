@@ -53,12 +53,36 @@ const Quotes = () => {
     onSuccess: () => { toast({ title: "Devis envoyé" }); qc.invalidateQueries({ queryKey: ["quotes"] }); },
   });
 
+  const buildPdfParams = (quote: any) => {
+    const lines = Array.isArray(quote.lines) ? quote.lines : [];
+    return {
+      type: "quote" as const,
+      reference: quote.reference,
+      date: format(new Date(quote.created_at), "dd/MM/yyyy"),
+      clientName: quote.clients?.name,
+      clientAddress: quote.clients?.address,
+      clientPhone: quote.clients?.phone,
+      clientEmail: quote.clients?.email,
+      lines,
+      totalHT: Number(quote.total_ht),
+      totalTTC: Number(quote.total_ttc),
+      vatRate: Number(quote.vat_rate),
+      notes: quote.notes,
+    };
+  };
+
   const emailMutation = useMutation({
     mutationFn: async (quote: any) => {
       const email = quote.clients?.email;
       if (!email) throw new Error("Ce client n'a pas d'adresse email.");
       const { data: orgId } = await supabase.rpc("get_user_org_id");
       if (!orgId) throw new Error("Organisation introuvable");
+      const { data: org } = await supabase.from("organizations").select("*").single();
+      if (!org) throw new Error("Organisation introuvable");
+
+      // Generate PDF as base64
+      const pdfBase64 = await generatePDF(org, buildPdfParams(quote), { base64: true }) as string;
+
       const device = quote.devices ? `${quote.devices.brand} ${quote.devices.model}` : "—";
       await sendTransactionalEmail({
         template: "quote_ready",
@@ -70,13 +94,19 @@ const Quotes = () => {
           totalTTC: Number(quote.total_ttc).toFixed(2),
         },
         organizationId: orgId,
+        attachments: [
+          {
+            filename: `${quote.reference}.pdf`,
+            content: pdfBase64,
+          },
+        ],
       });
       if (quote.status === "brouillon") {
         await supabase.from("quotes").update({ status: "envoye" as any }).eq("id", quote.id);
       }
     },
     onSuccess: () => {
-      toast({ title: "Devis envoyé par email", description: "Le client a reçu le devis par email." });
+      toast({ title: "Devis envoyé par email", description: "Le client a reçu le devis avec le PDF en pièce jointe." });
       qc.invalidateQueries({ queryKey: ["quotes"] });
     },
     onError: (e: Error) => toast({ title: "Erreur d'envoi", description: e.message, variant: "destructive" }),
@@ -103,23 +133,6 @@ const Quotes = () => {
     },
   });
 
-  const buildPdfParams = (quote: any) => {
-    const lines = Array.isArray(quote.lines) ? quote.lines : [];
-    return {
-      type: "quote" as const,
-      reference: quote.reference,
-      date: format(new Date(quote.created_at), "dd/MM/yyyy"),
-      clientName: quote.clients?.name,
-      clientAddress: quote.clients?.address,
-      clientPhone: quote.clients?.phone,
-      clientEmail: quote.clients?.email,
-      lines,
-      totalHT: Number(quote.total_ht),
-      totalTTC: Number(quote.total_ttc),
-      vatRate: Number(quote.vat_rate),
-      notes: quote.notes,
-    };
-  };
 
   const previewPDF = async (quote: any) => {
     setPreviewRef(quote.reference);

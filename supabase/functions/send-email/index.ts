@@ -183,9 +183,24 @@ const templates: Record<string, (data: Record<string, string>, orgContact?: { ph
 
 // ─── Resend Send ────────────────────────────────────────────────────
 
-async function sendResend(to: string, subject: string, html: string): Promise<void> {
+async function sendResend(to: string, subject: string, html: string, attachments?: Array<{ filename: string; content: string }>): Promise<void> {
   const apiKey = Deno.env.get("RESEND_API_KEY");
   if (!apiKey) throw new Error("RESEND_API_KEY is not configured");
+
+  const payload: Record<string, unknown> = {
+    from: FROM_EMAIL,
+    to: [to],
+    reply_to: REPLY_TO,
+    subject,
+    html,
+  };
+
+  if (attachments && Array.isArray(attachments) && attachments.length > 0) {
+    payload.attachments = attachments.map((a: { filename: string; content: string }) => ({
+      filename: a.filename,
+      content: a.content,
+    }));
+  }
 
   const res = await fetch("https://api.resend.com/emails", {
     method: "POST",
@@ -193,13 +208,7 @@ async function sendResend(to: string, subject: string, html: string): Promise<vo
       "Authorization": `Bearer ${apiKey}`,
       "Content-Type": "application/json",
     },
-    body: JSON.stringify({
-      from: FROM_EMAIL,
-      to: [to],
-      reply_to: REPLY_TO,
-      subject,
-      html,
-    }),
+    body: JSON.stringify(payload),
   });
 
   const body = await res.text();
@@ -247,7 +256,7 @@ Deno.serve(async (req) => {
     // ── Parse request body ────────────────────────────────────────
     const supabase = createClient(supabaseUrl, serviceKey);
 
-    const { template, to, data, organization_id, repair_id } = await req.json();
+    const { template, to, data, organization_id, repair_id, attachments } = await req.json();
 
     if (!template || !to) {
       return new Response(
@@ -298,7 +307,7 @@ Deno.serve(async (req) => {
     let errorMessage: string | null = null;
 
     try {
-      await sendResend(to, subject, html);
+      await sendResend(to, subject, html, attachments);
     } catch (sendError) {
       status = "failed";
       errorMessage = sendError instanceof Error ? sendError.message : "Resend error";

@@ -7,12 +7,18 @@ type EmailTemplate =
   | "status_update"
   | "client_notification";
 
+interface EmailAttachment {
+  filename: string;
+  content: string; // base64
+}
+
 interface SendEmailParams {
   template: EmailTemplate;
   to: string;
   data: Record<string, string>;
   organizationId: string;
   repairId?: string;
+  attachments?: EmailAttachment[];
 }
 
 export async function sendTransactionalEmail({
@@ -21,6 +27,7 @@ export async function sendTransactionalEmail({
   data,
   organizationId,
   repairId,
+  attachments,
 }: SendEmailParams) {
   const { data: result, error } = await supabase.functions.invoke("send-email", {
     body: {
@@ -29,6 +36,7 @@ export async function sendTransactionalEmail({
       data,
       organization_id: organizationId,
       repair_id: repairId,
+      attachments,
     },
   });
 
