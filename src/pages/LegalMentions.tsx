@@ -22,7 +22,7 @@ const sections = [
     id: "responsable",
     title: "2. Responsable de publication",
     content: (
-      <p>Le responsable de la publication du site est le représentant légal de la société Bonoitec Repair, joignable à l'adresse email : contact@bonoitecpilot.fr.</p>
+      <p>Le responsable de la publication du site est le représentant légal de la société Bonoitec Repair, joignable à l'adresse email : contact@app.bonoitecpilot.fr.</p>
     ),
   },
   {
