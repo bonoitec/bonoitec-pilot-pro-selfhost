@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { uploadFile, getSignedFileUrl } from "@/lib/storage";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -38,6 +39,8 @@ const SettingsPage = () => {
     article_categories: [] as string[],
   });
 
+  const [resolvedLogoUrl, setResolvedLogoUrl] = useState("");
+
   useEffect(() => {
     if (org) {
       setForm({
@@ -54,6 +57,9 @@ const SettingsPage = () => {
         checklist_label: (org as any).checklist_label || "Checklist de prise en charge",
         article_categories: (org as any).article_categories ?? ["Chargeur", "Câble", "Coque", "Protection écran", "Adaptateur", "Accessoire", "Autre"],
       });
+      if (org.logo_url) {
+        getSignedFileUrl(org.logo_url).then(setResolvedLogoUrl);
+      }
     }
   }, [org]);
 
@@ -96,11 +102,15 @@ const SettingsPage = () => {
     if (!file || !org) return;
     const ext = file.name.split(".").pop();
     const path = `${org.id}/logo.${ext}`;
-    const { error } = await supabase.storage.from("logos").upload(path, file, { upsert: true });
-    if (error) { toast({ title: "Erreur upload", description: error.message, variant: "destructive" }); return; }
-    const { data: urlData } = supabase.storage.from("logos").getPublicUrl(path);
-    setForm(f => ({ ...f, logo_url: urlData.publicUrl }));
-    toast({ title: "Logo uploadé" });
+    try {
+      const storedPath = await uploadFile(path, file, { upsert: true });
+      setForm(f => ({ ...f, logo_url: storedPath }));
+      const signedUrl = await getSignedFileUrl(storedPath);
+      setResolvedLogoUrl(signedUrl);
+      toast({ title: "Logo uploadé" });
+    } catch (err: any) {
+      toast({ title: "Erreur upload", description: err.message, variant: "destructive" });
+    }
   };
 
   const set = (key: string) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
@@ -126,8 +136,10 @@ const SettingsPage = () => {
           {/* Logo upload */}
           <div className="flex items-center gap-4">
             <div className="w-20 h-20 rounded-lg border-2 border-dashed border-border flex items-center justify-center overflow-hidden bg-muted/30">
-              {form.logo_url ? (
-                <img src={form.logo_url} alt="Logo" className="w-full h-full object-contain" />
+              {resolvedLogoUrl ? (
+                <img src={resolvedLogoUrl} alt="Logo" className="w-full h-full object-contain" />
+              ) : form.logo_url ? (
+                <span className="text-xs text-muted-foreground">Chargement...</span>
               ) : (
                 <Upload className="h-6 w-6 text-muted-foreground" />
               )}

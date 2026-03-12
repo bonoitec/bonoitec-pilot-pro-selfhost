@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { uploadFile, getSignedFileUrl, getSignedFileUrls } from "@/lib/storage";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -236,19 +237,38 @@ export function RepairDetailDialog({ open, onOpenChange, repair }: Props) {
     const file = e.target.files?.[0];
     if (!file || !repair) return;
     const path = `repairs/${repair.id}/${Date.now()}-${file.name}`;
-    const { error } = await supabase.storage.from("logos").upload(path, file);
-    if (error) { toast({ title: "Erreur upload", description: error.message, variant: "destructive" }); return; }
-    const { data: urlData } = supabase.storage.from("logos").getPublicUrl(path);
-    const currentPhotos = (repair.photos as string[]) || [];
-    await supabase.from("repairs").update({ photos: [...currentPhotos, urlData.publicUrl] } as any).eq("id", repair.id);
-    qc.invalidateQueries({ queryKey: ["repairs"] });
-    toast({ title: "Photo ajoutée" });
+    try {
+      const storedPath = await uploadFile(path, file);
+      const currentPhotos = (repair.photos as string[]) || [];
+      await supabase.from("repairs").update({ photos: [...currentPhotos, storedPath] } as any).eq("id", repair.id);
+      qc.invalidateQueries({ queryKey: ["repairs"] });
+      toast({ title: "Photo ajoutée" });
+    } catch (err: any) {
+      toast({ title: "Erreur upload", description: err.message, variant: "destructive" });
+    }
   };
+
+  // Resolve signed URLs for photos and signature
+  const rawPhotos = repair ? (repair.photos as string[]) || [] : [];
+  const [resolvedPhotos, setResolvedPhotos] = useState<string[]>([]);
+  const [resolvedSignature, setResolvedSignature] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (rawPhotos.length > 0) {
+      getSignedFileUrls(rawPhotos).then(setResolvedPhotos);
+    } else {
+      setResolvedPhotos([]);
+    }
+    if (repair?.customer_signature_url) {
+      getSignedFileUrl(repair.customer_signature_url).then(setResolvedSignature);
+    } else {
+      setResolvedSignature(null);
+    }
+  }, [repair?.photos, repair?.customer_signature_url]);
 
   if (!repair) return null;
 
   const intakeChecklist = repair.intake_checklist as string[] | null;
-  const photos = (repair.photos as string[]) || [];
 
   return (
     <>
@@ -347,9 +367,9 @@ export function RepairDetailDialog({ open, onOpenChange, repair }: Props) {
                   <CardTitle className="text-sm flex items-center gap-2"><Camera className="h-4 w-4 text-primary" />Photos</CardTitle>
                 </CardHeader>
                 <CardContent className="px-4 pb-3">
-                  {photos.length > 0 && (
+                  {resolvedPhotos.length > 0 && (
                     <div className="grid grid-cols-3 gap-2 mb-3">
-                      {photos.map((url, i) => (
+                      {resolvedPhotos.map((url, i) => (
                         <img key={i} src={url} alt={`Photo ${i + 1}`} className="w-full h-24 object-cover rounded-lg border border-border" />
                       ))}
                     </div>
@@ -362,13 +382,13 @@ export function RepairDetailDialog({ open, onOpenChange, repair }: Props) {
               </Card>
 
               {/* Customer Signature */}
-              {repair.customer_signature_url && (
+              {resolvedSignature && (
                 <Card className="border-border/60">
                   <CardHeader className="pb-2 pt-3 px-4">
                     <CardTitle className="text-sm flex items-center gap-2"><PenTool className="h-4 w-4 text-primary" />Signature du client</CardTitle>
                   </CardHeader>
                   <CardContent className="px-4 pb-3">
-                    <img src={repair.customer_signature_url} alt="Signature client" className="max-h-[100px] border border-border rounded-lg p-2 bg-card" />
+                    <img src={resolvedSignature} alt="Signature client" className="max-h-[100px] border border-border rounded-lg p-2 bg-card" />
                   </CardContent>
                 </Card>
               )}

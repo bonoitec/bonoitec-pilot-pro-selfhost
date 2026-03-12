@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { uploadFile } from "@/lib/storage";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -117,10 +118,10 @@ export function CreateRepairDialog({ open, onOpenChange }: Props) {
       if (signatureDataUrl) {
         const blob = await (await fetch(signatureDataUrl)).blob();
         const path = `signatures/${orgId}/${ref}-${Date.now()}.png`;
-        const { error: uploadErr } = await supabase.storage.from("logos").upload(path, blob, { contentType: "image/png" });
-        if (!uploadErr) {
-          const { data: urlData } = supabase.storage.from("logos").getPublicUrl(path);
-          signatureUrl = urlData.publicUrl;
+        try {
+          signatureUrl = await uploadFile(path, blob, { contentType: "image/png" });
+        } catch {
+          // Signature upload failed, continue without it
         }
       }
 
