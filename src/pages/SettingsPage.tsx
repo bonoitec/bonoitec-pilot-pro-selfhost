@@ -39,6 +39,8 @@ const SettingsPage = () => {
     article_categories: [] as string[],
   });
 
+  const [resolvedLogoUrl, setResolvedLogoUrl] = useState("");
+
   useEffect(() => {
     if (org) {
       setForm({
@@ -55,6 +57,9 @@ const SettingsPage = () => {
         checklist_label: (org as any).checklist_label || "Checklist de prise en charge",
         article_categories: (org as any).article_categories ?? ["Chargeur", "Câble", "Coque", "Protection écran", "Adaptateur", "Accessoire", "Autre"],
       });
+      if (org.logo_url) {
+        getSignedFileUrl(org.logo_url).then(setResolvedLogoUrl);
+      }
     }
   }, [org]);
 
