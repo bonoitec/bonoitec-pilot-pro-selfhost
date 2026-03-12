@@ -86,8 +86,6 @@ function emailLayout(content: string, preheader = "", orgContact?: { phone?: str
 </html>`;
 }
 
-// ─── Templates ───────────────────────────────────────────────────────
-
 const templates: Record<string, (data: Record<string, string>, orgContact?: { phone?: string; email?: string }) => { subject: string; html: string }> = {
   quote_ready: (d, oc) => ({
     subject: `Votre devis ${d.reference} est disponible`,
@@ -220,6 +218,33 @@ Deno.serve(async (req) => {
   try {
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    const anonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
+
+    // ── Authentication check ──────────────────────────────────────
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader?.startsWith("Bearer ")) {
+      return new Response(
+        JSON.stringify({ error: "Unauthorized" }),
+        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    const authClient = createClient(supabaseUrl, anonKey, {
+      global: { headers: { Authorization: authHeader } },
+    });
+    const { data: claimsData, error: claimsError } = await authClient.auth.getClaims(
+      authHeader.replace("Bearer ", "")
+    );
+    if (claimsError || !claimsData?.claims) {
+      return new Response(
+        JSON.stringify({ error: "Invalid token" }),
+        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    const userId = claimsData.claims.sub as string;
+
+    // ── Parse request body ────────────────────────────────────────
     const supabase = createClient(supabaseUrl, serviceKey);
 
     const { template, to, data, organization_id, repair_id } = await req.json();
@@ -229,6 +254,21 @@ Deno.serve(async (req) => {
         JSON.stringify({ error: "template and to are required" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
+    }
+
+    // ── Verify user belongs to the organization ───────────────────
+    if (organization_id) {
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("organization_id")
+        .eq("user_id", userId)
+        .single();
+      if (!profile || profile.organization_id !== organization_id) {
+        return new Response(
+          JSON.stringify({ error: "Forbidden: organization mismatch" }),
+          { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
     }
 
     const templateFn = templates[template];
