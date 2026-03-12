@@ -55,7 +55,7 @@ FONCTIONNALITÉS :
 - Messagerie technicien-client intégrée
 
 SUPPORT :
-- Email : contact@bonoitecpilot.fr
+- Email : contact@app.bonoitecpilot.fr
 - Téléphone : 04 65 96 95 85
 - Pages web : /contact, /support
 
