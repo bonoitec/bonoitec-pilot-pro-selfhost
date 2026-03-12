@@ -113,6 +113,15 @@ const Quotes = () => {
     onError: (e: Error) => toast({ title: "Erreur d'envoi", description: e.message, variant: "destructive" }),
   });
 
+  const deleteMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from("quotes").delete().eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => { toast({ title: "Devis supprimé" }); qc.invalidateQueries({ queryKey: ["quotes"] }); },
+    onError: (e: Error) => toast({ title: "Erreur", description: e.message, variant: "destructive" }),
+  });
+
   const convertMutation = useMutation({
     mutationFn: async (quote: any) => {
       const { data: orgId } = await supabase.rpc("get_user_org_id");
