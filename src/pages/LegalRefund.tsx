@@ -58,7 +58,7 @@ const sections = [
       <>
         <p>Pour effectuer une demande de remboursement :</p>
         <ul>
-          <li>Envoyez un email à <a href="mailto:contact@bonoitecpilot.fr" className="text-primary hover:underline font-medium">contact@bonoitecpilot.fr</a> en précisant votre nom, l'adresse email associée à votre compte, et le motif de votre demande</li>
+          <li>Envoyez un email à <a href="mailto:contact@app.bonoitecpilot.fr" className="text-primary hover:underline font-medium">contact@app.bonoitecpilot.fr</a> en précisant votre nom, l'adresse email associée à votre compte, et le motif de votre demande</li>
           <li>Vous pouvez également nous appeler au <a href="tel:0465969585" className="text-primary hover:underline font-medium">04 65 96 95 85</a></li>
         </ul>
         <p>Notre équipe accusera réception de votre demande dans un délai de 48 heures ouvrées.</p>
