@@ -248,12 +248,8 @@ export function RepairDetailDialog({ open, onOpenChange, repair }: Props) {
     }
   };
 
-  if (!repair) return null;
-
-  const intakeChecklist = repair.intake_checklist as string[] | null;
-  const rawPhotos = (repair.photos as string[]) || [];
-
   // Resolve signed URLs for photos and signature
+  const rawPhotos = repair ? (repair.photos as string[]) || [] : [];
   const [resolvedPhotos, setResolvedPhotos] = useState<string[]>([]);
   const [resolvedSignature, setResolvedSignature] = useState<string | null>(null);
 
@@ -263,12 +259,16 @@ export function RepairDetailDialog({ open, onOpenChange, repair }: Props) {
     } else {
       setResolvedPhotos([]);
     }
-    if (repair.customer_signature_url) {
+    if (repair?.customer_signature_url) {
       getSignedFileUrl(repair.customer_signature_url).then(setResolvedSignature);
     } else {
       setResolvedSignature(null);
     }
-  }, [repair.photos, repair.customer_signature_url]);
+  }, [repair?.photos, repair?.customer_signature_url]);
+
+  if (!repair) return null;
+
+  const intakeChecklist = repair.intake_checklist as string[] | null;
 
   return (
     <>
