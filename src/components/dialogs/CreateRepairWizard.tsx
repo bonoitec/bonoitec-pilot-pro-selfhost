@@ -258,11 +258,10 @@ export function CreateRepairWizard({ open, onOpenChange }: Props) {
       const photoUrls: string[] = [];
       for (const photo of photos) {
         const path = `repairs/${orgId}/${Date.now()}-${photo.file.name}`;
-        const { error: upErr } = await supabase.storage.from("logos").upload(path, photo.file, { contentType: photo.file.type });
-        if (!upErr) {
-          const { data: urlData } = supabase.storage.from("logos").getPublicUrl(path);
-          photoUrls.push(urlData.publicUrl);
-        }
+        try {
+          const storedPath = await uploadFile(path, photo.file, { contentType: photo.file.type });
+          photoUrls.push(storedPath);
+        } catch { /* skip failed upload */ }
       }
 
       // 4. Upload signature
@@ -270,11 +269,9 @@ export function CreateRepairWizard({ open, onOpenChange }: Props) {
       if (signatureDataUrl) {
         const blob = await (await fetch(signatureDataUrl)).blob();
         const path = `signatures/${orgId}/${Date.now()}.png`;
-        const { error: sigErr } = await supabase.storage.from("logos").upload(path, blob, { contentType: "image/png" });
-        if (!sigErr) {
-          const { data: urlData } = supabase.storage.from("logos").getPublicUrl(path);
-          signatureUrl = urlData.publicUrl;
-        }
+        try {
+          signatureUrl = await uploadFile(path, blob, { contentType: "image/png" });
+        } catch { /* skip failed upload */ }
       }
 
       // 5. Build intake checklist

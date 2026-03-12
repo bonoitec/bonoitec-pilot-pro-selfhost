@@ -236,13 +236,15 @@ export function RepairDetailDialog({ open, onOpenChange, repair }: Props) {
     const file = e.target.files?.[0];
     if (!file || !repair) return;
     const path = `repairs/${repair.id}/${Date.now()}-${file.name}`;
-    const { error } = await supabase.storage.from("logos").upload(path, file);
-    if (error) { toast({ title: "Erreur upload", description: error.message, variant: "destructive" }); return; }
-    const { data: urlData } = supabase.storage.from("logos").getPublicUrl(path);
-    const currentPhotos = (repair.photos as string[]) || [];
-    await supabase.from("repairs").update({ photos: [...currentPhotos, urlData.publicUrl] } as any).eq("id", repair.id);
-    qc.invalidateQueries({ queryKey: ["repairs"] });
-    toast({ title: "Photo ajoutée" });
+    try {
+      const storedPath = await uploadFile(path, file);
+      const currentPhotos = (repair.photos as string[]) || [];
+      await supabase.from("repairs").update({ photos: [...currentPhotos, storedPath] } as any).eq("id", repair.id);
+      qc.invalidateQueries({ queryKey: ["repairs"] });
+      toast({ title: "Photo ajoutée" });
+    } catch (err: any) {
+      toast({ title: "Erreur upload", description: err.message, variant: "destructive" });
+    }
   };
 
   if (!repair) return null;
