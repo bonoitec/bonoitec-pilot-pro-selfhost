@@ -105,6 +105,8 @@ const SettingsPage = () => {
     try {
       const storedPath = await uploadFile(path, file, { upsert: true });
       setForm(f => ({ ...f, logo_url: storedPath }));
+      const signedUrl = await getSignedFileUrl(storedPath);
+      setResolvedLogoUrl(signedUrl);
       toast({ title: "Logo uploadé" });
     } catch (err: any) {
       toast({ title: "Erreur upload", description: err.message, variant: "destructive" });
