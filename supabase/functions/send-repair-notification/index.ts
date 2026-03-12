@@ -14,7 +14,47 @@ Deno.serve(async (req) => {
   try {
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    const anonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
+
+    // ── Authentication check ──────────────────────────────────────
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader?.startsWith("Bearer ")) {
+      return new Response(
+        JSON.stringify({ error: "Unauthorized" }),
+        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    const authClient = createClient(supabaseUrl, anonKey, {
+      global: { headers: { Authorization: authHeader } },
+    });
+    const { data: claimsData, error: claimsError } = await authClient.auth.getClaims(
+      authHeader.replace("Bearer ", "")
+    );
+    if (claimsError || !claimsData?.claims) {
+      return new Response(
+        JSON.stringify({ error: "Invalid token" }),
+        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    const userId = claimsData.claims.sub as string;
+
     const supabase = createClient(supabaseUrl, serviceKey);
+
+    // ── Verify user belongs to an organization ────────────────────
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("organization_id")
+      .eq("user_id", userId)
+      .single();
+
+    if (!profile) {
+      return new Response(
+        JSON.stringify({ error: "Forbidden: no profile found" }),
+        { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
 
     const { repair_id, new_status, message, channel } = await req.json();
 
@@ -39,6 +79,14 @@ Deno.serve(async (req) => {
       );
     }
 
+    // Verify the repair belongs to the user's organization
+    if (repair.organization_id !== profile.organization_id) {
+      return new Response(
+        JSON.stringify({ error: "Forbidden: organization mismatch" }),
+        { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
     const client = repair.clients;
     if (!client) {
       return new Response(
@@ -47,7 +95,6 @@ Deno.serve(async (req) => {
       );
     }
 
-    const recipient = client.email || client.phone || "";
     const notificationChannel = channel || (client.email ? "email" : "sms");
     const notificationMessage = message || `Mise à jour de votre réparation ${repair.reference}: statut changé.`;
 
@@ -61,29 +108,26 @@ Deno.serve(async (req) => {
       content: notificationMessage,
     });
 
-    // Log the notification
+    // Log the notification (without leaking recipient)
     await supabase.from("notification_logs").insert({
       repair_id,
       organization_id: repair.organization_id,
       channel: notificationChannel,
-      recipient,
+      recipient: client.email || client.phone || "",
       subject: `Mise à jour réparation ${repair.reference}`,
       body: notificationMessage,
       status: "pending",
     });
 
-    // Here you would integrate with actual email/SMS/WhatsApp providers
-    // For now, the notification is logged and visible in the messaging system
-
     return new Response(
-      JSON.stringify({ success: true, channel: notificationChannel, recipient }),
+      JSON.stringify({ success: true, channel: notificationChannel }),
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : "Unknown error";
     console.error("Notification error:", errorMessage);
     return new Response(
-      JSON.stringify({ error: errorMessage }),
+      JSON.stringify({ error: "Internal server error" }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }
