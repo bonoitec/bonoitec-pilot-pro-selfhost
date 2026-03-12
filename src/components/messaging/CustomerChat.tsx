@@ -125,7 +125,8 @@ export function CustomerChat({ trackingCode }: CustomerChatProps) {
               type="text"
               placeholder="Votre nom..."
               value={customerName}
-              onChange={(e) => setCustomerName(e.target.value)}
+              onChange={(e) => setCustomerName(e.target.value.slice(0, 100))}
+              maxLength={100}
               className="w-full text-sm rounded-lg border border-input bg-background px-3 py-2 placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
             />
           </div>
