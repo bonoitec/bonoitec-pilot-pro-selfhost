@@ -71,7 +71,7 @@ const LandingContact = forwardRef<HTMLDivElement>((_, ref) => {
     try {
       const { error } = await supabase.functions.invoke("send-email", {
         body: {
-          to: "contact@bonoitecpilot.fr",
+          to: "contact@app.bonoitecpilot.fr",
           subject: `[Contact] Message de ${result.data.firstName} ${result.data.lastName}`,
           html: `<p><strong>Nom :</strong> ${result.data.firstName} ${result.data.lastName}</p><p><strong>Email :</strong> ${result.data.email}</p><p><strong>Téléphone :</strong> ${result.data.phone}</p><p><strong>Message :</strong></p><p>${result.data.message.replace(/\n/g, "<br/>")}</p>`,
         },
