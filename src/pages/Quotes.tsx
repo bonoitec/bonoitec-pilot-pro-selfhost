@@ -189,7 +189,14 @@ const Quotes = () => {
           <h1 className="text-2xl font-bold">Devis</h1>
           <p className="text-muted-foreground text-sm">Créez et gérez vos devis</p>
         </div>
-        <Button onClick={() => setShowCreate(true)}><Plus className="h-4 w-4 mr-2" />Nouveau devis</Button>
+        <div className="flex gap-2">
+          {quotes.length > 0 && (
+            <Button variant="outline" onClick={() => exportQuotesCsv(quotes)}>
+              <FileSpreadsheet className="h-4 w-4 mr-2" />Export CSV
+            </Button>
+          )}
+          <Button onClick={() => setShowCreate(true)}><Plus className="h-4 w-4 mr-2" />Nouveau devis</Button>
+        </div>
       </div>
 
       <div className="flex gap-2 flex-wrap">
