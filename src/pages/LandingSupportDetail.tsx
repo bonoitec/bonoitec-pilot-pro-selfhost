@@ -186,7 +186,7 @@ const LandingSupportDetail = forwardRef<HTMLDivElement>((_, ref) => {
                 <p className="font-semibold text-sm">Besoin d'aide supplémentaire ?</p>
                 <p className="text-sm text-muted-foreground">
                   Contactez-nous à{" "}
-                  <a href="mailto:contact@bonoitecpilot.fr" className="text-primary hover:underline font-medium">contact@bonoitecpilot.fr</a>
+                  <a href="mailto:contact@app.bonoitecpilot.fr" className="text-primary hover:underline font-medium">contact@app.bonoitecpilot.fr</a>
                   {" "}ou au{" "}
                   <a href="tel:0465969585" className="text-primary hover:underline font-medium">04 65 96 95 85</a>
                 </p>

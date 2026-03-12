@@ -113,7 +113,7 @@ export function ProductChatWidget() {
             {
               role: "assistant",
               content:
-                "Désolé, une erreur s'est produite. Vous pouvez contacter notre support à contact@bonoitecpilot.fr.",
+                "Désolé, une erreur s'est produite. Vous pouvez contacter notre support à contact@app.bonoitecpilot.fr.",
             },
           ]);
         }
