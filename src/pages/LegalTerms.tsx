@@ -121,7 +121,7 @@ const sections = [
     id: "contact",
     title: "12. Contact",
     content: (
-      <p>Pour toute question relative aux présentes CGU/CGV, contactez-nous à <a href="mailto:contact@bonoitecpilot.fr" className="text-primary hover:underline font-medium">contact@bonoitecpilot.fr</a> ou par courrier : Bonoitec Repair, 17 place Paul Arène, 04200 Sisteron, France.</p>
+      <p>Pour toute question relative aux présentes CGU/CGV, contactez-nous à <a href="mailto:contact@app.bonoitecpilot.fr" className="text-primary hover:underline font-medium">contact@app.bonoitecpilot.fr</a> ou par courrier : Bonoitec Repair, 17 place Paul Arène, 04200 Sisteron, France.</p>
     ),
   },
 ];

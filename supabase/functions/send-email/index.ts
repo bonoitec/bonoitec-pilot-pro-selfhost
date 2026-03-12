@@ -29,7 +29,7 @@ function emailLayout(content: string, preheader = "", orgContact?: { phone?: str
   }
   const contactLine = footerLines.length > 0
     ? footerLines.join(" · ")
-    : `<a href="mailto:contact@bonoitecpilot.fr">contact@bonoitecpilot.fr</a>`;
+    : `<a href="mailto:contact@app.bonoitecpilot.fr">contact@app.bonoitecpilot.fr</a>`;
 
   return `<!DOCTYPE html>
 <html lang="fr">

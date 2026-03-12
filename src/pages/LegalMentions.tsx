@@ -71,7 +71,7 @@ const sections = [
     id: "contact",
     title: "7. Contact",
     content: (
-      <p>Pour toute question relative aux présentes mentions légales, vous pouvez nous contacter à l'adresse email <a href="mailto:contact@bonoitecpilot.fr" className="text-primary hover:underline font-medium">contact@bonoitecpilot.fr</a> ou par téléphone au <a href="tel:0465969585" className="text-primary hover:underline font-medium">04 65 96 95 85</a>.</p>
+      <p>Pour toute question relative aux présentes mentions légales, vous pouvez nous contacter à l'adresse email <a href="mailto:contact@app.bonoitecpilot.fr" className="text-primary hover:underline font-medium">contact@app.bonoitecpilot.fr</a> ou par téléphone au <a href="tel:0465969585" className="text-primary hover:underline font-medium">04 65 96 95 85</a>.</p>
     ),
   },
 ];

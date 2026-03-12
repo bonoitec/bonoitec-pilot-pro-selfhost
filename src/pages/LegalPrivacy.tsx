@@ -129,7 +129,7 @@ const sections = [
     id: "contact",
     title: "9. Contact",
     content: (
-      <p>Pour toute question relative à la présente politique de confidentialité ou à la protection de vos données, contactez-nous à <a href="mailto:contact@bonoitecpilot.fr" className="text-primary hover:underline font-medium">contact@bonoitecpilot.fr</a> ou par courrier à l'adresse : Bonoitec Repair, 17 place Paul Arène, 04200 Sisteron, France.</p>
+      <p>Pour toute question relative à la présente politique de confidentialité ou à la protection de vos données, contactez-nous à <a href="mailto:contact@app.bonoitecpilot.fr" className="text-primary hover:underline font-medium">contact@app.bonoitecpilot.fr</a> ou par courrier à l'adresse : Bonoitec Repair, 17 place Paul Arène, 04200 Sisteron, France.</p>
     ),
   },
 ];

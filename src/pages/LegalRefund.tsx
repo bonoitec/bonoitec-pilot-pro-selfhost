@@ -96,7 +96,7 @@ const sections = [
     id: "contact",
     title: "8. Contact",
     content: (
-      <p>Pour toute question relative à notre politique de remboursement, n'hésitez pas à nous contacter à <a href="mailto:contact@bonoitecpilot.fr" className="text-primary hover:underline font-medium">contact@bonoitecpilot.fr</a> ou par téléphone au <a href="tel:0465969585" className="text-primary hover:underline font-medium">04 65 96 95 85</a>. Notre équipe est à votre écoute et s'engage à répondre dans les meilleurs délais.</p>
+      <p>Pour toute question relative à notre politique de remboursement, n'hésitez pas à nous contacter à <a href="mailto:contact@app.bonoitecpilot.fr" className="text-primary hover:underline font-medium">contact@app.bonoitecpilot.fr</a> ou par téléphone au <a href="tel:0465969585" className="text-primary hover:underline font-medium">04 65 96 95 85</a>. Notre équipe est à votre écoute et s'engage à répondre dans les meilleurs délais.</p>
     ),
   },
 ];
