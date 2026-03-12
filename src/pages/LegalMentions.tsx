@@ -12,7 +12,7 @@ const sections = [
           <li><strong>Forme juridique :</strong> Entreprise individuelle</li>
           <li><strong>Adresse du siège social :</strong> 17 place Paul Arène, 04200 Sisteron, France</li>
           <li><strong>SIRET :</strong> 95106548100032</li>
-          <li><strong>Email :</strong> contact@bonoitecpilot.fr</li>
+          <li><strong>Email :</strong> contact@app.bonoitecpilot.fr</li>
           <li><strong>Téléphone :</strong> 04 65 96 95 85</li>
         </ul>
       </>
