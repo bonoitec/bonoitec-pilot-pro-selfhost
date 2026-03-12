@@ -12,6 +12,7 @@ import { PDFPreviewDialog } from "@/components/dialogs/PDFPreviewDialog";
 import { useToast } from "@/hooks/use-toast";
 import { generatePDF } from "@/lib/pdf";
 import { sendTransactionalEmail } from "@/lib/email";
+import { exportInvoicesCsv } from "@/lib/csvExport";
 
 const statusLabels: Record<string, string> = {
   brouillon: "Brouillon", envoyee: "Envoyée", payee: "Payée", partiel: "Partiel", annulee: "Annulée",
