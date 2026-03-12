@@ -170,68 +170,78 @@ const Invoices = () => {
       ) : invoices.length === 0 ? (
         <Card><CardContent className="p-8 text-center text-muted-foreground">Aucune facture trouvée</CardContent></Card>
       ) : (
-        <Card>
-          <CardContent className="p-0">
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b bg-muted/30">
-                    <th className="text-left p-3 font-medium">N°</th>
-                    <th className="text-left p-3 font-medium">Client</th>
-                    <th className="text-right p-3 font-medium">HT</th>
-                    <th className="text-right p-3 font-medium">TTC</th>
-                    <th className="text-center p-3 font-medium">Statut</th>
-                    <th className="text-center p-3 font-medium">Paiement</th>
-                    <th className="text-center p-3 font-medium">Date</th>
-                    <th className="text-center p-3 font-medium">Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {invoices.map((inv) => (
-                    <tr key={inv.id} className="border-b hover:bg-muted/20 transition-colors">
-                      <td className="p-3 font-mono text-xs">{inv.reference}</td>
-                      <td className="p-3">{inv.clients?.name ?? "—"}</td>
-                      <td className="p-3 text-right text-muted-foreground">{Number(inv.total_ht).toFixed(2)} €</td>
-                      <td className="p-3 text-right font-medium">{Number(inv.total_ttc).toFixed(2)} €</td>
-                      <td className="p-3 text-center">
-                        <Badge variant="secondary" className={statusColors[inv.status]}>{statusLabels[inv.status]}</Badge>
-                      </td>
-                      <td className="p-3 text-center text-xs text-muted-foreground">{inv.payment_method ? paymentLabels[inv.payment_method] ?? inv.payment_method : "—"}</td>
-                      <td className="p-3 text-center text-xs text-muted-foreground">{format(new Date(inv.created_at), "dd/MM/yyyy")}</td>
-                      <td className="p-3 text-center">
-                        <div className="flex justify-center gap-1">
-                          <Button variant="ghost" size="icon" className="h-8 w-8" title="Aperçu PDF" onClick={() => previewPDF(inv)}>
-                            <Eye className="h-3.5 w-3.5 text-primary" />
-                          </Button>
-                          {inv.clients?.email && (
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="h-8 w-8"
-                              title="Envoyer par email"
-                              onClick={() => emailMutation.mutate(inv)}
-                              disabled={emailMutation.isPending}
-                            >
-                              <Mail className="h-3.5 w-3.5 text-primary" />
-                            </Button>
-                          )}
-                          {inv.status !== "payee" && (
-                            <Button variant="ghost" size="icon" className="h-8 w-8" title="Marquer payée" onClick={() => markPaid.mutate(inv.id)}>
-                              <CheckCircle2 className="h-3.5 w-3.5 text-success" />
-                            </Button>
-                          )}
-                          <Button variant="ghost" size="icon" className="h-8 w-8" title="Télécharger PDF" onClick={() => downloadPDF(inv)}>
-                            <Download className="h-3.5 w-3.5" />
-                          </Button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+        (() => {
+          const grouped = invoices.reduce<Record<string, typeof invoices>>((acc, inv) => {
+            const year = new Date(inv.created_at).getFullYear().toString();
+            (acc[year] = acc[year] || []).push(inv);
+            return acc;
+          }, {});
+          const years = Object.keys(grouped).sort((a, b) => Number(b) - Number(a));
+          return (
+            <div className="space-y-6">
+              {years.map((year) => (
+                <div key={year}>
+                  <h2 className="text-lg font-semibold mb-3 text-muted-foreground">{year}</h2>
+                  <Card>
+                    <CardContent className="p-0">
+                      <div className="overflow-x-auto">
+                        <table className="w-full text-sm">
+                          <thead>
+                            <tr className="border-b bg-muted/30">
+                              <th className="text-left p-3 font-medium">N°</th>
+                              <th className="text-left p-3 font-medium">Client</th>
+                              <th className="text-right p-3 font-medium">HT</th>
+                              <th className="text-right p-3 font-medium">TTC</th>
+                              <th className="text-center p-3 font-medium">Statut</th>
+                              <th className="text-center p-3 font-medium">Paiement</th>
+                              <th className="text-center p-3 font-medium">Date</th>
+                              <th className="text-center p-3 font-medium">Actions</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {grouped[year].map((inv) => (
+                              <tr key={inv.id} className="border-b hover:bg-muted/20 transition-colors">
+                                <td className="p-3 font-mono text-xs">{inv.reference}</td>
+                                <td className="p-3">{inv.clients?.name ?? "—"}</td>
+                                <td className="p-3 text-right text-muted-foreground">{Number(inv.total_ht).toFixed(2)} €</td>
+                                <td className="p-3 text-right font-medium">{Number(inv.total_ttc).toFixed(2)} €</td>
+                                <td className="p-3 text-center">
+                                  <Badge variant="secondary" className={statusColors[inv.status]}>{statusLabels[inv.status]}</Badge>
+                                </td>
+                                <td className="p-3 text-center text-xs text-muted-foreground">{inv.payment_method ? paymentLabels[inv.payment_method] ?? inv.payment_method : "—"}</td>
+                                <td className="p-3 text-center text-xs text-muted-foreground">{format(new Date(inv.created_at), "dd/MM/yyyy")}</td>
+                                <td className="p-3 text-center">
+                                  <div className="flex justify-center gap-1">
+                                    <Button variant="ghost" size="icon" className="h-8 w-8" title="Aperçu PDF" onClick={() => previewPDF(inv)}>
+                                      <Eye className="h-3.5 w-3.5 text-primary" />
+                                    </Button>
+                                    {inv.clients?.email && (
+                                      <Button variant="ghost" size="icon" className="h-8 w-8" title="Envoyer par email" onClick={() => emailMutation.mutate(inv)} disabled={emailMutation.isPending}>
+                                        <Mail className="h-3.5 w-3.5 text-primary" />
+                                      </Button>
+                                    )}
+                                    {inv.status !== "payee" && (
+                                      <Button variant="ghost" size="icon" className="h-8 w-8" title="Marquer payée" onClick={() => markPaid.mutate(inv.id)}>
+                                        <CheckCircle2 className="h-3.5 w-3.5 text-success" />
+                                      </Button>
+                                    )}
+                                    <Button variant="ghost" size="icon" className="h-8 w-8" title="Télécharger PDF" onClick={() => downloadPDF(inv)}>
+                                      <Download className="h-3.5 w-3.5" />
+                                    </Button>
+                                  </div>
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+              ))}
             </div>
-          </CardContent>
-        </Card>
+          );
+        })()
       )}
 
       <CreateInvoiceDialog open={showCreate} onOpenChange={setShowCreate} />
