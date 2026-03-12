@@ -134,8 +134,10 @@ const SettingsPage = () => {
           {/* Logo upload */}
           <div className="flex items-center gap-4">
             <div className="w-20 h-20 rounded-lg border-2 border-dashed border-border flex items-center justify-center overflow-hidden bg-muted/30">
-              {form.logo_url ? (
-                <img src={form.logo_url} alt="Logo" className="w-full h-full object-contain" />
+              {resolvedLogoUrl ? (
+                <img src={resolvedLogoUrl} alt="Logo" className="w-full h-full object-contain" />
+              ) : form.logo_url ? (
+                <span className="text-xs text-muted-foreground">Chargement...</span>
               ) : (
                 <Upload className="h-6 w-6 text-muted-foreground" />
               )}
