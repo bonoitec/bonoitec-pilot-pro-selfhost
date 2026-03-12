@@ -45,6 +45,13 @@ const articles = [
     excerpt: "Automatisez vos devis, réduisez les tâches répétitives et concentrez-vous sur votre cœur de métier.",
     image: blogDevis,
   },
+  {
+    slug: "allie-gestion-boutique",
+    category: "Application",
+    title: "BonoitecPilot, votre allié pour mieux gérer votre boutique de réparation",
+    excerpt: "Découvrez comment BonoitecPilot aide les réparateurs et boutiques à piloter leur activité au quotidien.",
+    image: blogAllieGestion,
+  },
 ];
 
 // Show 3 articles at a time on desktop, pick a sliding window
