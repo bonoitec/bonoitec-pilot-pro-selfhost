@@ -183,7 +183,7 @@ const templates: Record<string, (data: Record<string, string>, orgContact?: { ph
 
 // ─── Resend Send ────────────────────────────────────────────────────
 
-async function sendResend(to: string, subject: string, html: string): Promise<void> {
+async function sendResend(to: string, subject: string, html: string, attachments?: Array<{ filename: string; content: string }>): Promise<void> {
   const apiKey = Deno.env.get("RESEND_API_KEY");
   if (!apiKey) throw new Error("RESEND_API_KEY is not configured");
 
