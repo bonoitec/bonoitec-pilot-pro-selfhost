@@ -53,6 +53,24 @@ const Quotes = () => {
     onSuccess: () => { toast({ title: "Devis envoyé" }); qc.invalidateQueries({ queryKey: ["quotes"] }); },
   });
 
+  const buildPdfParams = (quote: any) => {
+    const lines = Array.isArray(quote.lines) ? quote.lines : [];
+    return {
+      type: "quote" as const,
+      reference: quote.reference,
+      date: format(new Date(quote.created_at), "dd/MM/yyyy"),
+      clientName: quote.clients?.name,
+      clientAddress: quote.clients?.address,
+      clientPhone: quote.clients?.phone,
+      clientEmail: quote.clients?.email,
+      lines,
+      totalHT: Number(quote.total_ht),
+      totalTTC: Number(quote.total_ttc),
+      vatRate: Number(quote.vat_rate),
+      notes: quote.notes,
+    };
+  };
+
   const emailMutation = useMutation({
     mutationFn: async (quote: any) => {
       const email = quote.clients?.email;
