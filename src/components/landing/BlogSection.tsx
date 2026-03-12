@@ -7,6 +7,7 @@ import blogFacturation from "@/assets/blog-facturation.jpg";
 import blogCentraliser from "@/assets/blog-centraliser.jpg";
 import blogSuiviClient from "@/assets/blog-suivi-client.jpg";
 import blogDevis from "@/assets/blog-devis-rapides.jpg";
+import blogAllieGestion from "@/assets/blog-allie-gestion.jpg";
 
 const articles = [
   {
