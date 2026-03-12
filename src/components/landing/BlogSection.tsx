@@ -7,6 +7,7 @@ import blogFacturation from "@/assets/blog-facturation.jpg";
 import blogCentraliser from "@/assets/blog-centraliser.jpg";
 import blogSuiviClient from "@/assets/blog-suivi-client.jpg";
 import blogDevis from "@/assets/blog-devis-rapides.jpg";
+import blogAllieGestion from "@/assets/blog-allie-gestion.jpg";
 
 const articles = [
   {
@@ -43,6 +44,13 @@ const articles = [
     title: "Comment gagner du temps sur les devis et réparations",
     excerpt: "Automatisez vos devis, réduisez les tâches répétitives et concentrez-vous sur votre cœur de métier.",
     image: blogDevis,
+  },
+  {
+    slug: "allie-gestion-boutique",
+    category: "Application",
+    title: "BonoitecPilot, votre allié pour mieux gérer votre boutique de réparation",
+    excerpt: "Découvrez comment BonoitecPilot aide les réparateurs et boutiques à piloter leur activité au quotidien.",
+    image: blogAllieGestion,
   },
 ];
 
