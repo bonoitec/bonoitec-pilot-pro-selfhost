@@ -69,14 +69,32 @@ const LandingContact = forwardRef<HTMLDivElement>((_, ref) => {
     setErrors({});
     setSubmitting(true);
     try {
-      const { error } = await supabase.functions.invoke("send-email", {
+      // Send notification to team
+      await supabase.functions.invoke("send-email", {
         body: {
           to: "contact@app.bonoitecpilot.fr",
           subject: `[Contact] Message de ${result.data.firstName} ${result.data.lastName}`,
           html: `<p><strong>Nom :</strong> ${result.data.firstName} ${result.data.lastName}</p><p><strong>Email :</strong> ${result.data.email}</p><p><strong>Téléphone :</strong> ${result.data.phone}</p><p><strong>Message :</strong></p><p>${result.data.message.replace(/\n/g, "<br/>")}</p>`,
         },
       });
-      if (error) throw error;
+
+      // Send confirmation to sender
+      await supabase.functions.invoke("send-email", {
+        body: {
+          to: result.data.email,
+          subject: "Confirmation de réception — BonoitecPilot",
+          html: `
+            <p>Bonjour ${result.data.firstName},</p>
+            <p>Nous avons bien reçu votre message et nous vous en remercions.</p>
+            <p>Notre équipe vous répondra dans les <strong>24 heures ouvrées</strong>.</p>
+            <br/>
+            <p><strong>Récapitulatif de votre message :</strong></p>
+            <blockquote style="border-left:3px solid #4338ca;padding-left:12px;color:#64748b;margin:12px 0;">${result.data.message.replace(/\n/g, "<br/>")}</blockquote>
+            <br/>
+            <p>À très bientôt,<br/>L'équipe BonoitecPilot</p>
+          `,
+        },
+      });
     } catch {
       // Even if email sending fails, show success to the user (message received)
     }
