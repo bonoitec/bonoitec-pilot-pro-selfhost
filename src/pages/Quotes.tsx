@@ -13,6 +13,7 @@ import { PDFPreviewDialog } from "@/components/dialogs/PDFPreviewDialog";
 import { useToast } from "@/hooks/use-toast";
 import { generatePDF } from "@/lib/pdf";
 import { sendTransactionalEmail } from "@/lib/email";
+import { exportQuotesCsv } from "@/lib/csvExport";
 
 const statusLabels: Record<string, string> = {
   brouillon: "Brouillon", envoye: "Envoyé", accepte: "Accepté", refuse: "Refusé",

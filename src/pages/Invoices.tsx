@@ -163,7 +163,14 @@ const Invoices = () => {
           <h1 className="text-2xl font-bold">Factures</h1>
           <p className="text-muted-foreground text-sm">Suivi de facturation et paiements</p>
         </div>
-        <Button onClick={() => setShowCreate(true)}><Plus className="h-4 w-4 mr-2" />Nouvelle facture</Button>
+        <div className="flex gap-2">
+          {invoices.length > 0 && (
+            <Button variant="outline" onClick={() => exportInvoicesCsv(invoices)}>
+              <FileSpreadsheet className="h-4 w-4 mr-2" />Export CSV
+            </Button>
+          )}
+          <Button onClick={() => setShowCreate(true)}><Plus className="h-4 w-4 mr-2" />Nouvelle facture</Button>
+        </div>
       </div>
 
       {isLoading ? (
