@@ -251,7 +251,24 @@ export function RepairDetailDialog({ open, onOpenChange, repair }: Props) {
   if (!repair) return null;
 
   const intakeChecklist = repair.intake_checklist as string[] | null;
-  const photos = (repair.photos as string[]) || [];
+  const rawPhotos = (repair.photos as string[]) || [];
+
+  // Resolve signed URLs for photos and signature
+  const [resolvedPhotos, setResolvedPhotos] = useState<string[]>([]);
+  const [resolvedSignature, setResolvedSignature] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (rawPhotos.length > 0) {
+      getSignedFileUrls(rawPhotos).then(setResolvedPhotos);
+    } else {
+      setResolvedPhotos([]);
+    }
+    if (repair.customer_signature_url) {
+      getSignedFileUrl(repair.customer_signature_url).then(setResolvedSignature);
+    } else {
+      setResolvedSignature(null);
+    }
+  }, [repair.photos, repair.customer_signature_url]);
 
   return (
     <>
