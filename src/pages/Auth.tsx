@@ -395,9 +395,15 @@ const Auth = () => {
 
                 <div className="space-y-1">
                   <Label htmlFor="s-cpw" className="text-xs font-medium">Confirmer</Label>
-                  <PasswordField id="s-cpw" value={signupConfirmPassword} onChange={setSignupConfirmPassword}
-                    show={showSignupConfirm} onToggle={() => setShowSignupConfirm(!showSignupConfirm)}
-                    placeholder="Confirmez le mot de passe" error={errors.confirmPassword} />
+                  <div className="relative">
+                    <Input id="s-cpw" type={showSignupConfirm ? "text" : "password"} placeholder="Confirmez le mot de passe" value={signupConfirmPassword}
+                      onChange={(e) => setSignupConfirmPassword(e.target.value)} required
+                      className={`pr-10 h-[42px] text-sm ${errors.confirmPassword ? "border-destructive" : ""}`} />
+                    <button type="button" onClick={() => setShowSignupConfirm(!showSignupConfirm)} tabIndex={-1}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground/60 hover:text-foreground transition-colors">
+                      {showSignupConfirm ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
+                    </button>
+                  </div>
                   {errors.confirmPassword && <p className="text-[11px] text-destructive">{errors.confirmPassword}</p>}
                 </div>
 
