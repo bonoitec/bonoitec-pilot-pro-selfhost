@@ -211,22 +211,6 @@ const Auth = () => {
     if (error) toast.error("Erreur lors de la connexion Google");
   };
 
-  const PasswordField = ({ id, value, onChange, show, onToggle, placeholder, error }: {
-    id: string; value: string; onChange: (v: string) => void; show: boolean; onToggle: () => void; placeholder: string; error?: string;
-  }) => (
-    <div className="relative">
-      <Input
-        id={id} type={show ? "text" : "password"} placeholder={placeholder} value={value}
-        onChange={(e) => onChange(e.target.value)} required
-        className={`pr-10 h-[42px] text-sm ${error ? "border-destructive" : ""}`}
-      />
-      <button type="button" onClick={onToggle} tabIndex={-1}
-        className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground/60 hover:text-foreground transition-colors">
-        {show ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
-      </button>
-    </div>
-  );
-
   const inputClass = (err?: string) =>
     `h-[42px] text-sm ${err ? "border-destructive" : ""}`;
 
