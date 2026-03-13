@@ -454,7 +454,7 @@ export function CreateRepairWizard({ open, onOpenChange }: Props) {
         </div>
 
         {/* Step content */}
-        <div className="px-6 py-5 overflow-y-auto" style={{ maxHeight: "calc(90vh - 220px)" }}>
+        <div className="px-3 sm:px-6 py-3 sm:py-5 overflow-y-auto flex-1 min-h-0">
           {/* Step 1: Client */}
           {step === 0 && (
             <div className="space-y-4">
