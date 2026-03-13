@@ -784,7 +784,7 @@ export function CreateRepairWizard({ open, onOpenChange }: Props) {
         </div>
 
         {/* Footer */}
-        <DialogFooter className="px-6 py-4 border-t border-border gap-2">
+        <DialogFooter className="px-3 sm:px-6 py-3 sm:py-4 border-t border-border gap-2 shrink-0">
           {step === 8 ? (
             <Button onClick={handleClose}>Fermer</Button>
           ) : (
