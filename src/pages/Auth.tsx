@@ -211,22 +211,6 @@ const Auth = () => {
     if (error) toast.error("Erreur lors de la connexion Google");
   };
 
-  const PasswordField = ({ id, value, onChange, show, onToggle, placeholder, error }: {
-    id: string; value: string; onChange: (v: string) => void; show: boolean; onToggle: () => void; placeholder: string; error?: string;
-  }) => (
-    <div className="relative">
-      <Input
-        id={id} type={show ? "text" : "password"} placeholder={placeholder} value={value}
-        onChange={(e) => onChange(e.target.value)} required
-        className={`pr-10 h-[42px] text-sm ${error ? "border-destructive" : ""}`}
-      />
-      <button type="button" onClick={onToggle} tabIndex={-1}
-        className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground/60 hover:text-foreground transition-colors">
-        {show ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
-      </button>
-    </div>
-  );
-
   const inputClass = (err?: string) =>
     `h-[42px] text-sm ${err ? "border-destructive" : ""}`;
 
@@ -397,17 +381,29 @@ const Auth = () => {
 
                 <div className="space-y-1">
                   <Label htmlFor="s-pw" className="text-xs font-medium">Mot de passe</Label>
-                  <PasswordField id="s-pw" value={signupPassword} onChange={setSignupPassword}
-                    show={showSignupPassword} onToggle={() => setShowSignupPassword(!showSignupPassword)}
-                    placeholder="Min. 6 caractères" error={errors.password} />
+                  <div className="relative">
+                    <Input id="s-pw" type={showSignupPassword ? "text" : "password"} placeholder="Min. 6 caractères" value={signupPassword}
+                      onChange={(e) => setSignupPassword(e.target.value)} required
+                      className={`pr-10 h-[42px] text-sm ${errors.password ? "border-destructive" : ""}`} />
+                    <button type="button" onClick={() => setShowSignupPassword(!showSignupPassword)} tabIndex={-1}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground/60 hover:text-foreground transition-colors">
+                      {showSignupPassword ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
+                    </button>
+                  </div>
                   {errors.password && <p className="text-[11px] text-destructive">{errors.password}</p>}
                 </div>
 
                 <div className="space-y-1">
                   <Label htmlFor="s-cpw" className="text-xs font-medium">Confirmer</Label>
-                  <PasswordField id="s-cpw" value={signupConfirmPassword} onChange={setSignupConfirmPassword}
-                    show={showSignupConfirm} onToggle={() => setShowSignupConfirm(!showSignupConfirm)}
-                    placeholder="Confirmez le mot de passe" error={errors.confirmPassword} />
+                  <div className="relative">
+                    <Input id="s-cpw" type={showSignupConfirm ? "text" : "password"} placeholder="Confirmez le mot de passe" value={signupConfirmPassword}
+                      onChange={(e) => setSignupConfirmPassword(e.target.value)} required
+                      className={`pr-10 h-[42px] text-sm ${errors.confirmPassword ? "border-destructive" : ""}`} />
+                    <button type="button" onClick={() => setShowSignupConfirm(!showSignupConfirm)} tabIndex={-1}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground/60 hover:text-foreground transition-colors">
+                      {showSignupConfirm ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
+                    </button>
+                  </div>
                   {errors.confirmPassword && <p className="text-[11px] text-destructive">{errors.confirmPassword}</p>}
                 </div>
 
@@ -455,9 +451,15 @@ const Auth = () => {
                       Mot de passe oublié ?
                     </button>
                   </div>
-                  <PasswordField id="l-pw" value={loginPassword} onChange={setLoginPassword}
-                    show={showLoginPassword} onToggle={() => setShowLoginPassword(!showLoginPassword)}
-                    placeholder="Votre mot de passe" />
+                  <div className="relative">
+                    <Input id="l-pw" type={showLoginPassword ? "text" : "password"} placeholder="Votre mot de passe" value={loginPassword}
+                      onChange={(e) => setLoginPassword(e.target.value)} required
+                      className="pr-10 h-[42px] text-sm" />
+                    <button type="button" onClick={() => setShowLoginPassword(!showLoginPassword)} tabIndex={-1}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground/60 hover:text-foreground transition-colors">
+                      {showLoginPassword ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
+                    </button>
+                  </div>
                 </div>
 
                 <div className="flex items-center gap-2">
