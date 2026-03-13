@@ -26,8 +26,93 @@ const Auth = () => {
   const [loading, setLoading] = useState(false);
 
   // Redirect to dashboard if already authenticated
+  // Forward-declare email helpers for use in useEffect
+  const sendWelcomeEmailRef = async (email: string, fullName: string, userId: string) => {
+    try {
+      await new Promise(r => setTimeout(r, 2000));
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("organization_id")
+        .eq("user_id", userId)
+        .single();
+      if (profile) {
+        await supabase.functions.invoke("send-email", {
+          body: {
+            template: "welcome_signup",
+            to: email,
+            data: { clientName: fullName },
+            organization_id: profile.organization_id,
+          },
+        });
+      }
+    } catch { /* non-blocking */ }
+  };
+
+  const sendLoginAlertEmailRef = async (email: string, userId: string) => {
+    try {
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("organization_id, full_name")
+        .eq("user_id", userId)
+        .single();
+      if (profile) {
+        await supabase.functions.invoke("send-email", {
+          body: {
+            template: "login_alert",
+            to: email,
+            data: {
+              clientName: profile.full_name || email,
+              loginTime: new Date().toLocaleString("fr-FR", { dateStyle: "long", timeStyle: "short" }),
+            },
+            organization_id: profile.organization_id,
+          },
+        });
+      }
+    } catch { /* non-blocking */ }
+  };
+
   useEffect(() => {
     if (!authLoading && session) {
+      const intent = localStorage.getItem("auth_intent");
+      const user = session.user;
+
+      // If user came from Google OAuth with "login" intent, check if account was just created
+      if (intent === "login" && user) {
+        const createdAt = new Date(user.created_at).getTime();
+        const now = Date.now();
+        const justCreated = now - createdAt < 30000;
+
+        if (justCreated && user.app_metadata?.provider === "google") {
+          localStorage.removeItem("auth_intent");
+          supabase.auth.signOut().then(() => {
+            toast.error("Aucun compte n'existe avec cette adresse Google.", {
+              description: "Veuillez d'abord créer un compte avant de vous connecter avec Google.",
+              duration: 6000,
+            });
+          });
+          return;
+        }
+      }
+
+      // If user came from Google OAuth with "signup" intent and just created
+      if (intent === "signup" && user) {
+        const createdAt = new Date(user.created_at).getTime();
+        const justCreated = Date.now() - createdAt < 30000;
+        if (justCreated) {
+          sendWelcomeEmailRef(user.email || "", user.user_metadata?.full_name || user.email || "", user.id);
+        }
+      }
+
+      // Send login alert for returning users (not newly created)
+      if (intent && user) {
+        const createdAt = new Date(user.created_at).getTime();
+        const justCreated = Date.now() - createdAt < 30000;
+        if (!justCreated) {
+          sendLoginAlertEmailRef(user.email || "", user.id);
+        }
+      }
+
+      localStorage.removeItem("auth_intent");
       navigate("/dashboard", { replace: true });
     }
   }, [session, authLoading, navigate]);
@@ -65,17 +150,36 @@ const Auth = () => {
     e.preventDefault();
     setErrors({});
     setLoading(true);
-    const { error } = await supabase.auth.signInWithPassword({ email: loginEmail, password: loginPassword });
+    const { data, error } = await supabase.auth.signInWithPassword({ email: loginEmail, password: loginPassword });
     setLoading(false);
-    if (error) toast.error("Identifiants incorrects.");
-    else navigate("/dashboard");
+    if (error) {
+      if (error.message.toLowerCase().includes("invalid login credentials") || error.message.toLowerCase().includes("invalid_credentials")) {
+        toast.error("Aucun compte n'est associé à cette adresse e-mail, ou le mot de passe est incorrect.", {
+          description: "Vérifiez vos identifiants ou créez un compte.",
+          duration: 5000,
+        });
+      } else if (error.message.toLowerCase().includes("email not confirmed")) {
+        toast.error("Veuillez confirmer votre adresse e-mail avant de vous connecter.", {
+          description: "Vérifiez votre boîte de réception.",
+          duration: 5000,
+        });
+      } else {
+        toast.error(error.message);
+      }
+      return;
+    }
+    // Send login alert email (fire and forget)
+    if (data?.user) {
+      sendLoginAlertEmailRef(data.user.email || "", data.user.id);
+    }
+    navigate("/dashboard");
   };
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!validateSignup()) return;
     setLoading(true);
-    const { error } = await supabase.auth.signUp({
+    const { data: signupData, error } = await supabase.auth.signUp({
       email: signupEmail,
       password: signupPassword,
       options: {
@@ -88,11 +192,19 @@ const Auth = () => {
       },
     });
     setLoading(false);
-    if (error) toast.error(error.message);
-    else toast.success("Vérifiez votre boîte mail pour confirmer votre compte.");
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
+    // Send welcome email (fire and forget)
+    if (signupData?.user) {
+      sendWelcomeEmailRef(signupData.user.email || "", `${signupFirstName} ${signupLastName}`.trim(), signupData.user.id);
+    }
+    toast.success("Votre compte a été créé ! Vérifiez votre boîte mail pour confirmer votre inscription.", { duration: 6000 });
   };
 
   const handleGoogleLogin = async () => {
+    localStorage.setItem("auth_intent", activeTab);
     setLoading(true);
     const { error } = await lovable.auth.signInWithOAuth("google", { redirect_uri: `${window.location.origin}/auth` });
     setLoading(false);

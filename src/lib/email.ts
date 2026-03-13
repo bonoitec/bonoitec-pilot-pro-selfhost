@@ -5,7 +5,9 @@ type EmailTemplate =
   | "repair_completed"
   | "invoice_sent"
   | "status_update"
-  | "client_notification";
+  | "client_notification"
+  | "welcome_signup"
+  | "login_alert";
 
 interface EmailAttachment {
   filename: string;
