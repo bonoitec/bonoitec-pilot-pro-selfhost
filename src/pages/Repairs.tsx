@@ -42,6 +42,7 @@ const Repairs = () => {
       if (error) throw error;
       return data;
     },
+    staleTime: 10000,
   });
 
   const updateStatus = useMutation({
