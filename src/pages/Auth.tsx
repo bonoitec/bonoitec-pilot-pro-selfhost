@@ -381,9 +381,15 @@ const Auth = () => {
 
                 <div className="space-y-1">
                   <Label htmlFor="s-pw" className="text-xs font-medium">Mot de passe</Label>
-                  <PasswordField id="s-pw" value={signupPassword} onChange={setSignupPassword}
-                    show={showSignupPassword} onToggle={() => setShowSignupPassword(!showSignupPassword)}
-                    placeholder="Min. 6 caractères" error={errors.password} />
+                  <div className="relative">
+                    <Input id="s-pw" type={showSignupPassword ? "text" : "password"} placeholder="Min. 6 caractères" value={signupPassword}
+                      onChange={(e) => setSignupPassword(e.target.value)} required
+                      className={`pr-10 h-[42px] text-sm ${errors.password ? "border-destructive" : ""}`} />
+                    <button type="button" onClick={() => setShowSignupPassword(!showSignupPassword)} tabIndex={-1}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground/60 hover:text-foreground transition-colors">
+                      {showSignupPassword ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
+                    </button>
+                  </div>
                   {errors.password && <p className="text-[11px] text-destructive">{errors.password}</p>}
                 </div>
 
