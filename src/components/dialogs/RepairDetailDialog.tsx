@@ -180,29 +180,23 @@ export function RepairDetailDialog({ open, onOpenChange, repair }: Props) {
         updates.repair_ended_at = new Date().toISOString();
       }
       if (paymentMethod) updates.payment_method = paymentMethod;
-      const { error } = await supabase.from("repairs").update(updates).eq("id", repair.id);
-      if (error) throw error;
 
-      // Deduct stock: compute delta between old and new parts
-      const oldParts: PartUsed[] = Array.isArray(repair.parts_used)
+      // Atomic server-side repair update + stock deduction
+      const oldParts = Array.isArray(repair.parts_used)
         ? repair.parts_used.map((p: any) => ({ inventory_id: p.inventory_id, quantity: Number(p.quantity ?? 1) }))
         : [];
-      const oldQtyMap = new Map<string, number>();
-      oldParts.forEach((p) => { if (p.inventory_id) oldQtyMap.set(p.inventory_id, (oldQtyMap.get(p.inventory_id) || 0) + p.quantity); });
-      const newQtyMap = new Map<string, number>();
-      partsUsed.forEach((p) => { if (p.inventory_id) newQtyMap.set(p.inventory_id, (newQtyMap.get(p.inventory_id) || 0) + p.quantity); });
 
-      const allIds = new Set([...oldQtyMap.keys(), ...newQtyMap.keys()]);
-      for (const id of allIds) {
-        const oldQty = oldQtyMap.get(id) || 0;
-        const newQty = newQtyMap.get(id) || 0;
-        const delta = newQty - oldQty;
-        if (delta === 0) continue;
-        const { data: inv } = await supabase.from("inventory").select("quantity").eq("id", id).single();
-        if (!inv) continue;
-        const updatedQty = Math.max(0, inv.quantity - delta);
-        await supabase.from("inventory").update({ quantity: updatedQty }).eq("id", id);
-      }
+      const { data, error } = await supabase.functions.invoke("update-repair-stock", {
+        body: {
+          repair_id: repair.id,
+          updates,
+          old_parts: oldParts,
+          new_parts: partsUsed.map(p => ({ inventory_id: p.inventory_id, quantity: p.quantity })),
+        },
+      });
+
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
     },
     onMutate: async () => {
       await qc.cancelQueries({ queryKey: ["repairs"] });
