@@ -418,9 +418,9 @@ export function CreateRepairWizard({ open, onOpenChange }: Props) {
 
   return (
     <Dialog open={open} onOpenChange={(o) => { if (!o) handleClose(); }}>
-      <DialogContent className="sm:max-w-3xl max-h-[90vh] p-0 gap-0">
+      <DialogContent className="w-[calc(100%-1rem)] sm:w-full sm:max-w-3xl max-h-[85vh] sm:max-h-[90vh] p-0 gap-0 overflow-hidden flex flex-col">
         {/* Header with stepper */}
-        <div className="border-b border-border px-6 pt-5 pb-4">
+        <div className="border-b border-border px-3 sm:px-6 pt-4 sm:pt-5 pb-3 sm:pb-4 shrink-0">
           <DialogHeader>
             <DialogTitle className="text-lg font-semibold">Nouvelle réparation</DialogTitle>
             <DialogDescription className="sr-only">Assistant de création de réparation</DialogDescription>
@@ -436,16 +436,16 @@ export function CreateRepairWizard({ open, onOpenChange }: Props) {
                   <button
                     key={i} type="button"
                     onClick={() => step !== 8 && i <= step && setStep(i)}
-                    className={`flex flex-col items-center gap-1 min-w-[56px] transition-colors ${
+                    className={`flex flex-col items-center gap-0.5 sm:gap-1 min-w-[36px] sm:min-w-[56px] transition-colors ${
                       isCurrent ? "text-primary" : isDone ? "text-success" : "text-muted-foreground/40"
                     } ${i <= step && step !== 8 ? "cursor-pointer" : "cursor-default"}`}
                   >
-                    <div className={`h-8 w-8 rounded-full flex items-center justify-center text-xs font-medium border-2 transition-colors ${
+                    <div className={`h-6 w-6 sm:h-8 sm:w-8 rounded-full flex items-center justify-center text-xs font-medium border-2 transition-colors ${
                       isCurrent ? "border-primary bg-primary/10" : isDone ? "border-success bg-success/10" : "border-muted"
                     }`}>
-                      {isDone && !isCurrent ? <Check className="h-4 w-4" /> : <Icon className="h-4 w-4" />}
+                      {isDone && !isCurrent ? <Check className="h-3 w-3 sm:h-4 sm:w-4" /> : <Icon className="h-3 w-3 sm:h-4 sm:w-4" />}
                     </div>
-                    <span className="text-[10px] font-medium leading-tight">{s.label}</span>
+                    <span className="text-[9px] sm:text-[10px] font-medium leading-tight hidden sm:block">{s.label}</span>
                   </button>
                 );
               })}
@@ -454,7 +454,7 @@ export function CreateRepairWizard({ open, onOpenChange }: Props) {
         </div>
 
         {/* Step content */}
-        <div className="px-6 py-5 overflow-y-auto" style={{ maxHeight: "calc(90vh - 220px)" }}>
+        <div className="px-3 sm:px-6 py-3 sm:py-5 overflow-y-auto flex-1 min-h-0">
           {/* Step 1: Client */}
           {step === 0 && (
             <div className="space-y-4">
@@ -784,7 +784,7 @@ export function CreateRepairWizard({ open, onOpenChange }: Props) {
         </div>
 
         {/* Footer */}
-        <DialogFooter className="px-6 py-4 border-t border-border gap-2">
+        <DialogFooter className="px-3 sm:px-6 py-3 sm:py-4 border-t border-border gap-2 shrink-0">
           {step === 8 ? (
             <Button onClick={handleClose}>Fermer</Button>
           ) : (
