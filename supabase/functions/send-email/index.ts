@@ -179,6 +179,47 @@ const templates: Record<string, (data: Record<string, string>, orgContact?: { ph
       </div>
     `, "", oc),
   }),
+
+  welcome_signup: (d, oc) => ({
+    subject: "Bienvenue sur BonoitecPilot — Votre compte a bien été créé ✅",
+    html: emailLayout(`
+      <div class="body">
+        <h2>🎉 Bienvenue sur BonoitecPilot !</h2>
+        <p>Bonjour ${d.clientName || ""},</p>
+        <p>Votre inscription a bien été prise en compte. Nous sommes ravis de vous accueillir sur notre plateforme de gestion professionnelle pour ateliers de réparation.</p>
+        <div class="info-box">
+          <p><strong>✅ Votre compte est actif</strong></p>
+          <p>Vous bénéficiez d'un essai gratuit de 30 jours avec accès complet à toutes les fonctionnalités.</p>
+        </div>
+        <p>Vous pouvez dès à présent :</p>
+        <p>• Créer vos premiers clients et appareils<br>• Enregistrer des réparations<br>• Générer des devis et factures<br>• Gérer votre stock de pièces</p>
+        <a href="https://bonoitec-pilot-pro.lovable.app/dashboard" class="btn">Accéder à mon tableau de bord</a>
+        <hr class="divider">
+        <p>Si vous avez la moindre question, n'hésitez pas à nous contacter. Nous sommes là pour vous accompagner.</p>
+        <p>À très vite,<br><strong>L'équipe BonoitecPilot</strong></p>
+      </div>
+    `, "Bienvenue ! Votre compte BonoitecPilot est prêt.", oc),
+  }),
+
+  login_alert: (d, oc) => ({
+    subject: "🔐 Connexion détectée sur votre compte BonoitecPilot",
+    html: emailLayout(`
+      <div class="body">
+        <h2>🔐 Connexion à votre compte</h2>
+        <p>Bonjour ${d.clientName || ""},</p>
+        <p>Une connexion à votre compte BonoitecPilot a été détectée.</p>
+        <div class="info-box">
+          <p><strong>📅 Date et heure :</strong> ${d.loginTime || new Date().toLocaleString("fr-FR")}</p>
+        </div>
+        <p><strong>Si c'était bien vous</strong>, aucune action n'est nécessaire. Vous pouvez ignorer cet e-mail.</p>
+        <p><strong>Si ce n'était pas vous</strong>, nous vous recommandons de :</p>
+        <p>• Changer immédiatement votre mot de passe<br>• Vérifier les appareils connectés à votre compte<br>• Nous contacter rapidement</p>
+        <hr class="divider">
+        <p style="font-size:12px;color:${BRAND.muted};">Cet e-mail est envoyé automatiquement à chaque connexion pour garantir la sécurité de votre compte.</p>
+        <p>Cordialement,<br><strong>L'équipe BonoitecPilot</strong></p>
+      </div>
+    `, "Une connexion a été détectée sur votre compte", oc),
+  }),
 };
 
 // ─── Resend Send ────────────────────────────────────────────────────
