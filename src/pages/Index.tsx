@@ -38,6 +38,7 @@ const Index = () => {
       if (error) throw error;
       return data;
     },
+    staleTime: 15000,
   });
 
   const { data: lowStock = [] } = useQuery({
