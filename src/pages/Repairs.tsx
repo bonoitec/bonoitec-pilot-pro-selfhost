@@ -42,19 +42,17 @@ const Repairs = () => {
       if (error) throw error;
       return data;
     },
+    staleTime: 10000,
   });
 
   const updateStatus = useMutation({
     mutationFn: async ({ id, status }: { id: string; status: string }) => {
       const updates: any = { status };
-      // Timer starts on "diagnostic" (Débuté)
       if (status === "diagnostic") updates.repair_started_at = new Date().toISOString();
-      // Timer ends on "termine" or "pret_a_recuperer"
       if (status === "termine" || status === "pret_a_recuperer") updates.repair_ended_at = new Date().toISOString();
       const { error } = await supabase.from("repairs").update(updates).eq("id", id);
       if (error) throw error;
 
-      // Send auto email to client
       const repair = repairs.find(r => r.id === id);
       if (repair?.clients?.email) {
         try {
@@ -78,12 +76,25 @@ const Repairs = () => {
         }
       }
     },
+    onMutate: async ({ id, status: newStatus }) => {
+      await qc.cancelQueries({ queryKey: ["repairs"] });
+      const previous = qc.getQueryData<any[]>(["repairs"]);
+      qc.setQueryData<any[]>(["repairs"], (old) =>
+        old?.map(r => r.id === id ? { ...r, status: newStatus } : r) ?? []
+      );
+      return { previous };
+    },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["repairs"] });
       qc.invalidateQueries({ queryKey: ["dashboard-repairs"] });
       qc.invalidateQueries({ queryKey: ["sales-repairs"] });
     },
-    onError: (e: Error) => toast({ title: "Erreur", description: e.message, variant: "destructive" }),
+    onError: (e: Error, _vars, context) => {
+      if (context?.previous) {
+        qc.setQueryData(["repairs"], context.previous);
+      }
+      toast({ title: "Erreur", description: e.message, variant: "destructive" });
+    },
   });
 
   const onDragEnd = useCallback((result: DropResult) => {

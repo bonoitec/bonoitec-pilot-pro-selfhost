@@ -38,6 +38,7 @@ const Index = () => {
       if (error) throw error;
       return data;
     },
+    staleTime: 15000,
   });
 
   const { data: lowStock = [] } = useQuery({
@@ -49,6 +50,7 @@ const Index = () => {
       if (error) throw error;
       return (data ?? []).filter((p) => p.quantity <= p.min_quantity);
     },
+    staleTime: 30000,
   });
 
   const inProgress = repairs.filter((r) => ["en_cours", "diagnostic"].includes(r.status));

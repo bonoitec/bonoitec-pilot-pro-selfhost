@@ -173,11 +173,9 @@ export function RepairDetailDialog({ open, onOpenChange, repair }: Props) {
         parts_used: partsUsed,
         services_used: servicesUsed,
       };
-      // Timer starts on "diagnostic" (Débuté)
       if (status === "diagnostic" && repair.status !== "diagnostic" && !repair.repair_started_at) {
         updates.repair_started_at = new Date().toISOString();
       }
-      // Timer ends on "termine" or "pret_a_recuperer"
       if ((status === "termine" || status === "pret_a_recuperer") && repair.status !== status) {
         updates.repair_ended_at = new Date().toISOString();
       }
@@ -206,6 +204,14 @@ export function RepairDetailDialog({ open, onOpenChange, repair }: Props) {
         await supabase.from("inventory").update({ quantity: updatedQty }).eq("id", id);
       }
     },
+    onMutate: async () => {
+      await qc.cancelQueries({ queryKey: ["repairs"] });
+      const previous = qc.getQueryData<any[]>(["repairs"]);
+      qc.setQueryData<any[]>(["repairs"], (old) =>
+        old?.map(r => r.id === repair.id ? { ...r, status } : r) ?? []
+      );
+      return { previous };
+    },
     onSuccess: () => {
       toast({ title: "Réparation mise à jour" });
       qc.invalidateQueries({ queryKey: ["repairs"] });
@@ -220,7 +226,12 @@ export function RepairDetailDialog({ open, onOpenChange, repair }: Props) {
         onOpenChange(false);
       }
     },
-    onError: (e: Error) => toast({ title: "Erreur", description: e.message, variant: "destructive" }),
+    onError: (e: Error, _vars, context) => {
+      if (context?.previous) {
+        qc.setQueryData(["repairs"], context.previous);
+      }
+      toast({ title: "Erreur", description: e.message, variant: "destructive" });
+    },
   });
 
   const handleStatusChange = (newStatus: string) => {
