@@ -436,7 +436,7 @@ export function CreateRepairWizard({ open, onOpenChange }: Props) {
                   <button
                     key={i} type="button"
                     onClick={() => step !== 8 && i <= step && setStep(i)}
-                    className={`flex flex-col items-center gap-1 min-w-[56px] transition-colors ${
+                    className={`flex flex-col items-center gap-0.5 sm:gap-1 min-w-[36px] sm:min-w-[56px] transition-colors ${
                       isCurrent ? "text-primary" : isDone ? "text-success" : "text-muted-foreground/40"
                     } ${i <= step && step !== 8 ? "cursor-pointer" : "cursor-default"}`}
                   >
