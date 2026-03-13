@@ -418,9 +418,9 @@ export function CreateRepairWizard({ open, onOpenChange }: Props) {
 
   return (
     <Dialog open={open} onOpenChange={(o) => { if (!o) handleClose(); }}>
-      <DialogContent className="sm:max-w-3xl max-h-[90vh] p-0 gap-0">
+      <DialogContent className="w-[calc(100%-1rem)] sm:w-full sm:max-w-3xl max-h-[85vh] sm:max-h-[90vh] p-0 gap-0 overflow-hidden flex flex-col">
         {/* Header with stepper */}
-        <div className="border-b border-border px-6 pt-5 pb-4">
+        <div className="border-b border-border px-3 sm:px-6 pt-4 sm:pt-5 pb-3 sm:pb-4 shrink-0">
           <DialogHeader>
             <DialogTitle className="text-lg font-semibold">Nouvelle réparation</DialogTitle>
             <DialogDescription className="sr-only">Assistant de création de réparation</DialogDescription>
