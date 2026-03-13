@@ -445,7 +445,7 @@ export function CreateRepairWizard({ open, onOpenChange }: Props) {
                     }`}>
                       {isDone && !isCurrent ? <Check className="h-3 w-3 sm:h-4 sm:w-4" /> : <Icon className="h-3 w-3 sm:h-4 sm:w-4" />}
                     </div>
-                    <span className="text-[10px] font-medium leading-tight">{s.label}</span>
+                    <span className="text-[9px] sm:text-[10px] font-medium leading-tight hidden sm:block">{s.label}</span>
                   </button>
                 );
               })}
