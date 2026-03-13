@@ -440,7 +440,7 @@ export function CreateRepairWizard({ open, onOpenChange }: Props) {
                       isCurrent ? "text-primary" : isDone ? "text-success" : "text-muted-foreground/40"
                     } ${i <= step && step !== 8 ? "cursor-pointer" : "cursor-default"}`}
                   >
-                    <div className={`h-8 w-8 rounded-full flex items-center justify-center text-xs font-medium border-2 transition-colors ${
+                    <div className={`h-6 w-6 sm:h-8 sm:w-8 rounded-full flex items-center justify-center text-xs font-medium border-2 transition-colors ${
                       isCurrent ? "border-primary bg-primary/10" : isDone ? "border-success bg-success/10" : "border-muted"
                     }`}>
                       {isDone && !isCurrent ? <Check className="h-4 w-4" /> : <Icon className="h-4 w-4" />}
