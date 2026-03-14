@@ -18,11 +18,7 @@ export function useTrialStatus(): TrialStatus & { isLoading: boolean } {
   const { data, isLoading } = useQuery({
     queryKey: ["trial-status", user?.id],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("organizations")
-        .select("trial_start_date, trial_end_date, subscription_status")
-        .limit(1)
-        .single();
+      const { data, error } = await supabase.rpc("get_org_safe_data").single();
       if (error) throw error;
       return data;
     },

@@ -85,7 +85,7 @@ const Quotes = () => {
       if (!email) throw new Error("Ce client n'a pas d'adresse email.");
       const { data: orgId } = await supabase.rpc("get_user_org_id");
       if (!orgId) throw new Error("Organisation introuvable");
-      const { data: org } = await supabase.from("organizations").select("*").single();
+      const { data: org } = await supabase.rpc("get_org_safe_data").single();
       if (!org) throw new Error("Organisation introuvable");
 
       // Generate PDF as base64
@@ -158,7 +158,7 @@ const Quotes = () => {
     setPreviewOpen(true);
     setPreviewUrl(null);
     try {
-      const { data: org } = await supabase.from("organizations").select("*").single();
+      const { data: org } = await supabase.rpc("get_org_safe_data").single();
       if (!org) return;
       const url = await generatePDF(org, buildPdfParams(quote), { preview: true });
       setPreviewUrl(url as string);
@@ -171,13 +171,13 @@ const Quotes = () => {
 
   const downloadFromPreview = async () => {
     if (!previewQuote) return;
-    const { data: org } = await supabase.from("organizations").select("*").single();
+    const { data: org } = await supabase.rpc("get_org_safe_data").single();
     if (!org) return;
     await generatePDF(org, buildPdfParams(previewQuote));
   };
 
   const downloadPDF = async (quote: any) => {
-    const { data: org } = await supabase.from("organizations").select("*").single();
+    const { data: org } = await supabase.rpc("get_org_safe_data").single();
     if (!org) return;
     await generatePDF(org, buildPdfParams(quote));
   };

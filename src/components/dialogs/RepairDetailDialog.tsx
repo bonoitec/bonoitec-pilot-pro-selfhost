@@ -135,7 +135,7 @@ export function RepairDetailDialog({ open, onOpenChange, repair }: Props) {
   const { data: org } = useQuery({
     queryKey: ["organization"],
     queryFn: async () => {
-      const { data, error } = await supabase.from("organizations").select("*").single();
+      const { data, error } = await supabase.rpc("get_org_safe_data").single();
       if (error) throw error;
       return data;
     },
