@@ -45,7 +45,7 @@ export function CreateQuoteDialog({ open, onOpenChange }: Props) {
 
   const { data: org } = useQuery({
     queryKey: ["organization"],
-    queryFn: async () => { const { data } = await supabase.from("organizations").select("*").single(); return data; },
+    queryFn: async () => { const { data } = await supabase.rpc("get_org_safe_data").single(); return data; },
     enabled: open,
   });
 

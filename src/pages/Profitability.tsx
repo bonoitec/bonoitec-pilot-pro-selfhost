@@ -47,11 +47,7 @@ const Profitability = () => {
   const { data: org } = useQuery({
     queryKey: ["org-vat-settings"],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("organizations")
-        .select("vat_enabled, vat_rate")
-        .limit(1)
-        .single();
+      const { data, error } = await supabase.rpc("get_org_safe_data").single();
       if (error) throw error;
       return data;
     },
