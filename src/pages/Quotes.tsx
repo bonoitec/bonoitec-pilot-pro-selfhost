@@ -85,7 +85,7 @@ const Quotes = () => {
       if (!email) throw new Error("Ce client n'a pas d'adresse email.");
       const { data: orgId } = await supabase.rpc("get_user_org_id");
       if (!orgId) throw new Error("Organisation introuvable");
-      const { data: org } = await supabase.from("organizations").select("*").single();
+      const { data: org } = await supabase.rpc("get_org_safe_data").single();
       if (!org) throw new Error("Organisation introuvable");
 
       // Generate PDF as base64
