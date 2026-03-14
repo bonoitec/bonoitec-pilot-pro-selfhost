@@ -132,7 +132,7 @@ const Invoices = () => {
     setPreviewOpen(true);
     setPreviewUrl(null);
     try {
-      const { data: org } = await supabase.from("organizations").select("*").single();
+      const { data: org } = await supabase.rpc("get_org_safe_data").single();
       if (!org) return;
       const url = await generatePDF(org, buildPdfParams(inv), { preview: true });
       setPreviewUrl(url as string);
