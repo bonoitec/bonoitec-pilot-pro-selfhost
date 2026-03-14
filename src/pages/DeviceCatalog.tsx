@@ -96,6 +96,7 @@ export default function DeviceCatalog() {
         release_year: form.release_year ? parseInt(form.release_year) : null,
         storage_variants: storageArr,
         color_variants: colorArr,
+        organization_id: orgId!,
       };
       if (editingId) {
         const { error } = await supabase.from("device_catalog").update(payload).eq("id", editingId);
