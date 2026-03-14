@@ -145,7 +145,7 @@ const Invoices = () => {
 
   const downloadFromPreview = async () => {
     if (!previewInv) return;
-    const { data: org } = await supabase.from("organizations").select("*").single();
+    const { data: org } = await supabase.rpc("get_org_safe_data").single();
     if (!org) return;
     await generatePDF(org, buildPdfParams(previewInv));
   };
