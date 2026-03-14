@@ -154,6 +154,7 @@ export type Database = {
           is_active: boolean
           model: string
           model_number: string | null
+          organization_id: string
           release_year: number | null
           storage_variants: Json | null
           updated_at: string
@@ -168,6 +169,7 @@ export type Database = {
           is_active?: boolean
           model: string
           model_number?: string | null
+          organization_id: string
           release_year?: number | null
           storage_variants?: Json | null
           updated_at?: string
@@ -182,11 +184,20 @@ export type Database = {
           is_active?: boolean
           model?: string
           model_number?: string | null
+          organization_id?: string
           release_year?: number | null
           storage_variants?: Json | null
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "device_catalog_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       devices: {
         Row: {

@@ -49,6 +49,16 @@ export default function DeviceCatalog() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState(emptyForm);
 
+  // Fetch user's organization_id
+  const { data: orgId } = useQuery({
+    queryKey: ["user-org-id"],
+    queryFn: async () => {
+      const { data, error } = await supabase.rpc("get_user_org_id");
+      if (error) throw error;
+      return data as string;
+    },
+  });
+
   const { data: catalog = [], isLoading } = useQuery({
     queryKey: ["device-catalog-admin"],
     queryFn: async () => {
@@ -86,6 +96,7 @@ export default function DeviceCatalog() {
         release_year: form.release_year ? parseInt(form.release_year) : null,
         storage_variants: storageArr,
         color_variants: colorArr,
+        organization_id: orgId!,
       };
       if (editingId) {
         const { error } = await supabase.from("device_catalog").update(payload).eq("id", editingId);
