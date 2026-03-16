@@ -252,6 +252,9 @@ export function CustomerChat({ trackingCode, repairId }: CustomerChatProps) {
                             minute: "2-digit",
                           })}
                         </span>
+                        {isCustomer && (
+                          <ReadReceipt isRead={!!msg.is_read} readAt={msg.read_at} createdAt={msg.created_at} />
+                        )}
                       </div>
                     </div>
                   </div>
