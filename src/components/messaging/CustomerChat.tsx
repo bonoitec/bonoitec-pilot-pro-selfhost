@@ -5,6 +5,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Send, User, Wrench, Bot, MessageSquare } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { normalizeMessages, upsertMessage } from "@/components/messaging/message-utils";
+import { ReadReceipt } from "@/components/messaging/ReadReceipt";
 
 interface CustomerChatProps {
   trackingCode: string;
@@ -19,6 +20,7 @@ interface Message {
   content: string;
   channel?: string;
   is_read?: boolean;
+  read_at?: string | null;
   created_at: string;
 }
 
@@ -79,6 +81,27 @@ export function CustomerChat({ trackingCode, repairId }: CustomerChatProps) {
     const interval = setInterval(fetchMessages, 8000);
     return () => clearInterval(interval);
   }, [normalizedTrackingCode]);
+
+  // Mark technician messages as read when the customer views them
+  useEffect(() => {
+    const hasUnread = messages.some(
+      (m) => m.sender_type === "technician" && !m.is_read
+    );
+    if (!hasUnread) return;
+
+    supabase.rpc("mark_messages_read_by_tracking", {
+      _tracking_code: normalizedTrackingCode,
+      _sender_type: "technician",
+    } as any).then(() => {
+      setMessages((current) =>
+        current.map((m) =>
+          m.sender_type === "technician" && !m.is_read
+            ? { ...m, is_read: true, read_at: new Date().toISOString() }
+            : m
+        )
+      );
+    });
+  }, [messages, normalizedTrackingCode]);
 
   useEffect(() => {
     if (!resolvedRepairId) return;
@@ -229,6 +252,9 @@ export function CustomerChat({ trackingCode, repairId }: CustomerChatProps) {
                             minute: "2-digit",
                           })}
                         </span>
+                        {isCustomer && (
+                          <ReadReceipt isRead={!!msg.is_read} readAt={msg.read_at} createdAt={msg.created_at} />
+                        )}
                       </div>
                     </div>
                   </div>

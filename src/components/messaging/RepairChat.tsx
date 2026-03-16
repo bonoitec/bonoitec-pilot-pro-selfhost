@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Send, User, Wrench, Bot } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { normalizeMessages, upsertMessage } from "@/components/messaging/message-utils";
+import { ReadReceipt } from "@/components/messaging/ReadReceipt";
 
 interface RepairChatProps {
   repairId: string;
@@ -23,6 +24,7 @@ interface Message {
   content: string;
   channel: string;
   is_read: boolean;
+  read_at: string | null;
   created_at: string;
 }
 
@@ -71,15 +73,16 @@ export function RepairChat({ repairId, organizationId, compact = false }: Repair
 
     if (unreadIds.length === 0) return;
 
+    const now = new Date().toISOString();
     supabase
       .from("repair_messages")
-      .update({ is_read: true })
+      .update({ is_read: true, read_at: now } as any)
       .in("id", unreadIds)
       .then(({ error }) => {
         if (!error) {
           qc.setQueryData<Message[]>(queryKey, (current = []) =>
             current.map((message) =>
-              unreadIds.includes(message.id) ? { ...message, is_read: true } : message
+              unreadIds.includes(message.id) ? { ...message, is_read: true, read_at: now } : message
             )
           );
           qc.invalidateQueries({ queryKey: ["all-messages"] });
@@ -165,6 +168,7 @@ export function RepairChat({ repairId, organizationId, compact = false }: Repair
         sender_name: "Technicien",
         channel: "internal",
         is_read: true,
+        read_at: null,
         content: trimmed,
         created_at: new Date().toISOString(),
       };
@@ -257,6 +261,7 @@ export function RepairChat({ repairId, organizationId, compact = false }: Repair
                           minute: "2-digit",
                         })}
                       </span>
+                      {isTech && <ReadReceipt isRead={msg.is_read} readAt={msg.read_at} createdAt={msg.created_at} />}
                     </div>
                   </div>
                 </div>

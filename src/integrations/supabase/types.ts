@@ -781,6 +781,7 @@ export type Database = {
           id: string
           is_read: boolean
           organization_id: string
+          read_at: string | null
           repair_id: string
           sender_name: string | null
           sender_type: string
@@ -792,6 +793,7 @@ export type Database = {
           id?: string
           is_read?: boolean
           organization_id: string
+          read_at?: string | null
           repair_id: string
           sender_name?: string | null
           sender_type: string
@@ -803,6 +805,7 @@ export type Database = {
           id?: string
           is_read?: boolean
           organization_id?: string
+          read_at?: string | null
           repair_id?: string
           sender_name?: string | null
           sender_type?: string
@@ -1193,6 +1196,10 @@ export type Database = {
           _user_id: string
         }
         Returns: boolean
+      }
+      mark_messages_read_by_tracking: {
+        Args: { _sender_type?: string; _tracking_code: string }
+        Returns: Json
       }
       send_customer_message: {
         Args: {
