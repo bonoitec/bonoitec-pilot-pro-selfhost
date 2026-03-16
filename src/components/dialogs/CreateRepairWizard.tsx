@@ -302,7 +302,7 @@ export function CreateRepairWizard({ open, onOpenChange }: Props) {
       if (rErr) throw rErr;
       return repair;
     },
-    onSuccess: (repair) => {
+    onSuccess: async (repair) => {
       toast({ title: "Réparation créée avec succès" });
       qc.invalidateQueries({ queryKey: ["repairs"] });
       qc.invalidateQueries({ queryKey: ["dashboard-repairs"] });
@@ -310,6 +310,32 @@ export function CreateRepairWizard({ open, onOpenChange }: Props) {
       qc.invalidateQueries({ queryKey: ["devices-for-client"] });
       setCreatedRepair(repair);
       setStep(8); // Go to summary
+
+      // Send creation email to client if they have an email
+      const clientEmail = repair.clients?.email || newClient.email.trim();
+      if (clientEmail) {
+        try {
+          const deviceLabel = repair.devices ? `${repair.devices.brand} ${repair.devices.model}` : `${device.brand} ${device.model}`;
+          const trackingUrl = repair.tracking_code ? `https://bonoitec-pilot-pro.lovable.app/repair/${repair.tracking_code}` : "";
+          await supabase.functions.invoke("send-email", {
+            body: {
+              template: "repair_created",
+              to: clientEmail,
+              data: {
+                clientName: repair.clients?.name || newClient.name,
+                reference: repair.reference,
+                device: deviceLabel,
+                issue: repair.issue,
+                trackingUrl,
+              },
+              organization_id: repair.organization_id,
+              repair_id: repair.id,
+            },
+          });
+        } catch (emailErr) {
+          console.error("Email de création échoué:", emailErr);
+        }
+      }
     },
     onError: (e: Error) => toast({ title: "Erreur", description: e.message, variant: "destructive" }),
   });

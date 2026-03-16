@@ -201,6 +201,26 @@ const templates: Record<string, (data: Record<string, string>, orgContact?: { ph
     `, "Bienvenue ! Votre compte BonoitecPilot est prêt.", oc),
   }),
 
+  repair_created: (d, oc) => ({
+    subject: `Réparation enregistrée — ${d.reference}`,
+    html: emailLayout(`
+      <div class="body">
+        <h2>📱 Votre réparation a été enregistrée</h2>
+        <p>Bonjour ${d.clientName || ""},</p>
+        <p>Nous avons bien enregistré votre demande de réparation. Voici les détails :</p>
+        <div class="info-box">
+          <p><strong>Référence :</strong> ${d.reference}</p>
+          <p><strong>Appareil :</strong> ${d.device || "—"}</p>
+          <p><strong>Problème :</strong> ${d.issue || "—"}</p>
+        </div>
+        <p>Vous pouvez suivre l'avancement de votre réparation en temps réel grâce au lien ci-dessous :</p>
+        ${d.trackingUrl ? `<a href="${d.trackingUrl}" class="btn">Suivre ma réparation</a>` : ""}
+        <p>Nous vous tiendrons informé(e) à chaque étape.</p>
+        <p>Cordialement,<br><strong>L'équipe BonoitecPilot</strong></p>
+      </div>
+    `, `Réparation ${d.reference} enregistrée — suivez son avancement`, oc),
+  }),
+
   login_alert: (d, oc) => ({
     subject: "🔐 Connexion détectée sur votre compte BonoitecPilot",
     html: emailLayout(`
