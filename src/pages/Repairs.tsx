@@ -150,8 +150,8 @@ const Repairs = () => {
           <>
             <TabsContent value="kanban" className="mt-4">
               <DragDropContext onDragEnd={onDragEnd}>
-                <div className="overflow-x-auto pb-4">
-                  <div className="flex gap-3" style={{ minWidth: `${statusOrder.length * 180}px` }}>
+                <div className="">
+                  <div className="grid grid-cols-6 gap-3">
                     {statusOrder.map((status) => {
                       const items = filtered.filter((r) => r.status === status);
                       return (
