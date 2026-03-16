@@ -103,15 +103,15 @@ export function getCheckedUpTo(dbStatus: string): number {
 /** Human-readable label for the top status banner on the tracking page */
 export function getTrackingBannerLabel(dbStatus: string): string {
   const map: Record<string, string> = {
-    nouveau: "Reçu – en attente de diagnostic",
-    diagnostic: "Diagnostic en cours",
-    devis_en_attente: "Devis envoyé – en attente de validation",
-    devis_valide: "Devis validé",
+    nouveau: "Réparation reçue",
+    diagnostic: "Réparation reçue",
+    devis_en_attente: "Réparation reçue",
+    devis_valide: "Réparation reçue",
     en_cours: "Pièce à commander",
-    en_attente_piece: "Pièce en attente de livraison",
-    pret_reparation: "Pièce reçue – prêt pour réparation",
-    reparation_en_cours: "Réparation en cours",
-    termine: "Réparation terminée",
+    en_attente_piece: "En attente de livraison",
+    pret_reparation: "Débuté",
+    reparation_en_cours: "Débuté",
+    termine: "Terminé",
     pret_a_recuperer: "Restitué",
   };
   return map[dbStatus] ?? "En cours";
