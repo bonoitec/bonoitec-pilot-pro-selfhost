@@ -22,12 +22,8 @@ export const statusOrder = [
 
 export const statusColors: Record<string, string> = {
   nouveau: "bg-info/10 text-info border-info/20",
-  diagnostic: "bg-warning/10 text-warning border-warning/20",
-  devis_en_attente: "bg-accent text-accent-foreground border-accent-foreground/20",
-  devis_valide: "bg-success/10 text-success border-success/20",
   en_cours: "bg-primary/10 text-primary border-primary/20",
   en_attente_piece: "bg-muted text-muted-foreground border-border",
-  pret_reparation: "bg-info/10 text-info border-info/20",
   reparation_en_cours: "bg-warning/10 text-warning border-warning/20",
   termine: "bg-success/10 text-success border-success/20",
   pret_a_recuperer: "bg-accent text-accent-foreground border-accent-foreground/20",
