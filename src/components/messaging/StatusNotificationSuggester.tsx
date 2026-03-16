@@ -81,6 +81,7 @@ export function StatusNotificationSuggester({ repair, newStatus, onDismiss }: Pr
             status: newStatus,
             statusLabel: statusLabels[newStatus] || newStatus,
             message: message.trim(),
+            trackingUrl: repair.tracking_code ? `https://bonoitec-pilot-pro.lovable.app/repair/${repair.tracking_code}` : "",
           },
           organizationId: repair.organization_id,
           repairId: repair.id,
