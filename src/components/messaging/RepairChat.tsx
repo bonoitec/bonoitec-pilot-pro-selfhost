@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Send, User, Wrench, Bot } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { normalizeMessages, upsertMessage } from "@/components/messaging/message-utils";
+import { ReadReceipt } from "@/components/messaging/ReadReceipt";
 
 interface RepairChatProps {
   repairId: string;
