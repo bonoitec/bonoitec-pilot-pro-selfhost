@@ -24,6 +24,7 @@ export function CustomerChat({ trackingCode }: CustomerChatProps) {
   const [newMessage, setNewMessage] = useState("");
   const [sending, setSending] = useState(false);
   const [customerName, setCustomerName] = useState("");
+  const [nameConfirmed, setNameConfirmed] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   const fetchMessages = async () => {
@@ -119,16 +120,29 @@ export function CustomerChat({ trackingCode }: CustomerChatProps) {
           )}
         </ScrollArea>
 
-        {!customerName && (
-          <div className="mb-2">
+        {!nameConfirmed && (
+          <div className="mb-2 flex gap-2">
             <input
               type="text"
               placeholder="Votre nom..."
               value={customerName}
               onChange={(e) => setCustomerName(e.target.value.slice(0, 100))}
               maxLength={100}
-              className="w-full text-sm rounded-lg border border-input bg-background px-3 py-2 placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+              className="flex-1 text-sm rounded-lg border border-input bg-background px-3 py-2 placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && customerName.trim()) {
+                  setNameConfirmed(true);
+                }
+              }}
             />
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => { if (customerName.trim()) setNameConfirmed(true); }}
+              disabled={!customerName.trim()}
+            >
+              OK
+            </Button>
           </div>
         )}
 
