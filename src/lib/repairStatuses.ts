@@ -2,15 +2,11 @@
 // DB enum values remain unchanged; only display labels are updated
 
 export const statusLabels: Record<string, string> = {
-  nouveau: "Reçu",
-  diagnostic: "Diagnostic",
-  devis_en_attente: "Devis en attente",
-  devis_valide: "Devis validé",
+  nouveau: "Réparation reçue",
   en_cours: "Pièce à commander",
-  en_attente_piece: "En attente pièce",
-  pret_reparation: "Prêt pour réparation",
-  reparation_en_cours: "Réparation en cours",
-  termine: "Terminée",
+  en_attente_piece: "En attente de livraison",
+  reparation_en_cours: "Débuté",
+  termine: "Terminé",
   pret_a_recuperer: "Restitué",
 };
 
