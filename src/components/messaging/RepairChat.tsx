@@ -81,7 +81,7 @@ export function RepairChat({ repairId, organizationId, compact = false }: Repair
         if (!error) {
           qc.setQueryData<Message[]>(queryKey, (current = []) =>
             current.map((message) =>
-              unreadIds.includes(message.id) ? { ...message, is_read: true } : message
+              unreadIds.includes(message.id) ? { ...message, is_read: true, read_at: now } : message
             )
           );
           qc.invalidateQueries({ queryKey: ["all-messages"] });
