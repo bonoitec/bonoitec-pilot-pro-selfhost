@@ -72,9 +72,10 @@ export function RepairChat({ repairId, organizationId, compact = false }: Repair
 
     if (unreadIds.length === 0) return;
 
+    const now = new Date().toISOString();
     supabase
       .from("repair_messages")
-      .update({ is_read: true })
+      .update({ is_read: true, read_at: now } as any)
       .in("id", unreadIds)
       .then(({ error }) => {
         if (!error) {
