@@ -1216,6 +1216,10 @@ export type Database = {
         | "en_attente_piece"
         | "termine"
         | "pret_a_recuperer"
+        | "devis_en_attente"
+        | "devis_valide"
+        | "pret_reparation"
+        | "reparation_en_cours"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1354,6 +1358,10 @@ export const Constants = {
         "en_attente_piece",
         "termine",
         "pret_a_recuperer",
+        "devis_en_attente",
+        "devis_valide",
+        "pret_reparation",
+        "reparation_en_cours",
       ],
     },
   },

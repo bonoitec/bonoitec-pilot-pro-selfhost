@@ -1,8 +1,7 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useLayoutEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { Send, User, Wrench, Bot } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { MessageSquare } from "lucide-react";
@@ -25,7 +24,7 @@ export function CustomerChat({ trackingCode }: CustomerChatProps) {
   const [sending, setSending] = useState(false);
   const [customerName, setCustomerName] = useState("");
   const [nameConfirmed, setNameConfirmed] = useState(false);
-  const scrollRef = useRef<HTMLDivElement>(null);
+  const bottomRef = useRef<HTMLDivElement>(null);
 
   const fetchMessages = async () => {
     const { data } = await supabase.rpc("get_repair_messages_by_tracking", {
@@ -42,8 +41,10 @@ export function CustomerChat({ trackingCode }: CustomerChatProps) {
     return () => clearInterval(interval);
   }, [trackingCode]);
 
-  useEffect(() => {
-    scrollRef.current?.scrollIntoView({ behavior: "smooth" });
+  useLayoutEffect(() => {
+    if (bottomRef.current) {
+      bottomRef.current.scrollIntoView({ behavior: "smooth" });
+    }
   }, [messages]);
 
   const handleSend = async () => {
@@ -83,13 +84,13 @@ export function CustomerChat({ trackingCode }: CustomerChatProps) {
         </CardTitle>
       </CardHeader>
       <CardContent className="px-4 pb-3">
-        <ScrollArea className="h-[300px] mb-3">
+        <div className="h-[280px] overflow-y-auto mb-3 border rounded-lg p-2 bg-muted/20">
           {messages.length === 0 ? (
             <p className="text-sm text-muted-foreground text-center py-8">
               Aucun message pour le moment.
             </p>
           ) : (
-            <div className="space-y-3 pr-2">
+            <div className="space-y-3">
               {messages.map((msg) => {
                 const Icon = senderIcons[msg.sender_type] || Bot;
                 const isCustomer = msg.sender_type === "customer";
@@ -101,24 +102,26 @@ export function CustomerChat({ trackingCode }: CustomerChatProps) {
                       <Icon className="h-3.5 w-3.5" />
                     </div>
                     <div className={`max-w-[75%] ${isCustomer ? "text-right" : ""}`}>
-                      <div className={`rounded-2xl px-3 py-2 text-sm ${
+                      <div className={`rounded-2xl px-3 py-2 text-sm inline-block text-left ${
                         isCustomer
                           ? "bg-primary text-primary-foreground rounded-br-md"
                           : "bg-muted text-foreground rounded-bl-md"
                       }`}>
                         {msg.content}
                       </div>
-                      <span className="text-[10px] text-muted-foreground px-1">
-                        {msg.sender_name || (isCustomer ? "Vous" : "Technicien")} · {new Date(msg.created_at).toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" })}
-                      </span>
+                      <div className={`flex items-center gap-1 mt-0.5 px-1 ${isCustomer ? "justify-end" : ""}`}>
+                        <span className="text-[10px] text-muted-foreground">
+                          {msg.sender_name || (isCustomer ? "Vous" : "Technicien")} · {new Date(msg.created_at).toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" })}
+                        </span>
+                      </div>
                     </div>
                   </div>
                 );
               })}
-              <div ref={scrollRef} />
+              <div ref={bottomRef} />
             </div>
           )}
-        </ScrollArea>
+        </div>
 
         {!nameConfirmed && (
           <div className="mb-2 flex gap-2">

@@ -12,16 +12,32 @@ import { statusLabels } from "@/lib/repairStatuses";
 
 const defaultMessages: Record<string, { subject: string; body: string }> = {
   diagnostic: {
-    subject: "Réparation débutée",
-    body: "Bonjour,\n\nLa réparation de votre {{device}} a bien débuté.\nRéférence : {{reference}}\n\nNous vous tiendrons informé(e) de l'avancement.\n\nCordialement,\nL'équipe BonoitecPilot",
+    subject: "Diagnostic en cours",
+    body: "Bonjour,\n\nVotre {{device}} est en cours de diagnostic.\nRéférence : {{reference}}\n\nNous vous informerons des résultats.\n\nCordialement,\nL'équipe BonoitecPilot",
+  },
+  devis_en_attente: {
+    subject: "Devis envoyé",
+    body: "Bonjour,\n\nUn devis vous a été envoyé pour la réparation de votre {{device}}.\nRéférence : {{reference}}\n\nMerci de le valider pour que nous puissions poursuivre.\n\nCordialement,\nL'équipe BonoitecPilot",
+  },
+  devis_valide: {
+    subject: "Devis validé",
+    body: "Bonjour,\n\nVotre devis pour la réparation de votre {{device}} a été validé.\nRéférence : {{reference}}\n\nNous allons préparer l'intervention.\n\nCordialement,\nL'équipe BonoitecPilot",
   },
   en_cours: {
     subject: "Pièces à commander",
-    body: "Bonjour,\n\nUne ou plusieurs pièces doivent être commandées pour la réparation de votre {{device}}.\nRéférence : {{reference}}\n\nNous vous informerons dès leur réception pour reprendre l'intervention.\n\nCordialement,\nL'équipe BonoitecPilot",
+    body: "Bonjour,\n\nUne ou plusieurs pièces doivent être commandées pour la réparation de votre {{device}}.\nRéférence : {{reference}}\n\nNous vous informerons dès leur réception.\n\nCordialement,\nL'équipe BonoitecPilot",
   },
   en_attente_piece: {
-    subject: "Livraison en attente",
-    body: "Bonjour,\n\nLa réparation de votre {{device}} est en attente de réception d'une pièce.\nRéférence : {{reference}}\n\nNous reprendrons dès que possible.\n\nCordialement,\nL'équipe BonoitecPilot",
+    subject: "En attente de pièce",
+    body: "Bonjour,\n\nLa commande de pièces pour votre {{device}} est en cours de livraison.\nRéférence : {{reference}}\n\nNous reprendrons dès réception.\n\nCordialement,\nL'équipe BonoitecPilot",
+  },
+  pret_reparation: {
+    subject: "Prêt pour réparation",
+    body: "Bonjour,\n\nToutes les pièces nécessaires sont disponibles. La réparation de votre {{device}} va bientôt débuter.\nRéférence : {{reference}}\n\nCordialement,\nL'équipe BonoitecPilot",
+  },
+  reparation_en_cours: {
+    subject: "Réparation en cours",
+    body: "Bonjour,\n\nLa réparation de votre {{device}} a débuté.\nRéférence : {{reference}}\n\nNous vous tiendrons informé(e) de l'avancement.\n\nCordialement,\nL'équipe BonoitecPilot",
   },
   termine: {
     subject: "Réparation terminée",

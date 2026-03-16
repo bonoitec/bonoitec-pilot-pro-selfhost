@@ -3,19 +3,34 @@ import { useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Zap, Clock, CheckCircle2, Search as SearchIcon, Package, Wrench, Truck } from "lucide-react";
+import { Zap, Clock, CheckCircle2, Search as SearchIcon, Package, Wrench, Truck, FileText, ShieldCheck, PlayCircle, Inbox } from "lucide-react";
 import { CustomerChat } from "@/components/messaging/CustomerChat";
 
 const statusConfig: Record<string, { label: string; color: string; emoji: string; icon: any }> = {
-  nouveau: { label: "Reçu", color: "bg-muted text-muted-foreground", emoji: "⚪", icon: Clock },
-  diagnostic: { label: "Débuté", color: "bg-warning/10 text-warning border-warning/20", emoji: "🟡", icon: Wrench },
-  en_cours: { label: "Pièces à commander", color: "bg-primary/10 text-primary border-primary/20", emoji: "🔵", icon: Package },
-  en_attente_piece: { label: "Livraison en attente", color: "bg-muted text-muted-foreground border-border", emoji: "🟠", icon: Truck },
-  termine: { label: "Terminé", color: "bg-success/10 text-success border-success/20", emoji: "🟢", icon: CheckCircle2 },
-  pret_a_recuperer: { label: "Restitué", color: "bg-success/10 text-success border-success/20", emoji: "✅", icon: CheckCircle2 },
+  nouveau: { label: "Reçu", color: "bg-muted text-muted-foreground", emoji: "📥", icon: Inbox },
+  diagnostic: { label: "Diagnostic", color: "bg-warning/10 text-warning border-warning/20", emoji: "🔍", icon: SearchIcon },
+  devis_en_attente: { label: "Devis en attente", color: "bg-accent text-accent-foreground", emoji: "📋", icon: FileText },
+  devis_valide: { label: "Devis validé", color: "bg-success/10 text-success", emoji: "✅", icon: ShieldCheck },
+  en_cours: { label: "Pièce à commander", color: "bg-primary/10 text-primary border-primary/20", emoji: "🛒", icon: Package },
+  en_attente_piece: { label: "En attente pièce", color: "bg-muted text-muted-foreground border-border", emoji: "📦", icon: Truck },
+  pret_reparation: { label: "Prêt pour réparation", color: "bg-info/10 text-info", emoji: "🔧", icon: Wrench },
+  reparation_en_cours: { label: "Réparation en cours", color: "bg-warning/10 text-warning", emoji: "⚙️", icon: PlayCircle },
+  termine: { label: "Terminée", color: "bg-success/10 text-success border-success/20", emoji: "🟢", icon: CheckCircle2 },
+  pret_a_recuperer: { label: "Restitué", color: "bg-success/10 text-success border-success/20", emoji: "🏁", icon: CheckCircle2 },
 };
 
-const statusOrder = ["nouveau", "diagnostic", "en_cours", "en_attente_piece", "termine", "pret_a_recuperer"];
+const timelineStatuses = [
+  "nouveau",
+  "diagnostic",
+  "devis_en_attente",
+  "devis_valide",
+  "en_cours",
+  "en_attente_piece",
+  "pret_reparation",
+  "reparation_en_cours",
+  "termine",
+  "pret_a_recuperer",
+];
 
 export default function RepairTracking() {
   const { code } = useParams<{ code: string }>();
@@ -65,7 +80,18 @@ export default function RepairTracking() {
   }
 
   const currentStatus = statusConfig[repair.status] || statusConfig.nouveau;
-  const currentIndex = statusOrder.indexOf(repair.status);
+  const currentIndex = timelineStatuses.indexOf(repair.status);
+
+  // Simplify timeline for client view: show only relevant passed/current steps
+  const visibleStatuses = timelineStatuses.filter((s, i) => {
+    // Always show current and completed steps
+    if (i <= currentIndex) return true;
+    // Show next step
+    if (i === currentIndex + 1) return true;
+    // Show key milestones
+    if (["termine", "pret_a_recuperer"].includes(s)) return true;
+    return false;
+  });
 
   return (
     <div className="min-h-screen bg-background">
@@ -98,23 +124,21 @@ export default function RepairTracking() {
         <Card>
           <CardContent className="p-4">
             <div className="space-y-3">
-              {statusOrder.filter(s => s !== "pret_a_recuperer").map((s, i) => {
+              {visibleStatuses.map((s, i) => {
                 const cfg = statusConfig[s];
-                const isCompleted = i <= currentIndex;
-                const isCurrent = i === currentIndex;
+                const globalIdx = timelineStatuses.indexOf(s);
+                const isCompleted = globalIdx < currentIndex;
+                const isCurrent = globalIdx === currentIndex;
                 return (
                   <div key={s} className="flex items-center gap-3">
                     <div className={`flex h-8 w-8 items-center justify-center rounded-full text-xs font-bold shrink-0 ${
                       isCurrent ? "bg-primary text-primary-foreground" : isCompleted ? "bg-primary/20 text-primary" : "bg-muted text-muted-foreground"
                     }`}>
-                      {isCompleted ? "✓" : i + 1}
+                      {isCompleted ? "✓" : isCurrent ? "●" : globalIdx + 1}
                     </div>
-                    <span className={`text-sm ${isCurrent ? "font-semibold" : isCompleted ? "text-foreground" : "text-muted-foreground"}`}>
+                    <span className={`text-sm flex-1 ${isCurrent ? "font-semibold" : isCompleted ? "text-foreground" : "text-muted-foreground"}`}>
                       {cfg.label}
                     </span>
-                    {i < statusOrder.length - 2 && (
-                      <div className={`flex-1 h-px ${isCompleted ? "bg-primary/30" : "bg-border"}`} />
-                    )}
                   </div>
                 );
               })}
