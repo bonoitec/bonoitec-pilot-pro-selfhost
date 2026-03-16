@@ -261,6 +261,7 @@ export function RepairChat({ repairId, organizationId, compact = false }: Repair
                           minute: "2-digit",
                         })}
                       </span>
+                      {isTech && <ReadReceipt isRead={msg.is_read} readAt={msg.read_at} createdAt={msg.created_at} />}
                     </div>
                   </div>
                 </div>
