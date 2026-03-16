@@ -83,7 +83,7 @@ export function CustomerChat({ trackingCode }: CustomerChatProps) {
         </CardTitle>
       </CardHeader>
       <CardContent className="px-4 pb-3">
-        <ScrollArea className="h-[250px] mb-3">
+        <ScrollArea className="h-[300px] mb-3">
           {messages.length === 0 ? (
             <p className="text-sm text-muted-foreground text-center py-8">
               Aucun message pour le moment.
