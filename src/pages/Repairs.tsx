@@ -160,7 +160,7 @@ const Repairs = () => {
                             <div
                               ref={provided.innerRef}
                               {...provided.droppableProps}
-                              className={`space-y-2 min-h-[120px] rounded-lg p-2 transition-all duration-300 flex-shrink-0 w-[180px] ${
+                              className={`space-y-2 min-h-[120px] rounded-lg p-2 transition-all duration-300 ${
                                 snapshot.isDraggingOver
                                   ? "bg-primary/5 ring-2 ring-primary/20 scale-[1.01]"
                                   : "hover:bg-muted/30"
