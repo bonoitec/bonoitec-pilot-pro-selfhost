@@ -59,7 +59,7 @@ export function CustomerChat({ trackingCode, repairId }: CustomerChatProps) {
       return;
     }
 
-    const normalized = normalizeMessages((Array.isArray(data) ? data : []) as Message[]);
+    const normalized = normalizeMessages((Array.isArray(data) ? data : []) as unknown as Message[]);
     setMessages(normalized);
 
     const messageWithRepair = normalized.find((message) => !!message.repair_id);
