@@ -1,4 +1,4 @@
-import { useState, forwardRef } from "react";
+import { useState, forwardRef, useEffect, useMemo } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
@@ -8,7 +8,6 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Search, MessageSquare, User } from "lucide-react";
 import { RepairChat } from "@/components/messaging/RepairChat";
-import { useEffect } from "react";
 
 interface ConversationSummary {
   repair_id: string;
@@ -20,84 +19,161 @@ interface ConversationSummary {
   unread_count: number;
 }
 
+interface MessageRow {
+  id: string;
+  repair_id: string;
+  content: string;
+  sender_type: string;
+  is_read: boolean;
+  created_at: string;
+}
+
 const Messages = forwardRef<HTMLDivElement>(function Messages(_props, ref) {
   const [search, setSearch] = useState("");
   const [selectedRepairId, setSelectedRepairId] = useState<string | null>(null);
   const [selectedOrgId, setSelectedOrgId] = useState<string>("");
   const qc = useQueryClient();
 
-  const { data: conversations = [], isLoading } = useQuery({
+  const {
+    data: conversations = [],
+    isLoading,
+    error,
+  } = useQuery<ConversationSummary[], Error>({
     queryKey: ["all-messages"],
     queryFn: async () => {
-      // Get all repairs that have messages
-      const { data: messages, error } = await supabase
+      const { data: messageRows, error: messagesError } = await supabase
         .from("repair_messages")
-        .select("repair_id, content, sender_type, is_read, created_at")
-        .order("created_at", { ascending: false });
-      if (error) throw error;
+        .select("id, repair_id, content, sender_type, is_read, created_at")
+        .order("created_at", { ascending: false })
+        .order("id", { ascending: false });
 
-      // Group by repair_id
-      const repairMap = new Map<string, { messages: typeof messages }>();
-      for (const msg of messages || []) {
-        if (!repairMap.has(msg.repair_id)) {
-          repairMap.set(msg.repair_id, { messages: [] });
+      if (messagesError) throw messagesError;
+
+      const uniqueById = new Map<string, MessageRow>();
+      for (const row of (messageRows ?? []) as MessageRow[]) {
+        if (!uniqueById.has(row.id)) {
+          uniqueById.set(row.id, row);
         }
-        repairMap.get(msg.repair_id)!.messages.push(msg);
       }
 
-      // Fetch repair details for those repair IDs
+      const repairMap = new Map<string, MessageRow[]>();
+      for (const message of uniqueById.values()) {
+        if (!repairMap.has(message.repair_id)) {
+          repairMap.set(message.repair_id, []);
+        }
+        repairMap.get(message.repair_id)!.push(message);
+      }
+
       const repairIds = Array.from(repairMap.keys());
       if (repairIds.length === 0) return [];
 
-      const { data: repairs } = await supabase
+      const { data: repairs, error: repairsError } = await supabase
         .from("repairs")
         .select("id, reference, organization_id, clients(name)")
         .in("id", repairIds);
 
+      if (repairsError) throw repairsError;
+
       const summaries: ConversationSummary[] = [];
+
       for (const repair of repairs || []) {
         const group = repairMap.get(repair.id);
-        if (!group) continue;
-        const sorted = group.messages.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
-        const unread = sorted.filter(m => !m.is_read && m.sender_type === "customer").length;
+        if (!group || group.length === 0) continue;
+
+        const sorted = [...group].sort((a, b) => {
+          const dateDiff = new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+          if (dateDiff !== 0) return dateDiff;
+          return b.id.localeCompare(a.id);
+        });
+
+        const latest = sorted[0];
+        const lastMessage = latest?.content?.trim() || "";
+        if (!lastMessage) continue;
+
+        const unreadCount = sorted.filter(
+          (message) => !message.is_read && message.sender_type === "customer"
+        ).length;
+
         summaries.push({
           repair_id: repair.id,
           repair_reference: repair.reference,
           client_name: repair.clients?.name ?? "Client",
           organization_id: repair.organization_id,
-          last_message: sorted[0]?.content || "",
-          last_message_at: sorted[0]?.created_at || "",
-          unread_count: unread,
+          last_message: lastMessage,
+          last_message_at: latest.created_at,
+          unread_count: unreadCount,
         });
       }
 
-      return summaries.sort((a, b) =>
-        new Date(b.last_message_at).getTime() - new Date(a.last_message_at).getTime()
-      );
+      return summaries.sort((a, b) => {
+        const dateDiff = new Date(b.last_message_at).getTime() - new Date(a.last_message_at).getTime();
+        if (dateDiff !== 0) return dateDiff;
+        return b.repair_id.localeCompare(a.repair_id);
+      });
     },
+    staleTime: 15_000,
   });
 
-  // Realtime subscription for new messages
+  // Realtime subscription for new/updated messages
   useEffect(() => {
     const channel = supabase
       .channel("all-messages-realtime")
-      .on("postgres_changes", {
-        event: "INSERT",
-        schema: "public",
-        table: "repair_messages",
-      }, () => {
-        qc.invalidateQueries({ queryKey: ["all-messages"] });
-      })
+      .on(
+        "postgres_changes",
+        {
+          event: "INSERT",
+          schema: "public",
+          table: "repair_messages",
+        },
+        () => {
+          qc.invalidateQueries({ queryKey: ["all-messages"] });
+        }
+      )
+      .on(
+        "postgres_changes",
+        {
+          event: "UPDATE",
+          schema: "public",
+          table: "repair_messages",
+        },
+        () => {
+          qc.invalidateQueries({ queryKey: ["all-messages"] });
+        }
+      )
       .subscribe();
-    return () => { supabase.removeChannel(channel); };
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, [qc]);
 
-  const filtered = conversations.filter(
-    (c) =>
-      c.client_name.toLowerCase().includes(search.toLowerCase()) ||
-      c.repair_reference.toLowerCase().includes(search.toLowerCase()) ||
-      c.last_message.toLowerCase().includes(search.toLowerCase())
-  );
+  const filtered = useMemo(() => {
+    const term = search.trim().toLowerCase();
+    if (!term) return conversations;
+
+    return conversations.filter(
+      (conversation) =>
+        conversation.client_name.toLowerCase().includes(term) ||
+        conversation.repair_reference.toLowerCase().includes(term) ||
+        conversation.last_message.toLowerCase().includes(term)
+    );
+  }, [conversations, search]);
+
+  useEffect(() => {
+    if (filtered.length === 0) {
+      setSelectedRepairId(null);
+      setSelectedOrgId("");
+      return;
+    }
+
+    if (!selectedRepairId || !filtered.some((conversation) => conversation.repair_id === selectedRepairId)) {
+      setSelectedRepairId(filtered[0].repair_id);
+      setSelectedOrgId(filtered[0].organization_id);
+    }
+  }, [filtered, selectedRepairId]);
+
+  const selectedConversation =
+    conversations.find((conversation) => conversation.repair_id === selectedRepairId) ?? null;
 
   return (
     <div ref={ref} className="space-y-6 animate-fade-in">
@@ -106,9 +182,9 @@ const Messages = forwardRef<HTMLDivElement>(function Messages(_props, ref) {
         <p className="text-muted-foreground text-sm">Conversations avec vos clients</p>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4" style={{ height: "calc(100vh - 220px)" }}>
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-3 lg:h-[calc(100vh-220px)]">
         {/* Conversation list */}
-        <div className="lg:col-span-1 flex flex-col">
+        <div className="lg:col-span-1 flex min-h-[280px] flex-col lg:min-h-0">
           <div className="relative mb-3">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
@@ -118,10 +194,17 @@ const Messages = forwardRef<HTMLDivElement>(function Messages(_props, ref) {
               className="pl-9"
             />
           </div>
-          <ScrollArea className="flex-1">
+
+          <ScrollArea className="flex-1 rounded-md border border-border">
             {isLoading ? (
-              <div className="space-y-2">
-                {[1, 2, 3].map(i => <Skeleton key={i} className="h-16 w-full" />)}
+              <div className="space-y-2 p-2">
+                {[1, 2, 3].map((item) => (
+                  <Skeleton key={item} className="h-16 w-full" />
+                ))}
+              </div>
+            ) : error ? (
+              <div className="text-center py-12 text-sm text-destructive px-4">
+                Impossible de charger les conversations.
               </div>
             ) : filtered.length === 0 ? (
               <div className="text-center py-12 text-muted-foreground text-sm">
@@ -129,18 +212,16 @@ const Messages = forwardRef<HTMLDivElement>(function Messages(_props, ref) {
                 Aucune conversation
               </div>
             ) : (
-              <div className="space-y-1">
-                {filtered.map((conv) => (
+              <div className="space-y-1 p-2">
+                {filtered.map((conversation) => (
                   <Card
-                    key={conv.repair_id}
+                    key={conversation.repair_id}
                     className={`cursor-pointer transition-all hover:shadow-sm ${
-                      selectedRepairId === conv.repair_id
-                        ? "ring-2 ring-primary bg-primary/5"
-                        : ""
+                      selectedRepairId === conversation.repair_id ? "ring-2 ring-primary bg-primary/5" : ""
                     }`}
                     onClick={() => {
-                      setSelectedRepairId(conv.repair_id);
-                      setSelectedOrgId(conv.organization_id);
+                      setSelectedRepairId(conversation.repair_id);
+                      setSelectedOrgId(conversation.organization_id);
                     }}
                   >
                     <CardContent className="p-3">
@@ -149,26 +230,32 @@ const Messages = forwardRef<HTMLDivElement>(function Messages(_props, ref) {
                           <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-muted">
                             <User className="h-4 w-4 text-muted-foreground" />
                           </div>
+
                           <div className="min-w-0">
                             <div className="flex items-center gap-2">
-                              <p className="text-sm font-medium truncate">{conv.client_name}</p>
-                              {conv.unread_count > 0 && (
+                              <p className="text-sm font-medium truncate">{conversation.client_name}</p>
+                              {conversation.unread_count > 0 && (
                                 <Badge className="bg-primary text-primary-foreground text-[10px] h-5 px-1.5">
-                                  {conv.unread_count}
+                                  {conversation.unread_count}
                                 </Badge>
                               )}
                             </div>
-                            <p className="text-[10px] text-muted-foreground font-mono">{conv.repair_reference}</p>
+                            <p className="text-[10px] text-muted-foreground font-mono">{conversation.repair_reference}</p>
                           </div>
                         </div>
+
                         <span className="text-[10px] text-muted-foreground shrink-0">
-                          {conv.last_message_at
-                            ? new Date(conv.last_message_at).toLocaleDateString("fr-FR", { day: "2-digit", month: "short" })
+                          {conversation.last_message_at
+                            ? new Date(conversation.last_message_at).toLocaleDateString("fr-FR", {
+                                day: "2-digit",
+                                month: "short",
+                              })
                             : ""}
                         </span>
                       </div>
+
                       <p className="text-xs text-muted-foreground mt-1 line-clamp-1 pl-10">
-                        {conv.last_message}
+                        {conversation.last_message}
                       </p>
                     </CardContent>
                   </Card>
@@ -179,21 +266,20 @@ const Messages = forwardRef<HTMLDivElement>(function Messages(_props, ref) {
         </div>
 
         {/* Chat panel */}
-        <div className="lg:col-span-2">
-          {selectedRepairId ? (
-            <Card className="h-full flex flex-col">
+        <div className="lg:col-span-2 min-h-[420px] lg:min-h-0">
+          {selectedRepairId && selectedConversation ? (
+            <Card className="h-full min-h-0 flex flex-col overflow-hidden">
               <div className="border-b px-4 py-3">
                 <div className="flex items-center gap-2">
                   <MessageSquare className="h-4 w-4 text-primary" />
-                  <span className="text-sm font-medium">
-                    {conversations.find(c => c.repair_id === selectedRepairId)?.client_name}
-                  </span>
+                  <span className="text-sm font-medium">{selectedConversation.client_name}</span>
                   <Badge variant="outline" className="text-[10px] font-mono">
-                    {conversations.find(c => c.repair_id === selectedRepairId)?.repair_reference}
+                    {selectedConversation.repair_reference}
                   </Badge>
                 </div>
               </div>
-              <div className="flex-1">
+
+              <div className="flex-1 min-h-0">
                 <RepairChat repairId={selectedRepairId} organizationId={selectedOrgId} />
               </div>
             </Card>

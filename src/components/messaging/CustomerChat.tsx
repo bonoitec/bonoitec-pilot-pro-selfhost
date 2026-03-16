@@ -1,64 +1,168 @@
-import { useState, useEffect, useRef, useLayoutEffect } from "react";
+import { useEffect, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Send, User, Wrench, Bot } from "lucide-react";
+import { Send, User, Wrench, Bot, MessageSquare } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { MessageSquare } from "lucide-react";
+import { normalizeMessages, upsertMessage } from "@/components/messaging/message-utils";
 
 interface CustomerChatProps {
   trackingCode: string;
+  repairId?: string;
 }
 
 interface Message {
   id: string;
+  repair_id?: string;
   sender_type: string;
   sender_name: string | null;
   content: string;
+  channel?: string;
+  is_read?: boolean;
   created_at: string;
 }
 
-export function CustomerChat({ trackingCode }: CustomerChatProps) {
+interface SendCustomerMessageResponse {
+  success?: boolean;
+  error?: string;
+  repair_id?: string;
+  message?: Message;
+}
+
+export function CustomerChat({ trackingCode, repairId }: CustomerChatProps) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState("");
   const [sending, setSending] = useState(false);
   const [customerName, setCustomerName] = useState("");
   const [nameConfirmed, setNameConfirmed] = useState(false);
-  const bottomRef = useRef<HTMLDivElement>(null);
+  const [error, setError] = useState("");
+  const [resolvedRepairId, setResolvedRepairId] = useState<string | null>(repairId ?? null);
+
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const previousCountRef = useRef(0);
+
+  const normalizedTrackingCode = trackingCode.toUpperCase();
+
+  const scrollToBottom = (behavior: ScrollBehavior = "smooth") => {
+    const container = scrollContainerRef.current;
+    if (!container) return;
+    container.scrollTo({ top: container.scrollHeight, behavior });
+  };
 
   const fetchMessages = async () => {
-    const { data } = await supabase.rpc("get_repair_messages_by_tracking", {
-      _tracking_code: trackingCode.toUpperCase(),
+    const { data, error: fetchError } = await supabase.rpc("get_repair_messages_by_tracking", {
+      _tracking_code: normalizedTrackingCode,
     });
-    if (data && Array.isArray(data)) {
-      setMessages(data as unknown as Message[]);
+
+    if (fetchError) {
+      setError("Impossible de charger les messages pour le moment.");
+      return;
     }
+
+    const normalized = normalizeMessages((Array.isArray(data) ? data : []) as Message[]);
+    setMessages(normalized);
+
+    const messageWithRepair = normalized.find((message) => !!message.repair_id);
+    if (messageWithRepair?.repair_id) {
+      setResolvedRepairId(messageWithRepair.repair_id);
+    }
+
+    setError("");
   };
 
   useEffect(() => {
-    fetchMessages();
-    const interval = setInterval(fetchMessages, 5000);
-    return () => clearInterval(interval);
-  }, [trackingCode]);
+    setResolvedRepairId(repairId ?? null);
+  }, [repairId]);
 
-  useLayoutEffect(() => {
-    if (bottomRef.current) {
-      bottomRef.current.scrollIntoView({ behavior: "smooth" });
-    }
+  useEffect(() => {
+    fetchMessages();
+    const interval = setInterval(fetchMessages, 8000);
+    return () => clearInterval(interval);
+  }, [normalizedTrackingCode]);
+
+  useEffect(() => {
+    if (!resolvedRepairId) return;
+
+    const channel = supabase
+      .channel(`customer-chat-${resolvedRepairId}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "INSERT",
+          schema: "public",
+          table: "repair_messages",
+          filter: `repair_id=eq.${resolvedRepairId}`,
+        },
+        (payload) => {
+          const incoming = payload.new as Message;
+          setMessages((current) => upsertMessage(current, incoming));
+        }
+      )
+      .on(
+        "postgres_changes",
+        {
+          event: "UPDATE",
+          schema: "public",
+          table: "repair_messages",
+          filter: `repair_id=eq.${resolvedRepairId}`,
+        },
+        (payload) => {
+          const incoming = payload.new as Message;
+          setMessages((current) => upsertMessage(current, incoming));
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [resolvedRepairId]);
+
+  useEffect(() => {
+    const behavior: ScrollBehavior = previousCountRef.current === 0 ? "auto" : "smooth";
+    previousCountRef.current = messages.length;
+    scrollToBottom(behavior);
   }, [messages]);
 
   const handleSend = async () => {
-    if (!newMessage.trim()) return;
+    const trimmedMessage = newMessage.trim();
+    if (!trimmedMessage || sending) return;
+
     setSending(true);
-    const { data } = await supabase.rpc("send_customer_message", {
-      _tracking_code: trackingCode.toUpperCase(),
-      _content: newMessage.trim(),
+    setError("");
+
+    const { data, error: sendError } = await supabase.rpc("send_customer_message", {
+      _tracking_code: normalizedTrackingCode,
+      _content: trimmedMessage,
       _sender_name: customerName.trim() || "Client",
     });
-    if (data && typeof data === "object" && "success" in (data as any)) {
-      setNewMessage("");
-      fetchMessages();
+
+    if (sendError) {
+      setError("Envoi impossible, veuillez réessayer.");
+      setSending(false);
+      return;
     }
+
+    const response = (data ?? {}) as SendCustomerMessageResponse;
+
+    if (!response.success) {
+      setError(response.error || "Envoi impossible, veuillez réessayer.");
+      setSending(false);
+      return;
+    }
+
+    setNewMessage("");
+
+    if (response.repair_id) {
+      setResolvedRepairId(response.repair_id);
+    }
+
+    if (response.message) {
+      setMessages((current) => upsertMessage(current, response.message as Message));
+    } else {
+      await fetchMessages();
+    }
+
     setSending(false);
   };
 
@@ -83,8 +187,9 @@ export function CustomerChat({ trackingCode }: CustomerChatProps) {
           Messages
         </CardTitle>
       </CardHeader>
+
       <CardContent className="px-4 pb-3">
-        <div className="h-[280px] overflow-y-auto mb-3 border rounded-lg p-2 bg-muted/20">
+        <div ref={scrollContainerRef} className="h-[320px] sm:h-[360px] overflow-y-auto mb-3 border rounded-lg p-2 bg-muted/20">
           {messages.length === 0 ? (
             <p className="text-sm text-muted-foreground text-center py-8">
               Aucun message pour le moment.
@@ -94,34 +199,46 @@ export function CustomerChat({ trackingCode }: CustomerChatProps) {
               {messages.map((msg) => {
                 const Icon = senderIcons[msg.sender_type] || Bot;
                 const isCustomer = msg.sender_type === "customer";
+
                 return (
                   <div key={msg.id} className={`flex gap-2 ${isCustomer ? "flex-row-reverse" : "flex-row"}`}>
-                    <div className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full ${
-                      isCustomer ? "bg-primary text-primary-foreground" : "bg-muted text-foreground"
-                    }`}>
+                    <div
+                      className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full ${
+                        isCustomer ? "bg-primary text-primary-foreground" : "bg-muted text-foreground"
+                      }`}
+                    >
                       <Icon className="h-3.5 w-3.5" />
                     </div>
-                    <div className={`max-w-[75%] ${isCustomer ? "text-right" : ""}`}>
-                      <div className={`rounded-2xl px-3 py-2 text-sm inline-block text-left ${
-                        isCustomer
-                          ? "bg-primary text-primary-foreground rounded-br-md"
-                          : "bg-muted text-foreground rounded-bl-md"
-                      }`}>
+
+                    <div className={`max-w-[80%] ${isCustomer ? "text-right" : ""}`}>
+                      <div
+                        className={`rounded-2xl px-3 py-2 text-sm inline-block text-left ${
+                          isCustomer
+                            ? "bg-primary text-primary-foreground rounded-br-md"
+                            : "bg-muted text-foreground rounded-bl-md"
+                        }`}
+                      >
                         {msg.content}
                       </div>
+
                       <div className={`flex items-center gap-1 mt-0.5 px-1 ${isCustomer ? "justify-end" : ""}`}>
                         <span className="text-[10px] text-muted-foreground">
-                          {msg.sender_name || (isCustomer ? "Vous" : "Technicien")} · {new Date(msg.created_at).toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" })}
+                          {msg.sender_name || (isCustomer ? "Vous" : "Technicien")} ·{" "}
+                          {new Date(msg.created_at).toLocaleTimeString("fr-FR", {
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          })}
                         </span>
                       </div>
                     </div>
                   </div>
                 );
               })}
-              <div ref={bottomRef} />
             </div>
           )}
         </div>
+
+        {error && <p className="mb-2 text-xs text-destructive">{error}</p>}
 
         {!nameConfirmed && (
           <div className="mb-2 flex gap-2">
@@ -141,7 +258,9 @@ export function CustomerChat({ trackingCode }: CustomerChatProps) {
             <Button
               size="sm"
               variant="outline"
-              onClick={() => { if (customerName.trim()) setNameConfirmed(true); }}
+              onClick={() => {
+                if (customerName.trim()) setNameConfirmed(true);
+              }}
               disabled={!customerName.trim()}
             >
               OK
@@ -159,12 +278,7 @@ export function CustomerChat({ trackingCode }: CustomerChatProps) {
             className="min-h-[40px] max-h-[80px] resize-none text-sm"
             rows={1}
           />
-          <Button
-            size="icon"
-            onClick={handleSend}
-            disabled={!newMessage.trim() || sending}
-            className="shrink-0"
-          >
+          <Button size="icon" onClick={handleSend} disabled={!newMessage.trim() || sending} className="shrink-0">
             <Send className="h-4 w-4" />
           </Button>
         </div>

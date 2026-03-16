@@ -187,7 +187,7 @@ export default function RepairTracking() {
           </Card>
         )}
 
-        {code && <CustomerChat trackingCode={code} />}
+        {code && <CustomerChat trackingCode={code} repairId={repair.id} />}
       </div>
     </div>
   );
