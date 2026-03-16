@@ -30,13 +30,9 @@ export const statusColors: Record<string, string> = {
 };
 
 export const statusHelpText: Record<string, string> = {
-  nouveau: "Les appareils déposés ou réceptionnés apparaissent ici",
-  diagnostic: "Appareils en cours d'analyse et de diagnostic",
-  devis_en_attente: "Un devis a été envoyé, en attente de validation client",
-  devis_valide: "Le devis a été accepté par le client",
+  nouveau: "Appareils déposés ou réceptionnés",
   en_cours: "Pièces nécessaires à commander avant intervention",
   en_attente_piece: "Commande passée, en attente de réception",
-  pret_reparation: "Toutes les pièces sont disponibles, prêt à intervenir",
   reparation_en_cours: "L'intervention technique est en cours",
   termine: "Réparation terminée, prêt à être récupéré",
   pret_a_recuperer: "Appareil restitué au client, dossier clôturé",
