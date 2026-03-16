@@ -13,12 +13,8 @@ export const statusLabels: Record<string, string> = {
 // Full admin status order (used in Kanban columns and status select)
 export const statusOrder = [
   "nouveau",
-  "diagnostic",
-  "devis_en_attente",
-  "devis_valide",
   "en_cours",
   "en_attente_piece",
-  "pret_reparation",
   "reparation_en_cours",
   "termine",
   "pret_a_recuperer",
