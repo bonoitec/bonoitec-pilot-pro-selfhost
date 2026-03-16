@@ -5,6 +5,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Send, User, Wrench, Bot, MessageSquare } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { normalizeMessages, upsertMessage } from "@/components/messaging/message-utils";
+import { ReadReceipt } from "@/components/messaging/ReadReceipt";
 
 interface CustomerChatProps {
   trackingCode: string;
