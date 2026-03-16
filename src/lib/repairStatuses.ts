@@ -55,8 +55,7 @@ export const statusHelpText: Record<string, string> = {
 };
 
 // ─── Client-facing timeline ───────────────────────────────────────────
-// These are the 7 milestone steps shown to the customer on the tracking page.
-// The order matters: each step index is used for cumulative checkbox logic.
+// 6 milestone steps shown to the customer on the tracking page.
 
 export interface TimelineStep {
   key: string;
@@ -65,53 +64,37 @@ export interface TimelineStep {
 }
 
 export const clientTimelineSteps: TimelineStep[] = [
-  { key: "diagnostic",              label: "Diagnostic",                   emoji: "🔍" },
-  { key: "en_cours",                label: "Pièce à commander",            emoji: "🛒" },
-  { key: "en_attente_piece",        label: "Pièce en attente de livraison",emoji: "📦" },
-  { key: "pret_reparation",         label: "Pièce reçue",                  emoji: "✅" },
-  { key: "reparation_en_cours",     label: "Débuté",                       emoji: "⚙️" },
-  { key: "termine",                 label: "Terminé",                      emoji: "🟢" },
-  { key: "pret_a_recuperer",        label: "Restitué",                     emoji: "🏁" },
+  { key: "nouveau",              label: "Réparation reçue",              emoji: "📥" },
+  { key: "en_cours",             label: "Pièce à commander",             emoji: "🛒" },
+  { key: "en_attente_piece",     label: "En attente de livraison",       emoji: "📦" },
+  { key: "reparation_en_cours",  label: "Débuté",                        emoji: "⚙️" },
+  { key: "termine",              label: "Terminé",                       emoji: "✅" },
+  { key: "pret_a_recuperer",     label: "Restitué",                      emoji: "🏁" },
 ];
 
 /**
- * Given the current DB repair status, returns the index (0-based) within
- * clientTimelineSteps up to which checkboxes should be checked (inclusive).
- *
- * Returns -1 when no step should be checked (e.g. "nouveau").
- *
- * Rules (cumulative):
- *  - nouveau            → nothing checked  (-1)
- *  - diagnostic         → step 0           (Diagnostic)
- *  - devis_en_attente   → step 0           (Diagnostic done)
- *  - devis_valide       → step 0           (Diagnostic done)
- *  - en_cours           → step 1           (Diagnostic + Pièce à commander)
- *  - en_attente_piece   → step 2           (… + Pièce en attente)
- *  - pret_reparation    → step 3           (… + Pièce reçue)
- *  - reparation_en_cours→ step 4           (… + Débuté)
- *  - termine            → step 5           (… + Terminé)
- *  - pret_a_recuperer   → step 6           (all checked)
+ * Cumulative index (0-based) up to which checkboxes are checked.
+ * -1 = nothing checked yet.
  */
 export function getCheckedUpTo(dbStatus: string): number {
   switch (dbStatus) {
     case "nouveau":
-      return -1;
+      return 0; // Réparation reçue
     case "diagnostic":
     case "devis_en_attente":
     case "devis_valide":
-      return 0; // Diagnostic checked
+      return 0; // still at "reçue" for the client
     case "en_cours":
-      return 1; // + Pièce à commander
+      return 1; // Pièce à commander
     case "en_attente_piece":
-      return 2; // + Pièce en attente de livraison
+      return 2; // En attente de livraison
     case "pret_reparation":
-      return 3; // + Pièce reçue
     case "reparation_en_cours":
-      return 4; // + Débuté
+      return 3; // Débuté
     case "termine":
-      return 5; // + Terminé
+      return 4; // Terminé
     case "pret_a_recuperer":
-      return 6; // all steps
+      return 5; // Restitué (all checked)
     default:
       return -1;
   }
