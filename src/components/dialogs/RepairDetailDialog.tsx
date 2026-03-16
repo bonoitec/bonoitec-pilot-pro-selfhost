@@ -173,7 +173,8 @@ export function RepairDetailDialog({ open, onOpenChange, repair }: Props) {
         parts_used: partsUsed,
         services_used: servicesUsed,
       };
-      if (status === "diagnostic" && repair.status !== "diagnostic" && !repair.repair_started_at) {
+      // Only set repair_started_at when the actual repair begins
+      if (status === "reparation_en_cours" && repair.status !== "reparation_en_cours" && !repair.repair_started_at) {
         updates.repair_started_at = new Date().toISOString();
       }
       if ((status === "termine" || status === "pret_a_recuperer") && repair.status !== status) {
