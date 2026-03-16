@@ -3,7 +3,7 @@ import { useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Zap, Clock, CheckCircle2, Search as SearchIcon, Package, Wrench, Truck, FileText, ShieldCheck, PlayCircle, Inbox } from "lucide-react";
+import { Zap, CheckCircle2, Search as SearchIcon, Package, Wrench, Truck, FileText, ShieldCheck, PlayCircle, Inbox } from "lucide-react";
 import { CustomerChat } from "@/components/messaging/CustomerChat";
 
 const statusConfig: Record<string, { label: string; color: string; emoji: string; icon: any }> = {
@@ -187,7 +187,7 @@ export default function RepairTracking() {
           </Card>
         )}
 
-        {code && <CustomerChat trackingCode={code} />}
+        {code && <CustomerChat trackingCode={code} repairId={repair.id} />}
       </div>
     </div>
   );

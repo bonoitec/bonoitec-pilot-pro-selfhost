@@ -439,7 +439,7 @@ export function RepairDetailDialog({ open, onOpenChange, repair }: Props) {
           </TabsContent>
 
           <TabsContent value="messages">
-            <RepairChat repairId={repair.id} organizationId={repair.organization_id} />
+            <RepairChat repairId={repair.id} organizationId={repair.organization_id} compact />
           </TabsContent>
         </Tabs>
 
