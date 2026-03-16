@@ -82,6 +82,27 @@ export function CustomerChat({ trackingCode, repairId }: CustomerChatProps) {
     return () => clearInterval(interval);
   }, [normalizedTrackingCode]);
 
+  // Mark technician messages as read when the customer views them
+  useEffect(() => {
+    const hasUnread = messages.some(
+      (m) => m.sender_type === "technician" && !m.is_read
+    );
+    if (!hasUnread) return;
+
+    supabase.rpc("mark_messages_read_by_tracking", {
+      _tracking_code: normalizedTrackingCode,
+      _sender_type: "technician",
+    } as any).then(() => {
+      setMessages((current) =>
+        current.map((m) =>
+          m.sender_type === "technician" && !m.is_read
+            ? { ...m, is_read: true, read_at: new Date().toISOString() }
+            : m
+        )
+      );
+    });
+  }, [messages, normalizedTrackingCode]);
+
   useEffect(() => {
     if (!resolvedRepairId) return;
 
