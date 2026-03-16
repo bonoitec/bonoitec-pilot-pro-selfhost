@@ -24,6 +24,7 @@ export function CustomerChat({ trackingCode }: CustomerChatProps) {
   const [newMessage, setNewMessage] = useState("");
   const [sending, setSending] = useState(false);
   const [customerName, setCustomerName] = useState("");
+  const [nameConfirmed, setNameConfirmed] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   const fetchMessages = async () => {
