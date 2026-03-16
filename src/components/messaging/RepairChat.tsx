@@ -167,6 +167,7 @@ export function RepairChat({ repairId, organizationId, compact = false }: Repair
         sender_name: "Technicien",
         channel: "internal",
         is_read: true,
+        read_at: null,
         content: trimmed,
         created_at: new Date().toISOString(),
       };
