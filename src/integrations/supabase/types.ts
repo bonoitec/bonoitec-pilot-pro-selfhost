@@ -1197,6 +1197,10 @@ export type Database = {
         }
         Returns: boolean
       }
+      mark_messages_read_by_tracking: {
+        Args: { _sender_type?: string; _tracking_code: string }
+        Returns: Json
+      }
       send_customer_message: {
         Args: {
           _content: string
