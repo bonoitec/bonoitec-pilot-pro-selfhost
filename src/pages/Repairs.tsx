@@ -48,7 +48,8 @@ const Repairs = () => {
   const updateStatus = useMutation({
     mutationFn: async ({ id, status }: { id: string; status: string }) => {
       const updates: any = { status };
-      if (status === "diagnostic") updates.repair_started_at = new Date().toISOString();
+      // Only set repair_started_at when the actual repair begins
+      if (status === "reparation_en_cours") updates.repair_started_at = new Date().toISOString();
       if (status === "termine" || status === "pret_a_recuperer") updates.repair_ended_at = new Date().toISOString();
       const { error } = await supabase.from("repairs").update(updates).eq("id", id);
       if (error) throw error;
@@ -149,81 +150,83 @@ const Repairs = () => {
           <>
             <TabsContent value="kanban" className="mt-4">
               <DragDropContext onDragEnd={onDragEnd}>
-                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
-                  {statusOrder.map((status) => {
-                    const items = filtered.filter((r) => r.status === status);
-                    return (
-                      <Droppable droppableId={status} key={status}>
-                        {(provided, snapshot) => (
-                          <div
-                            ref={provided.innerRef}
-                            {...provided.droppableProps}
-                            className={`space-y-2 min-h-[120px] rounded-lg p-2 transition-all duration-300 ${
-                              snapshot.isDraggingOver
-                                ? "bg-primary/5 ring-2 ring-primary/20 scale-[1.01]"
-                                : "hover:bg-muted/30"
-                            }`}
-                          >
-                            <div className="flex items-center gap-2 mb-2">
-                              <Badge variant="outline" className={`text-xs ${statusColors[status]}`}>{statusLabels[status]}</Badge>
-                              <span className="text-xs text-muted-foreground">{items.length}</span>
-                            </div>
+                <div className="overflow-x-auto pb-4">
+                  <div className="flex gap-3" style={{ minWidth: `${statusOrder.length * 180}px` }}>
+                    {statusOrder.map((status) => {
+                      const items = filtered.filter((r) => r.status === status);
+                      return (
+                        <Droppable droppableId={status} key={status}>
+                          {(provided, snapshot) => (
+                            <div
+                              ref={provided.innerRef}
+                              {...provided.droppableProps}
+                              className={`space-y-2 min-h-[120px] rounded-lg p-2 transition-all duration-300 flex-shrink-0 w-[180px] ${
+                                snapshot.isDraggingOver
+                                  ? "bg-primary/5 ring-2 ring-primary/20 scale-[1.01]"
+                                  : "hover:bg-muted/30"
+                              }`}
+                            >
+                              <div className="flex items-center gap-2 mb-2">
+                                <Badge variant="outline" className={`text-[10px] ${statusColors[status]}`}>{statusLabels[status]}</Badge>
+                                <span className="text-xs text-muted-foreground">{items.length}</span>
+                              </div>
 
-                            {/* Help text for empty columns */}
-                            {items.length === 0 && !snapshot.isDraggingOver && (
-                              <div className="flex flex-col items-center justify-center py-6 px-2 text-center">
-                                <div className="w-8 h-8 rounded-full bg-muted/50 flex items-center justify-center mb-2">
-                                  <GripVertical className="h-3.5 w-3.5 text-muted-foreground/40" />
+                              {/* Help text for empty columns */}
+                              {items.length === 0 && !snapshot.isDraggingOver && (
+                                <div className="flex flex-col items-center justify-center py-6 px-2 text-center">
+                                  <div className="w-8 h-8 rounded-full bg-muted/50 flex items-center justify-center mb-2">
+                                    <GripVertical className="h-3.5 w-3.5 text-muted-foreground/40" />
+                                  </div>
+                                  <p className="text-[10px] text-muted-foreground/50 leading-relaxed">
+                                    {statusHelpText[status]}
+                                  </p>
                                 </div>
-                                <p className="text-[11px] text-muted-foreground/50 leading-relaxed">
-                                  {statusHelpText[status]}
-                                </p>
-                              </div>
-                            )}
+                              )}
 
-                            {/* Drop indicator when dragging over empty column */}
-                            {items.length === 0 && snapshot.isDraggingOver && (
-                              <div className="flex items-center justify-center py-8 rounded-md border-2 border-dashed border-primary/30 bg-primary/5">
-                                <p className="text-xs text-primary/60 font-medium">Déposez ici</p>
-                              </div>
-                            )}
+                              {/* Drop indicator when dragging over empty column */}
+                              {items.length === 0 && snapshot.isDraggingOver && (
+                                <div className="flex items-center justify-center py-8 rounded-md border-2 border-dashed border-primary/30 bg-primary/5">
+                                  <p className="text-xs text-primary/60 font-medium">Déposez ici</p>
+                                </div>
+                              )}
 
-                            {items.map((repair, index) => (
-                              <Draggable key={repair.id} draggableId={repair.id} index={index}>
-                                {(provided, snapshot) => (
-                                  <Card
-                                    ref={provided.innerRef}
-                                    {...provided.draggableProps}
-                                    {...provided.dragHandleProps}
-                                    className={`cursor-pointer transition-all duration-200 ${
-                                      snapshot.isDragging
-                                        ? "shadow-lg ring-2 ring-primary/30 rotate-[1deg] scale-105"
-                                        : "hover:shadow-md hover:-translate-y-0.5"
-                                    }`}
-                                    onClick={() => !snapshot.isDragging && setSelectedRepair(repair)}
-                                  >
-                                    <CardContent className="p-3">
-                                      <p className="text-xs font-mono text-muted-foreground">{repair.reference}</p>
-                                      <p className="text-sm font-medium mt-1">{repair.clients?.name ?? "—"}</p>
-                                      <p className="text-xs text-muted-foreground">{repair.devices ? `${repair.devices.brand} ${repair.devices.model}` : "—"}</p>
-                                      <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{repair.issue}</p>
-                                      {repair.repair_started_at && !repair.repair_ended_at && (
-                                        <div className="flex items-center gap-1 mt-2 text-xs text-primary">
-                                          <Timer className="h-3 w-3" />
-                                          {formatDuration(repair.repair_started_at)}
-                                        </div>
-                                      )}
-                                    </CardContent>
-                                  </Card>
-                                )}
-                              </Draggable>
-                            ))}
-                            {provided.placeholder}
-                          </div>
-                        )}
-                      </Droppable>
-                    );
-                  })}
+                              {items.map((repair, index) => (
+                                <Draggable key={repair.id} draggableId={repair.id} index={index}>
+                                  {(provided, snapshot) => (
+                                    <Card
+                                      ref={provided.innerRef}
+                                      {...provided.draggableProps}
+                                      {...provided.dragHandleProps}
+                                      className={`cursor-pointer transition-all duration-200 ${
+                                        snapshot.isDragging
+                                          ? "shadow-lg ring-2 ring-primary/30 rotate-[1deg] scale-105"
+                                          : "hover:shadow-md hover:-translate-y-0.5"
+                                      }`}
+                                      onClick={() => !snapshot.isDragging && setSelectedRepair(repair)}
+                                    >
+                                      <CardContent className="p-3">
+                                        <p className="text-xs font-mono text-muted-foreground">{repair.reference}</p>
+                                        <p className="text-sm font-medium mt-1">{repair.clients?.name ?? "—"}</p>
+                                        <p className="text-xs text-muted-foreground">{repair.devices ? `${repair.devices.brand} ${repair.devices.model}` : "—"}</p>
+                                        <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{repair.issue}</p>
+                                        {repair.repair_started_at && !repair.repair_ended_at && (
+                                          <div className="flex items-center gap-1 mt-2 text-xs text-primary">
+                                            <Timer className="h-3 w-3" />
+                                            {formatDuration(repair.repair_started_at)}
+                                          </div>
+                                        )}
+                                      </CardContent>
+                                    </Card>
+                                  )}
+                                </Draggable>
+                              ))}
+                              {provided.placeholder}
+                            </div>
+                          )}
+                        </Droppable>
+                      );
+                    })}
+                  </div>
                 </div>
               </DragDropContext>
             </TabsContent>
@@ -277,10 +280,14 @@ const Repairs = () => {
 
 function getAutoEmailMessage(status: string, device: string, reference: string): string {
   const messages: Record<string, string> = {
-    diagnostic: `La réparation de votre ${device} a bien débuté. Nous vous tiendrons informé(e) de l'avancement.`,
+    diagnostic: `Votre ${device} est en cours de diagnostic. Nous vous informerons des résultats.`,
+    devis_en_attente: `Un devis vous a été envoyé pour la réparation de votre ${device}. Merci de le valider pour que nous puissions poursuivre.`,
+    devis_valide: `Votre devis pour la réparation de votre ${device} a été validé. Nous allons préparer l'intervention.`,
     en_cours: `Une ou plusieurs pièces doivent être commandées pour la réparation de votre ${device}. Nous vous informerons dès leur réception.`,
-    en_attente_piece: `La réparation de votre ${device} est en attente de réception d'une pièce. Nous reprendrons dès que possible.`,
-    termine: `La réparation de votre ${device} est terminée ! Votre appareil est prêt à être récupéré à notre atelier.`,
+    en_attente_piece: `La commande de pièces pour votre ${device} est en cours de livraison. Nous reprendrons dès réception.`,
+    pret_reparation: `Toutes les pièces nécessaires sont disponibles. La réparation de votre ${device} va bientôt débuter.`,
+    reparation_en_cours: `La réparation de votre ${device} a débuté. Nous vous tiendrons informé(e) de l'avancement.`,
+    termine: `La réparation de votre ${device} est terminée ! Votre appareil est prêt à être récupéré.`,
     pret_a_recuperer: `Votre ${device} vous a été restitué. L'intervention est clôturée. Merci de votre confiance !`,
   };
   return messages[status] || `Le statut de votre réparation (réf. ${reference}) a été mis à jour.`;
