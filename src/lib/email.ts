@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 type EmailTemplate =
   | "quote_ready"
   | "repair_completed"
+  | "repair_created"
   | "invoice_sent"
   | "status_update"
   | "client_notification"
