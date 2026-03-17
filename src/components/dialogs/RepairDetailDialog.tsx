@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { uploadFile, getSignedFileUrl, getSignedFileUrls } from "@/lib/storage";
+import { generateIntakePDF } from "@/lib/pdf";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -14,7 +15,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
-import { Timer, Star, ClipboardCheck, Camera, CreditCard, Upload, MessageSquare, FileText, AlertTriangle } from "lucide-react";
+import { Timer, Star, ClipboardCheck, Camera, CreditCard, Upload, MessageSquare, FileText, AlertTriangle, Printer } from "lucide-react";
 import { RepairChat } from "@/components/messaging/RepairChat";
 import { StatusNotificationSuggester } from "@/components/messaging/StatusNotificationSuggester";
 import { MarginAnalysisCard } from "@/components/repairs/MarginAnalysisCard";
@@ -444,6 +445,39 @@ export function RepairDetailDialog({ open, onOpenChange, repair }: Props) {
         </Tabs>
 
         <div className="flex justify-end gap-2 mt-2">
+          <Button variant="ghost" size="sm" onClick={async () => {
+            if (!org) return;
+            try {
+              const photoUrls = resolvedPhotos;
+              await generateIntakePDF(org as any, {
+                reference: repair.reference,
+                date: new Date(repair.created_at).toLocaleDateString("fr-FR"),
+                clientName: repair.clients?.name,
+                clientAddress: repair.clients?.address,
+                clientPhone: repair.clients?.phone,
+                clientEmail: repair.clients?.email,
+                issue: repair.issue,
+                estimatedPrice: repair.estimated_price,
+                intake: {
+                  deviceBrand: repair.devices?.brand,
+                  deviceModel: repair.devices?.model,
+                  serialNumber: repair.devices?.serial_number || undefined,
+                  deviceCategory: repair.devices?.type,
+                  checklist: intakeChecklist || undefined,
+                  screenCondition: repair.screen_condition,
+                  frameCondition: repair.frame_condition,
+                  backCondition: repair.back_condition,
+                  photoUrls,
+                  signatureUrl: resolvedSignature,
+                },
+              });
+              toast({ title: "Prise en charge téléchargée" });
+            } catch (e: any) {
+              toast({ title: "Erreur", description: e?.message, variant: "destructive" });
+            }
+          }}>
+            <Printer className="h-4 w-4 mr-1" />Réimprimer prise en charge
+          </Button>
           <Button variant="outline" onClick={() => onOpenChange(false)}>Fermer</Button>
           <Button onClick={() => mutation.mutate()} disabled={mutation.isPending}>
             {mutation.isPending ? "Mise à jour..." : "Enregistrer"}

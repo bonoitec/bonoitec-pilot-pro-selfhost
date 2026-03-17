@@ -15,7 +15,7 @@ import { Progress } from "@/components/ui/progress";
 import { useToast } from "@/hooks/use-toast";
 import { SignaturePad } from "@/components/SignaturePad";
 import { isValidIMEI, lookupTAC, lookupTACBroad } from "@/lib/imei";
-import { generatePDF } from "@/lib/pdf";
+import { generatePDF, generateIntakePDF } from "@/lib/pdf";
 import {
   User, Smartphone, ClipboardCheck, Star, Camera, Wrench,
   CalendarClock, PenTool, FileText, ChevronLeft, ChevronRight,
@@ -389,62 +389,25 @@ export function CreateRepairWizard({ open, onOpenChange }: Props) {
     onOpenChange(false);
   };
 
-  const handleGenerateQuote = async () => {
+  const handleGenerateIntake = async () => {
     if (!createdRepair || !org) {
       toast({ title: "Erreur", description: "Données de réparation ou organisation manquantes", variant: "destructive" });
       return;
     }
     try {
-      const vatRate = org.vat_rate ?? 20;
-
-      // Build lines from selected services or fallback to single line
-      let lines: { description: string; quantity: number; unit_price: number }[];
-      if (selectedServices.length > 0) {
-        lines = selectedServices.map(s => ({
-          description: s.name + (s.description ? ` — ${s.description}` : ""),
-          quantity: 1,
-          unit_price: Number(s.default_price) || 0,
-        }));
-      } else {
-        const price = estimatedPrice ? parseFloat(estimatedPrice) : 0;
-        lines = [{ description: `${repairType ? repairType + " — " : ""}${issue}`, quantity: 1, unit_price: price }];
-      }
-
-      const totalHT = lines.reduce((s, l) => s + l.quantity * l.unit_price, 0);
-      const totalTTC = org.vat_enabled ? totalHT * (1 + vatRate / 100) : totalHT;
-
-      // Save quote to DB
-      const { data: orgId } = await supabase.rpc("get_user_org_id");
-      if (!orgId) throw new Error("Organisation introuvable");
-
-      const qRef = (org.quote_prefix || "DEV-") + new Date().toISOString().slice(0, 10).replace(/-/g, "") + "-" + Math.random().toString(36).slice(2, 5).toUpperCase();
-
-      const { error: insertError } = await supabase.from("quotes").insert({
-        organization_id: orgId, reference: qRef,
-        client_id: createdRepair.client_id, device_id: createdRepair.device_id,
-        repair_id: createdRepair.id,
-        lines: lines as any, total_ht: totalHT, total_ttc: totalTTC, vat_rate: vatRate,
-        status: "brouillon",
-        notes: diagnosticResult ? JSON.stringify({ __diagnosticAnalysis: diagnosticResult }) : null,
-      } as any);
-      if (insertError) throw insertError;
-
-      qc.invalidateQueries({ queryKey: ["quotes"] });
-
-      // Build intake info for PDF
       const intakeChecklist = Object.entries(checklist).filter(([, v]) => v).map(([k]) => k === "Diagnostic impossible" ? `${k}: ${diagnosticReason}` : k);
       const photoUrls = (createdRepair.photos as string[]) || [];
 
-      // Generate PDF with full intake info
-      await generatePDF(org as any, {
-        type: "quote", reference: qRef,
+      await generateIntakePDF(org as any, {
+        reference: createdRepair.reference,
         date: new Date().toLocaleDateString("fr-FR"),
         clientName: createdRepair.clients?.name,
         clientAddress: createdRepair.clients?.address,
         clientPhone: createdRepair.clients?.phone,
         clientEmail: createdRepair.clients?.email,
-        diagnosticAnalysis: diagnosticResult || undefined,
-        lines, totalHT, totalTTC, vatRate,
+        issue: createdRepair.issue,
+        repairType: repairType || undefined,
+        estimatedPrice: createdRepair.estimated_price,
         intake: {
           deviceBrand: createdRepair.devices?.brand || device.brand,
           deviceModel: createdRepair.devices?.model || device.model,
@@ -458,10 +421,10 @@ export function CreateRepairWizard({ open, onOpenChange }: Props) {
           signatureUrl: signatureDataUrl || createdRepair.customer_signature_url,
         },
       });
-      toast({ title: "Devis généré et téléchargé" });
+      toast({ title: "Prise en charge générée et téléchargée" });
     } catch (e: any) {
-      console.error("Erreur génération devis:", e);
-      toast({ title: "Erreur lors de la génération du devis", description: e?.message || "Erreur inconnue", variant: "destructive" });
+      console.error("Erreur génération prise en charge:", e);
+      toast({ title: "Erreur lors de la génération", description: e?.message || "Erreur inconnue", variant: "destructive" });
     }
   };
 
@@ -947,8 +910,8 @@ export function CreateRepairWizard({ open, onOpenChange }: Props) {
                   <p className="text-sm font-medium">{createdRepair.estimated_price ? `${createdRepair.estimated_price} €` : "—"}</p>
                 </CardContent></Card>
               </div>
-              <Button onClick={handleGenerateQuote} className="w-full" variant="outline">
-                <FileText className="h-4 w-4 mr-2" />Générer le devis PDF
+              <Button onClick={handleGenerateIntake} className="w-full" variant="outline">
+                <FileText className="h-4 w-4 mr-2" />Imprimer la prise en charge PDF
               </Button>
             </div>
           )}
