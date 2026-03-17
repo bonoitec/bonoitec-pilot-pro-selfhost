@@ -899,9 +899,12 @@ export async function generateIntakePDF(org: OrgInfo, data: IntakePdfData, optio
   if (hasConditions || hasChecklist) {
     currentY = drawSectionTitle(doc, "ÉTAT DE L'APPAREIL", currentY);
 
-    // Build table rows only from actual data
-    type InspectionRow = [string, string];
-    const rows: InspectionRow[] = [];
+    // Ratings drawn with vector stars via didDrawCell
+    type ConditionEntry = { label: string; rating: number };
+    const conditionEntries: ConditionEntry[] = [];
+    if (intake?.screenCondition) conditionEntries.push({ label: "Écran", rating: intake.screenCondition });
+    if (intake?.frameCondition) conditionEntries.push({ label: "Châssis / Contours", rating: intake.frameCondition });
+    if (intake?.backCondition) conditionEntries.push({ label: "Vitre arrière", rating: intake.backCondition });
 
     const ratingLabel = (val: number): string => {
       if (val >= 5) return "Excellent";
@@ -910,30 +913,32 @@ export async function generateIntakePDF(org: OrgInfo, data: IntakePdfData, optio
       if (val >= 2) return "Usé";
       return "Mauvais";
     };
-    const ratingStars = (val: number): string => `${"★".repeat(val)}${"☆".repeat(5 - val)}`;
 
-    if (intake?.screenCondition) rows.push(["Écran", `${ratingLabel(intake.screenCondition)} ${ratingStars(intake.screenCondition)}`]);
-    if (intake?.frameCondition) rows.push(["Châssis / Contours", `${ratingLabel(intake.frameCondition)} ${ratingStars(intake.frameCondition)}`]);
-    if (intake?.backCondition) rows.push(["Vitre arrière", `${ratingLabel(intake.backCondition)} ${ratingStars(intake.backCondition)}`]);
-
-    // Add checklist items as verified rows
+    // Checklist items as simple rows
+    const checklistRows: [string, string][] = [];
     if (hasChecklist) {
       for (const item of intake!.checklist!) {
-        // Avoid duplicating condition rows
         const lower = item.toLowerCase();
         if (lower.includes("écran") || lower.includes("châssis") || lower.includes("vitre")) continue;
-        rows.push([item, "✓ Vérifié"]);
+        checklistRows.push([item, "Vérifié"]);
       }
     }
 
-    if (rows.length > 0) {
+    // Build combined body: condition rows use placeholder text, stars drawn in didDrawCell
+    const bodyRows: [string, string][] = [
+      ...conditionEntries.map(e => [e.label, ratingLabel(e.rating)] as [string, string]),
+      ...checklistRows,
+    ];
+
+    if (bodyRows.length > 0) {
+      const condCount = conditionEntries.length;
       autoTable(doc, {
         startY: currentY,
         head: [["Point de contrôle", "État constaté"]],
-        body: rows,
+        body: bodyRows,
         styles: {
-          fontSize: 7,
-          cellPadding: { top: 2, bottom: 2, left: 4, right: 4 },
+          fontSize: 7.5,
+          cellPadding: { top: 3, bottom: 3, left: 5, right: 5 },
           textColor: [...GRAY_700],
           lineColor: [...GRAY_200],
           lineWidth: 0.15,
@@ -942,19 +947,39 @@ export async function generateIntakePDF(org: OrgInfo, data: IntakePdfData, optio
           fillColor: [...PRIMARY],
           textColor: [...WHITE],
           fontStyle: "bold",
-          fontSize: 6.5,
-          cellPadding: { top: 2.5, bottom: 2.5, left: 4, right: 4 },
+          fontSize: 7,
+          cellPadding: { top: 3, bottom: 3, left: 5, right: 5 },
         },
         alternateRowStyles: { fillColor: [...GRAY_50] },
         columnStyles: {
-          0: { cellWidth: 50, fontStyle: "bold" },
-          1: { cellWidth: CONTENT_WIDTH - 50 },
+          0: { cellWidth: 55, fontStyle: "bold" },
+          1: { cellWidth: CONTENT_WIDTH - 55 },
         },
         theme: "plain",
         margin: { left: PAGE_LEFT, right: 20, bottom: FOOTER_ZONE + 5 },
         tableLineColor: [...GRAY_200],
         tableLineWidth: 0.15,
         didDrawPage: () => { doc.setFillColor(...PRIMARY); doc.rect(0, 0, 210, 5, "F"); },
+        didDrawCell: (cellData: any) => {
+          // Draw vector stars for condition rows (column 1, body rows within condCount)
+          if (cellData.section === "body" && cellData.column.index === 1 && cellData.row.index < condCount) {
+            const entry = conditionEntries[cellData.row.index];
+            if (entry) {
+              // Draw stars after the text label
+              const textW = doc.getTextWidth(ratingLabel(entry.rating) + "  ");
+              const starX = cellData.cell.x + 5 + textW;
+              const starY = cellData.cell.y + cellData.cell.height / 2 + 1;
+              drawStars(doc, starX, starY, entry.rating);
+            }
+          }
+          // Draw a check mark for checklist rows
+          if (cellData.section === "body" && cellData.column.index === 1 && cellData.row.index >= condCount) {
+            const cellX = cellData.cell.x + 5;
+            const cellY = cellData.cell.y + cellData.cell.height / 2;
+            doc.setFillColor(34, 197, 94); // green
+            doc.circle(cellX - 2.5, cellY - 0.5, 1.4, "F");
+          }
+        },
       });
       currentY = (doc as any).lastAutoTable.finalY + 4;
     }
