@@ -1,12 +1,12 @@
 import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { useSearchParams } from "react-router-dom";
+import { useSearchParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Wrench, Clock, CheckCircle2, DollarSign, AlertTriangle, TrendingUp, Plus } from "lucide-react";
+import { Wrench, Clock, CheckCircle2, DollarSign, AlertTriangle, TrendingUp, Plus, Package, Zap } from "lucide-react";
 import { CreateRepairWizard } from "@/components/dialogs/CreateRepairWizard";
 import { ProfitabilitySection } from "@/components/dashboard/ProfitabilitySection";
 import { useSubscription } from "@/hooks/useSubscription";
