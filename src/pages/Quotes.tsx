@@ -62,24 +62,37 @@ const Quotes = () => {
     onSuccess: () => { toast({ title: "Devis envoyé" }); qc.invalidateQueries({ queryKey: ["quotes"] }); },
   });
 
-  const buildPdfParams = (quote: any) => {
+  const buildPdfParams = async (quote: any) => {
     const lines = Array.isArray(quote.lines) ? quote.lines : [];
     const repair = quote.repairs;
     const device = quote.devices;
 
-    // Build intake info from linked repair
-    const intake = repair ? {
-      deviceBrand: device?.brand,
-      deviceModel: device?.model,
-      serialNumber: device?.serial_number || undefined,
-      deviceCategory: device?.type,
-      checklist: Array.isArray(repair.intake_checklist) ? repair.intake_checklist.filter((item: any) => typeof item === "string" || item?.checked).map((item: any) => typeof item === "string" ? item : item.label) : [],
-      screenCondition: repair.screen_condition ?? undefined,
-      frameCondition: repair.frame_condition ?? undefined,
-      backCondition: repair.back_condition ?? undefined,
-      photoUrls: Array.isArray(repair.photos) ? repair.photos as string[] : [],
-      signatureUrl: repair.customer_signature_url,
-    } : undefined;
+    // Build intake info from linked repair, resolving signed URLs for private storage
+    let intake: any = undefined;
+    if (repair) {
+      let signatureUrl = repair.customer_signature_url || undefined;
+      if (signatureUrl && !signatureUrl.startsWith("data:")) {
+        try { signatureUrl = await getSignedFileUrl(signatureUrl); } catch { /* keep raw */ }
+      }
+
+      let photoUrls: string[] = Array.isArray(repair.photos) ? repair.photos as string[] : [];
+      if (photoUrls.length > 0) {
+        try { photoUrls = await getSignedFileUrls(photoUrls); } catch { /* keep raw */ }
+      }
+
+      intake = {
+        deviceBrand: device?.brand,
+        deviceModel: device?.model,
+        serialNumber: device?.serial_number || undefined,
+        deviceCategory: device?.type,
+        checklist: Array.isArray(repair.intake_checklist) ? repair.intake_checklist.filter((item: any) => typeof item === "string" || item?.checked).map((item: any) => typeof item === "string" ? item : item.label) : [],
+        screenCondition: repair.screen_condition ?? undefined,
+        frameCondition: repair.frame_condition ?? undefined,
+        backCondition: repair.back_condition ?? undefined,
+        photoUrls,
+        signatureUrl,
+      };
+    }
 
     // Extract diagnostic analysis from notes JSON if stored
     let diagnosticAnalysis: any = undefined;
@@ -89,7 +102,7 @@ const Quotes = () => {
         const parsed = JSON.parse(quote.notes);
         if (parsed?.__diagnosticAnalysis) {
           diagnosticAnalysis = parsed.__diagnosticAnalysis;
-          displayNotes = undefined; // Don't show raw JSON as notes
+          displayNotes = undefined;
         }
       } catch { /* notes is plain text, keep as-is */ }
     }
