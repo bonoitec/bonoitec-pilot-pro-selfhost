@@ -19,8 +19,18 @@ import { generatePDF } from "@/lib/pdf";
 import {
   User, Smartphone, ClipboardCheck, Star, Camera, Wrench,
   CalendarClock, PenTool, FileText, ChevronLeft, ChevronRight,
-  Check, Search, Plus, Upload, X,
+  Check, Search, Plus, Upload, X, Sparkles, Loader2, Clock, Gauge, CheckCircle2,
 } from "lucide-react";
+
+interface DiagnosticResult {
+  causes_possibles: string[];
+  pieces_a_verifier: string[];
+  solution_probable: string;
+  difficulte: string;
+  temps_estime: string;
+  prix_estime: string;
+  conseils: string;
+}
 
 interface Props {
   open: boolean;
