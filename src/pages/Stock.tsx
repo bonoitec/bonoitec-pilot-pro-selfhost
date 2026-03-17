@@ -38,7 +38,7 @@ const Stock = () => {
     queryKey: ["purchase_history"],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from("purchase_history" as any)
+        .from("purchase_history")
         .select("*, inventory(name)")
         .order("purchased_at", { ascending: false });
       if (error) throw error;

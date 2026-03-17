@@ -76,6 +76,7 @@ export const CreateDeviceDialog = forwardRef<HTMLDivElement, Props>(function Cre
     onSuccess: () => {
       toast({ title: "Appareil ajouté avec succès" });
       qc.invalidateQueries({ queryKey: ["devices"] });
+      qc.invalidateQueries({ queryKey: ["clients"] });
       onOpenChange(false);
     },
     onError: (e: Error) => toast({ title: "Erreur", description: e.message, variant: "destructive" }),
