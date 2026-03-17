@@ -94,17 +94,31 @@ const Quotes = () => {
       };
     }
 
-    // Extract diagnostic analysis from notes JSON if stored
-    let diagnosticAnalysis: any = undefined;
+    // Parse notes JSON for device info and diagnostic
     let displayNotes: string | undefined = quote.notes;
+    let quoteDeviceInfo: any = undefined;
     if (quote.notes) {
       try {
         const parsed = JSON.parse(quote.notes);
+        if (parsed?.__quoteDeviceInfo) {
+          quoteDeviceInfo = parsed.__quoteDeviceInfo;
+          displayNotes = parsed.__userNotes || undefined;
+        }
         if (parsed?.__diagnosticAnalysis) {
-          diagnosticAnalysis = parsed.__diagnosticAnalysis;
-          displayNotes = undefined;
+          // Diagnostic removed from client documents
+          displayNotes = parsed.__userNotes || undefined;
         }
       } catch { /* notes is plain text, keep as-is */ }
+    }
+
+    // For standalone quotes (no repair), build intake from quoteDeviceInfo
+    if (!intake && quoteDeviceInfo && (quoteDeviceInfo.brand || quoteDeviceInfo.model)) {
+      intake = {
+        deviceBrand: quoteDeviceInfo.brand || device?.brand,
+        deviceModel: quoteDeviceInfo.model || device?.model,
+        serialNumber: quoteDeviceInfo.imei || device?.serial_number || undefined,
+        deviceCategory: undefined,
+      };
     }
 
     return {
@@ -115,13 +129,13 @@ const Quotes = () => {
       clientAddress: quote.clients?.address,
       clientPhone: quote.clients?.phone,
       clientEmail: quote.clients?.email,
-      diagnosticAnalysis,
       lines,
       totalHT: Number(quote.total_ht),
       totalTTC: Number(quote.total_ttc),
       vatRate: Number(quote.vat_rate),
       notes: displayNotes,
       intake,
+      quoteDeviceInfo,
     };
   };
 

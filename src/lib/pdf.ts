@@ -50,6 +50,19 @@ interface DiagnosticAnalysis {
   conseils: string;
 }
 
+interface QuoteDeviceInfo {
+  brand?: string;
+  model?: string;
+  imei?: string;
+  storage?: string;
+  color?: string;
+  condition?: string;
+  issue?: string;
+  accessories?: string;
+  passwordGiven?: string;
+  observations?: string;
+}
+
 interface DocData {
   type: "invoice" | "quote";
   reference: string;
@@ -67,6 +80,7 @@ interface DocData {
   paymentMethod?: string;
   notes?: string;
   intake?: IntakeInfo;
+  quoteDeviceInfo?: QuoteDeviceInfo;
 }
 
 async function loadImage(url: string): Promise<string | null> {
@@ -366,9 +380,58 @@ export async function generatePDF(org: OrgInfo, data: DocData, options?: { previ
   }
 
   // ═══════════════════════════════════════════
-  // ANALYSE TECHNIQUE — REMOVED from client documents
-  // Diagnostic data is kept only in internal repair detail
+  // DEVICE DETAILS (standalone quote with quoteDeviceInfo)
   // ═══════════════════════════════════════════
+
+  if (data.quoteDeviceInfo && !isInvoice) {
+    const di = data.quoteDeviceInfo;
+    const details: string[] = [];
+    if (di.storage) details.push(`Stockage : ${di.storage}`);
+    if (di.color) details.push(`Couleur : ${di.color}`);
+    if (di.condition) details.push(`État esthétique : ${di.condition}`);
+    if (di.accessories) details.push(`Accessoires : ${di.accessories}`);
+    if (di.passwordGiven && di.passwordGiven !== "non") details.push(`Code confié : Oui`);
+    if (di.passwordGiven === "non") details.push(`Code confié : Non`);
+
+    if (details.length > 0 || di.issue || di.observations) {
+      const blockH = 8 + details.length * 3.8 + (di.issue ? 8 : 0) + (di.observations ? 8 : 0);
+      if (currentY + blockH > PAGE_BOTTOM) { doc.addPage(); doc.setFillColor(...PRIMARY); doc.rect(0, 0, 210, 4, "F"); currentY = 14; }
+
+      doc.setFontSize(7); doc.setFont("helvetica", "bold"); doc.setTextColor(...PRIMARY);
+      doc.text("DÉTAILS APPAREIL", PAGE_LEFT, currentY);
+      currentY += 5;
+
+      doc.setFont("helvetica", "normal"); doc.setFontSize(7.5); doc.setTextColor(...GRAY_700);
+      details.forEach(d => {
+        doc.text(d, PAGE_LEFT + 2, currentY);
+        currentY += 3.8;
+      });
+
+      if (di.issue) {
+        currentY += 2;
+        doc.setFont("helvetica", "bold"); doc.setFontSize(7); doc.setTextColor(...PRIMARY);
+        doc.text("Panne signalée :", PAGE_LEFT + 2, currentY);
+        currentY += 4;
+        doc.setFont("helvetica", "normal"); doc.setFontSize(7.5); doc.setTextColor(...GRAY_700);
+        const issueLines = doc.splitTextToSize(di.issue, CONTENT_WIDTH - 6);
+        doc.text(issueLines, PAGE_LEFT + 4, currentY);
+        currentY += issueLines.length * 3.8;
+      }
+
+      if (di.observations) {
+        currentY += 2;
+        doc.setFont("helvetica", "bold"); doc.setFontSize(7); doc.setTextColor(...PRIMARY);
+        doc.text("Observations :", PAGE_LEFT + 2, currentY);
+        currentY += 4;
+        doc.setFont("helvetica", "normal"); doc.setFontSize(7.5); doc.setTextColor(...GRAY_700);
+        const obsLines = doc.splitTextToSize(di.observations, CONTENT_WIDTH - 6);
+        doc.text(obsLines, PAGE_LEFT + 4, currentY);
+        currentY += obsLines.length * 3.8;
+      }
+
+      currentY += 6;
+    }
+  }
 
   // Page break check
   if (currentY > PAGE_BOTTOM - 40) {
