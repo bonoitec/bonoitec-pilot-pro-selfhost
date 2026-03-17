@@ -93,9 +93,31 @@ async function loadImageWithDimensions(url: string): Promise<{ data: string; wid
   });
 }
 
-function starText(rating: number | undefined): string {
-  if (!rating) return "—";
-  return "★".repeat(rating) + "☆".repeat(5 - rating) + ` (${rating}/5)`;
+function drawStars(doc: jsPDF, x: number, y: number, rating: number, total: number = 5): number {
+  const starSize = 3;
+  const gap = 0.8;
+
+  for (let i = 0; i < total; i++) {
+    const cx = x + i * (starSize + gap) + starSize / 2;
+    const cy = y - starSize / 2 + 0.5;
+    const filled = i < rating;
+    const color: [number, number, number] = filled ? [234, 179, 8] : [209, 213, 219];
+    doc.setFillColor(color[0], color[1], color[2]);
+    // Draw a simple filled circle as a "star dot"
+    doc.circle(cx, cy, starSize / 2.5, "F");
+  }
+  // Return the X position after the last star for appending text
+  return x + total * (starSize + gap);
+}
+
+function drawConditionLine(doc: jsPDF, label: string, rating: number | undefined, x: number, y: number): void {
+  if (!rating) return;
+  doc.setFontSize(7);
+  doc.setFont("helvetica", "normal");
+  doc.text(`${label} : `, x, y);
+  const labelWidth = doc.getTextWidth(`${label} : `);
+  const afterStars = drawStars(doc, x + labelWidth, y, rating);
+  doc.text(` (${rating}/5)`, afterStars, y);
 }
 
 // Colors
@@ -290,9 +312,9 @@ export async function generatePDF(org: OrgInfo, data: DocData, options?: { previ
     doc.setFontSize(7.5);
     doc.setTextColor(...GRAY_700);
     currentY += 5;
-    if (intake.screenCondition) { doc.text(`Écran : ${starText(intake.screenCondition)}`, PAGE_LEFT + 2, currentY); currentY += 4; }
-    if (intake.frameCondition) { doc.text(`Châssis : ${starText(intake.frameCondition)}`, PAGE_LEFT + 2, currentY); currentY += 4; }
-    if (intake.backCondition) { doc.text(`Vitre arrière : ${starText(intake.backCondition)}`, PAGE_LEFT + 2, currentY); currentY += 4; }
+    if (intake.screenCondition) { drawConditionLine(doc, "Écran", intake.screenCondition, PAGE_LEFT + 2, currentY); currentY += 4; }
+    if (intake.frameCondition) { drawConditionLine(doc, "Châssis", intake.frameCondition, PAGE_LEFT + 2, currentY); currentY += 4; }
+    if (intake.backCondition) { drawConditionLine(doc, "Vitre arrière", intake.backCondition, PAGE_LEFT + 2, currentY); currentY += 4; }
     currentY += 6;
   }
 
