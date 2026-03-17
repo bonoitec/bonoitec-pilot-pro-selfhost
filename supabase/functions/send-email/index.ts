@@ -212,6 +212,7 @@ const templates: Record<string, (data: Record<string, string>, orgContact?: { ph
           <p><strong>Référence :</strong> ${d.reference}</p>
           <p><strong>Appareil :</strong> ${d.device || "—"}</p>
           <p><strong>Problème :</strong> ${d.issue || "—"}</p>
+          ${d.estimatedDelay ? `<p><strong>⏱ ${d.estimatedDelay}</strong></p>` : ""}
         </div>
         <p>Vous pouvez suivre l'avancement de votre réparation en temps réel grâce au lien ci-dessous :</p>
         ${d.trackingUrl ? `<a href="${d.trackingUrl}" class="btn">Suivre ma réparation</a>` : ""}
