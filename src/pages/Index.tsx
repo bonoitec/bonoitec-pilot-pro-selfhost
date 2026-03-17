@@ -17,6 +17,7 @@ import { statusLabels, statusColors } from "@/lib/repairStatuses";
 const Index = () => {
   const [showWizard, setShowWizard] = useState(false);
   const [searchParams, setSearchParams] = useSearchParams();
+  const navigate = useNavigate();
   const { checkSubscription } = useSubscription();
 
   // Handle checkout success return
