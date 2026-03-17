@@ -877,7 +877,7 @@ export function CreateRepairWizard({ open, onOpenChange }: Props) {
                             try {
                               const { data, error } = await supabase.functions.invoke("ai-diagnostic", {
                                 body: {
-                                  mode: "chat",
+                                  mode: "client-description",
                                   messages: [{
                                     role: "user",
                                     content: `À partir de cette panne: "${issue.trim()}" et ce diagnostic:\nCauses: ${diagnosticResult.causes_possibles.join(", ")}\nSolution: ${diagnosticResult.solution_probable}\n\nGénère UNE SEULE description courte, claire et professionnelle destinée à un client non technicien. La description doit expliquer le problème et les pistes de réparation dans un langage simple. Pas de titre, pas de listes, juste un paragraphe. Réponds uniquement avec le texte de la description, rien d'autre.`
