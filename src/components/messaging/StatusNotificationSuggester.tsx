@@ -13,7 +13,7 @@ import { statusLabels } from "@/lib/repairStatuses";
 const defaultMessages: Record<string, { subject: string; body: string }> = {
   diagnostic: {
     subject: "Diagnostic en cours",
-    body: "Bonjour,\n\nVotre {{device}} est en cours de diagnostic.\nRéférence : {{reference}}\n\nNous vous informerons des résultats.\n\nCordialement,\nL'équipe BonoitecPilot",
+    body: "Bonjour,\n\nVotre {{device}} est en cours de diagnostic.\nRéférence : {{reference}}\n{{delay}}\n\nNous vous informerons des résultats.\n\nCordialement,\nL'équipe BonoitecPilot",
   },
   devis_en_attente: {
     subject: "Devis envoyé",
