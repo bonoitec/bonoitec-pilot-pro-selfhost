@@ -10,11 +10,18 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
-import { Plus, Search, Pencil, Trash2, BookOpen, Smartphone, Laptop, Gamepad2, Watch, Tablet } from "lucide-react";
+import { Plus, Search, Pencil, Trash2, BookOpen, Smartphone, Laptop, Gamepad2, Watch, Tablet, Navigation, Globe, Database } from "lucide-react";
+import { SEED_DEVICES } from "@/data/deviceCatalogSeed";
 
-const categories = ["Smartphone", "Tablette", "Ordinateur", "Console", "Montre connectée", "Autre"];
+const categories = ["Console", "GPS", "Montre", "Ordinateur", "Smartphone", "Tablette", "Universel"];
 const categoryIcons: Record<string, any> = {
-  Smartphone, Tablette: Tablet, Ordinateur: Laptop, Console: Gamepad2, "Montre connectée": Watch,
+  Console: Gamepad2,
+  GPS: Navigation,
+  Montre: Watch,
+  Ordinateur: Laptop,
+  Smartphone,
+  Tablette: Tablet,
+  Universel: Globe,
 };
 
 interface CatalogEntry {
@@ -49,7 +56,6 @@ export default function DeviceCatalog() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState(emptyForm);
 
-  // Fetch user's organization_id
   const { data: orgId } = useQuery({
     queryKey: ["user-org-id"],
     queryFn: async () => {
@@ -130,6 +136,33 @@ export default function DeviceCatalog() {
     onError: (e: Error) => toast({ title: "Erreur", description: e.message, variant: "destructive" }),
   });
 
+  const prefillMutation = useMutation({
+    mutationFn: async () => {
+      if (!orgId) throw new Error("Organisation introuvable");
+      const BATCH_SIZE = 50;
+      const rows = SEED_DEVICES.map(d => ({
+        category: d.category,
+        brand: d.brand,
+        model: d.model,
+        release_year: d.release_year ?? null,
+        storage_variants: d.storage_variants ?? [],
+        color_variants: [],
+        organization_id: orgId,
+      }));
+      for (let i = 0; i < rows.length; i += BATCH_SIZE) {
+        const batch = rows.slice(i, i + BATCH_SIZE);
+        const { error } = await supabase.from("device_catalog").insert(batch);
+        if (error) throw error;
+      }
+    },
+    onSuccess: () => {
+      toast({ title: "Catalogue pré-rempli", description: `${SEED_DEVICES.length} appareils ajoutés avec succès.` });
+      qc.invalidateQueries({ queryKey: ["device-catalog-admin"] });
+      qc.invalidateQueries({ queryKey: ["device-catalog"] });
+    },
+    onError: (e: Error) => toast({ title: "Erreur", description: e.message, variant: "destructive" }),
+  });
+
   const openEdit = (entry: CatalogEntry) => {
     setEditingId(entry.id);
     setForm({
@@ -152,7 +185,7 @@ export default function DeviceCatalog() {
 
   return (
     <div className="space-y-6 animate-fade-in">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between flex-wrap gap-3">
         <div>
           <h1 className="text-2xl font-bold flex items-center gap-2">
             <BookOpen className="h-6 w-6 text-primary" />
@@ -160,7 +193,15 @@ export default function DeviceCatalog() {
           </h1>
           <p className="text-muted-foreground text-sm">{catalog.length} appareils référencés</p>
         </div>
-        <Button onClick={openCreate}><Plus className="h-4 w-4 mr-2" />Ajouter</Button>
+        <div className="flex gap-2">
+          {catalog.length === 0 && (
+            <Button variant="outline" onClick={() => prefillMutation.mutate()} disabled={prefillMutation.isPending}>
+              <Database className="h-4 w-4 mr-2" />
+              {prefillMutation.isPending ? "Chargement..." : `Pré-remplir (${SEED_DEVICES.length} modèles)`}
+            </Button>
+          )}
+          <Button onClick={openCreate}><Plus className="h-4 w-4 mr-2" />Ajouter</Button>
+        </div>
       </div>
 
       {/* Filters */}
