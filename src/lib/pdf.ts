@@ -50,6 +50,19 @@ interface DiagnosticAnalysis {
   conseils: string;
 }
 
+interface QuoteDeviceInfo {
+  brand?: string;
+  model?: string;
+  imei?: string;
+  storage?: string;
+  color?: string;
+  condition?: string;
+  issue?: string;
+  accessories?: string;
+  passwordGiven?: string;
+  observations?: string;
+}
+
 interface DocData {
   type: "invoice" | "quote";
   reference: string;
@@ -67,6 +80,7 @@ interface DocData {
   paymentMethod?: string;
   notes?: string;
   intake?: IntakeInfo;
+  quoteDeviceInfo?: QuoteDeviceInfo;
 }
 
 async function loadImage(url: string): Promise<string | null> {
