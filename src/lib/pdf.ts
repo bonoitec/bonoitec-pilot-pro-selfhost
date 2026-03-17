@@ -73,6 +73,15 @@ async function loadImage(url: string): Promise<string | null> {
   }
 }
 
+function detectImageFormat(dataUrl: string): string {
+  if (dataUrl.startsWith("data:image/jpeg") || dataUrl.startsWith("data:image/jpg")) return "JPEG";
+  if (dataUrl.startsWith("data:image/png")) return "PNG";
+  if (dataUrl.startsWith("data:image/webp")) return "WEBP";
+  // Fallback: check raw bytes for JPEG signature (FFD8)
+  if (dataUrl.includes("/9j/") || dataUrl.includes("_9j_")) return "JPEG";
+  return "PNG";
+}
+
 async function loadImageWithDimensions(url: string): Promise<{ data: string; width: number; height: number } | null> {
   const dataUrl = await loadImage(url);
   if (!dataUrl) return null;
@@ -138,7 +147,11 @@ export async function generatePDF(org: OrgInfo, data: DocData, options?: { previ
       const ratio = Math.min(maxW / logoImg.width, maxH / logoImg.height);
       const w = logoImg.width * ratio;
       const h = logoImg.height * ratio;
-      doc.addImage(logoImg.data, "PNG", PAGE_LEFT, headerY, w, h);
+      try {
+        doc.addImage(logoImg.data, detectImageFormat(logoImg.data), PAGE_LEFT, headerY, w, h);
+      } catch (e) {
+        console.warn("Logo image could not be added to PDF:", e);
+      }
       headerY += 2;
     }
   }
@@ -498,7 +511,11 @@ export async function generatePDF(org: OrgInfo, data: DocData, options?: { previ
     doc.text("SIGNATURE CLIENT", PAGE_LEFT, finalY + 4);
     const sigImg = await loadImage(intake.signatureUrl);
     if (sigImg) {
-      doc.addImage(sigImg, "PNG", PAGE_LEFT, finalY + 7, 50, 20);
+      try {
+        doc.addImage(sigImg, detectImageFormat(sigImg), PAGE_LEFT, finalY + 7, 50, 20);
+      } catch (e) {
+        console.warn("Signature image could not be added to PDF:", e);
+      }
     }
     finalY += 32;
   }
@@ -522,7 +539,12 @@ export async function generatePDF(org: OrgInfo, data: DocData, options?: { previ
     for (const url of intake.photoUrls.slice(0, 6)) {
       const imgData = await loadImage(url);
       if (imgData && photoY < 240) {
-        doc.addImage(imgData, "JPEG", PAGE_LEFT, photoY, 60, 45);
+        try {
+          doc.addImage(imgData, detectImageFormat(imgData), PAGE_LEFT, photoY, 60, 45);
+        } catch (e) {
+          console.warn("Photo could not be added to PDF:", e);
+          continue;
+        }
         photoY += 50;
       }
     }
