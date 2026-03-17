@@ -73,6 +73,15 @@ async function loadImage(url: string): Promise<string | null> {
   }
 }
 
+function detectImageFormat(dataUrl: string): string {
+  if (dataUrl.startsWith("data:image/jpeg") || dataUrl.startsWith("data:image/jpg")) return "JPEG";
+  if (dataUrl.startsWith("data:image/png")) return "PNG";
+  if (dataUrl.startsWith("data:image/webp")) return "WEBP";
+  // Fallback: check raw bytes for JPEG signature (FFD8)
+  if (dataUrl.includes("/9j/") || dataUrl.includes("_9j_")) return "JPEG";
+  return "PNG";
+}
+
 async function loadImageWithDimensions(url: string): Promise<{ data: string; width: number; height: number } | null> {
   const dataUrl = await loadImage(url);
   if (!dataUrl) return null;
