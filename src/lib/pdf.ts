@@ -393,7 +393,7 @@ export async function generatePDF(org: OrgInfo, data: DocData, options?: { previ
     doc.setFontSize(7);
     doc.setFont("helvetica", "bold");
     doc.setTextColor(...PRIMARY);
-    doc.text("ANALYSE TECHNIQUE", PAGE_LEFT + 6, dy);
+    doc.text("DIAGNOSTIC", PAGE_LEFT + 6, dy);
     dy += 6;
 
     // Temps estimé + Difficulté
