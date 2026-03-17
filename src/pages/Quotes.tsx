@@ -219,7 +219,7 @@ const Quotes = () => {
     if (!previewQuote) return;
     const { data: org } = await supabase.rpc("get_org_safe_data").single();
     if (!org) return;
-    await generatePDF(org, buildPdfParams(previewQuote));
+    await generatePDF(org, await buildPdfParams(previewQuote));
   };
 
   const downloadPDF = async (quote: any) => {
