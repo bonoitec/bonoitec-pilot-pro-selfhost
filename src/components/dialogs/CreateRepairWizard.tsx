@@ -785,10 +785,19 @@ export function CreateRepairWizard({ open, onOpenChange }: Props) {
                           onClick={async () => {
                             setDiagnosticLoading(true);
                             try {
+                              const deviceInfo = `${device.category || "Appareil"} ${device.brand || ""} ${device.model || ""}`.trim();
+                              const checkedItems = Object.entries(checklist).filter(([, v]) => v).map(([k]) => k);
+                              const conditionInfo = `État écran: ${screenCondition}/5, Châssis: ${frameCondition}/5, Dos: ${backCondition}/5`;
+                              const fullContext = [
+                                `Appareil: ${deviceInfo}`,
+                                checkedItems.length > 0 ? `Checklist: ${checkedItems.join(", ")}` : "",
+                                conditionInfo,
+                                `Description du problème par le technicien: ${issue.trim()}`,
+                              ].filter(Boolean).join("\n");
                               const { data, error } = await supabase.functions.invoke("ai-diagnostic", {
                                 body: {
                                   mode: "diagnostic",
-                                  messages: [{ role: "user", content: issue.trim() }],
+                                  messages: [{ role: "user", content: fullContext }],
                                 },
                               });
                               if (error) throw error;
