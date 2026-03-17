@@ -68,6 +68,8 @@ Retourne en JSON:
 - opportunites: tableau d'opportunités de croissance
 
 Réponds UNIQUEMENT en JSON valide, sans markdown ni backticks.`;
+    } else if (mode === "client-description") {
+      systemPrompt = `Tu es un assistant pour un atelier de réparation. Génère une description claire, professionnelle et compréhensible par un client non technicien. Réponds uniquement avec le texte de la description, sans titre ni formatage.`;
     } else {
       systemPrompt = `Tu es un assistant IA spécialisé pour les ateliers de réparation d'appareils électroniques (BonoitecPilot).
 Tu aides les techniciens avec les diagnostics, les prix, les pièces et les conseils de réparation.
