@@ -48,6 +48,7 @@ interface DocData {
   clientAddress?: string;
   clientPhone?: string;
   clientEmail?: string;
+  clientDiagnostic?: string;
   lines: Line[];
   totalHT: number;
   totalTTC: number;
@@ -297,6 +298,32 @@ export async function generatePDF(org: OrgInfo, data: DocData, options?: { previ
       currentY += 3.8;
     });
     currentY += 6;
+  }
+
+  // ═══════════════════════════════════════════
+  // CLIENT DIAGNOSTIC (AI-generated description)
+  // ═══════════════════════════════════════════
+  
+  if (data.clientDiagnostic) {
+    const diagLines = doc.splitTextToSize(data.clientDiagnostic, CONTENT_WIDTH - 12);
+    const diagH = diagLines.length * 3.8 + 14;
+    
+    if (currentY + diagH > PAGE_BOTTOM) { doc.addPage(); doc.setFillColor(...PRIMARY); doc.rect(0, 0, 210, 4, "F"); currentY = 14; }
+
+    doc.setFillColor(...PRIMARY_LIGHT);
+    doc.roundedRect(PAGE_LEFT, currentY, CONTENT_WIDTH, diagH, 2, 2, "F");
+
+    doc.setFontSize(7);
+    doc.setFont("helvetica", "bold");
+    doc.setTextColor(...PRIMARY);
+    doc.text("DIAGNOSTIC", PAGE_LEFT + 6, currentY + 6);
+
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(7.5);
+    doc.setTextColor(...GRAY_700);
+    doc.text(diagLines, PAGE_LEFT + 6, currentY + 12);
+
+    currentY += diagH + 6;
   }
 
   // Page break check
