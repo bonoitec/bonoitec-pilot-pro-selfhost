@@ -70,6 +70,7 @@ export type Database = {
       clients: {
         Row: {
           address: string | null
+          city: string | null
           created_at: string
           email: string | null
           id: string
@@ -77,10 +78,12 @@ export type Database = {
           notes: string | null
           organization_id: string
           phone: string | null
+          postal_code: string | null
           updated_at: string
         }
         Insert: {
           address?: string | null
+          city?: string | null
           created_at?: string
           email?: string | null
           id?: string
@@ -88,10 +91,12 @@ export type Database = {
           notes?: string | null
           organization_id: string
           phone?: string | null
+          postal_code?: string | null
           updated_at?: string
         }
         Update: {
           address?: string | null
+          city?: string | null
           created_at?: string
           email?: string | null
           id?: string
@@ -99,6 +104,7 @@ export type Database = {
           notes?: string | null
           organization_id?: string
           phone?: string | null
+          postal_code?: string | null
           updated_at?: string
         }
         Relationships: [

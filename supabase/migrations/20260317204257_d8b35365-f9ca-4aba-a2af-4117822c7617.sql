@@ -1,0 +1,2 @@
+ALTER TABLE public.clients ADD COLUMN IF NOT EXISTS city text DEFAULT NULL;
+ALTER TABLE public.clients ADD COLUMN IF NOT EXISTS postal_code text DEFAULT NULL;
