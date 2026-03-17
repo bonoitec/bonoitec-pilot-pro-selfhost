@@ -140,7 +140,7 @@ const Index = () => {
               variant="ghost"
               size="icon"
               className="h-8 w-8"
-              onClick={() => navigate("/stock")}
+              onClick={() => navigate("/stock-alerts")}
               title="Voir le stock"
             >
               <div className="relative">
