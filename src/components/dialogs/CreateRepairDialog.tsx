@@ -44,6 +44,16 @@ function StarRating({ value, onChange, label }: { value: number; onChange: (v: n
   );
 }
 
+interface DiagnosticResult {
+  causes_possibles: string[];
+  pieces_a_verifier: string[];
+  solution_probable: string;
+  difficulte: string;
+  temps_estime: string;
+  prix_estime: string;
+  conseils: string;
+}
+
 export function CreateRepairDialog({ open, onOpenChange }: Props) {
   const { toast } = useToast();
   const qc = useQueryClient();
@@ -57,6 +67,12 @@ export function CreateRepairDialog({ open, onOpenChange }: Props) {
   const [frameCondition, setFrameCondition] = useState(5);
   const [backCondition, setBackCondition] = useState(5);
   const [signatureDataUrl, setSignatureDataUrl] = useState<string | null>(null);
+
+  // AI Diagnostic state
+  const [showDiagnostic, setShowDiagnostic] = useState(false);
+  const [diagnosticLoading, setDiagnosticLoading] = useState(false);
+  const [diagnosticResult, setDiagnosticResult] = useState<DiagnosticResult | null>(null);
+  const [clientDescription, setClientDescription] = useState("");
 
   const { data: org } = useQuery({
     queryKey: ["organization"],
