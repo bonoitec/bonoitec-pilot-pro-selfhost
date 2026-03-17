@@ -37,7 +37,7 @@ export function CreateClientDialog({ open, onOpenChange }: Props) {
     onSuccess: () => {
       toast({ title: "Client créé avec succès" });
       qc.invalidateQueries({ queryKey: ["clients"] });
-      setForm({ name: "", phone: "", email: "", address: "", notes: "" });
+      setForm({ name: "", phone: "", email: "", address: "", city: "", postal_code: "", notes: "" });
       onOpenChange(false);
     },
     onError: (e: Error) => toast({ title: "Erreur", description: e.message, variant: "destructive" }),
