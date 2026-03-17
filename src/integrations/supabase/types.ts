@@ -1175,6 +1175,36 @@ export type Database = {
           },
         ]
       }
+      trial_history: {
+        Row: {
+          created_at: string
+          deleted_at: string | null
+          email: string
+          id: string
+          organization_id: string | null
+          trial_end_date: string | null
+          trial_start_date: string
+        }
+        Insert: {
+          created_at?: string
+          deleted_at?: string | null
+          email: string
+          id?: string
+          organization_id?: string | null
+          trial_end_date?: string | null
+          trial_start_date?: string
+        }
+        Update: {
+          created_at?: string
+          deleted_at?: string | null
+          email?: string
+          id?: string
+          organization_id?: string | null
+          trial_end_date?: string | null
+          trial_start_date?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           id: string
