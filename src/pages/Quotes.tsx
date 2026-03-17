@@ -63,6 +63,48 @@ const Quotes = () => {
 
   const buildPdfParams = (quote: any) => {
     const lines = Array.isArray(quote.lines) ? quote.lines : [];
+    const repair = quote.repairs;
+    const device = quote.devices;
+
+    // Build intake info from linked repair
+    const intake = repair ? {
+      deviceBrand: device?.brand,
+      deviceModel: device?.model,
+      serialNumber: device?.serial_number || undefined,
+      deviceCategory: device?.type,
+      checklist: Array.isArray(repair.intake_checklist) ? repair.intake_checklist.filter((item: any) => typeof item === "string" || item?.checked).map((item: any) => typeof item === "string" ? item : item.label) : [],
+      screenCondition: repair.screen_condition ?? undefined,
+      frameCondition: repair.frame_condition ?? undefined,
+      backCondition: repair.back_condition ?? undefined,
+      photoUrls: Array.isArray(repair.photos) ? repair.photos as string[] : [],
+      signatureUrl: repair.customer_signature_url,
+    } : undefined;
+
+    // Parse diagnostic analysis from internal_notes if available
+    let diagnosticAnalysis: any = undefined;
+    if (repair?.internal_notes) {
+      try {
+        const notes = repair.internal_notes;
+        // Try to extract structured data from notes
+        const causesMatch = notes.match(/Causes probables\s*:\s*\n([\s\S]*?)(?=\n\n|Pièces)/);
+        const piecesMatch = notes.match(/Pièces à vérifier\s*:\s*(.*?)(?:\n|$)/);
+        const tempsMatch = notes.match(/Temps estimé\s*:\s*(.*?)(?:\n|$)/i);
+        const difficulteMatch = notes.match(/Difficulté\s*:\s*(.*?)(?:\n|$)/i);
+        
+        if (causesMatch || tempsMatch) {
+          diagnosticAnalysis = {
+            causes_possibles: causesMatch ? causesMatch[1].split("\n").map((c: string) => c.replace(/^[•\-\s]+/, "").trim()).filter(Boolean) : [],
+            pieces_a_verifier: piecesMatch ? piecesMatch[1].split(",").map((p: string) => p.trim()).filter(Boolean) : [],
+            solution_probable: "",
+            difficulte: difficulteMatch ? difficulteMatch[1].trim() : "",
+            temps_estime: tempsMatch ? tempsMatch[1].trim() : "",
+            prix_estime: "",
+            conseils: "",
+          };
+        }
+      } catch { /* ignore parse errors */ }
+    }
+
     return {
       type: "quote" as const,
       reference: quote.reference,
@@ -71,11 +113,13 @@ const Quotes = () => {
       clientAddress: quote.clients?.address,
       clientPhone: quote.clients?.phone,
       clientEmail: quote.clients?.email,
+      diagnosticAnalysis,
       lines,
       totalHT: Number(quote.total_ht),
       totalTTC: Number(quote.total_ttc),
       vatRate: Number(quote.vat_rate),
       notes: quote.notes,
+      intake,
     };
   };
 
