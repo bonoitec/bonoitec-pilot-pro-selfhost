@@ -48,6 +48,7 @@ interface DocData {
   clientAddress?: string;
   clientPhone?: string;
   clientEmail?: string;
+  clientDiagnostic?: string;
   lines: Line[];
   totalHT: number;
   totalTTC: number;
