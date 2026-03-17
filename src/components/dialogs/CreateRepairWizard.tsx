@@ -296,7 +296,28 @@ export function CreateRepairWizard({ open, onOpenChange }: Props) {
         .filter(([, v]) => v)
         .map(([k]) => k === "Diagnostic impossible" ? `${k}: ${diagnosticReason}` : k);
 
-      // 6. Create repair
+      // 6. Parse estimated time into minutes
+      const parseTimeToMinutes = (timeStr: string): number | null => {
+        if (!timeStr.trim()) return null;
+        const lower = timeStr.toLowerCase().trim();
+        let totalMin = 0;
+        // Match hours: "1h", "2h30", "1h 30"
+        const hMatch = lower.match(/(\d+)\s*h/);
+        if (hMatch) totalMin += parseInt(hMatch[1]) * 60;
+        // Match minutes: "30min", "45 min", "30m", or just "30" after h
+        const mMatch = lower.match(/(\d+)\s*(?:min|m(?!a))/);
+        if (mMatch) totalMin += parseInt(mMatch[1]);
+        // If only "1h30" pattern (digits after h without min)
+        const hm = lower.match(/(\d+)\s*h\s*(\d+)(?!\s*min)/);
+        if (hm) totalMin = parseInt(hm[1]) * 60 + parseInt(hm[2]);
+        // If just a number, assume minutes
+        if (totalMin === 0 && /^\d+$/.test(lower)) totalMin = parseInt(lower);
+        return totalMin > 0 ? totalMin : null;
+      };
+
+      const estimatedMinutes = parseTimeToMinutes(estimatedTime);
+
+      // 7. Create repair
       const ref = "REP-" + new Date().toISOString().slice(0, 10).replace(/-/g, "") + "-" + Math.random().toString(36).slice(2, 6);
       const { data: repair, error: rErr } = await supabase.from("repairs").insert({
         organization_id: orgId, reference: ref,
@@ -313,6 +334,7 @@ export function CreateRepairWizard({ open, onOpenChange }: Props) {
         customer_signature_url: signatureUrl,
         photos: photoUrls,
         estimated_completion: plannedDate || null,
+        estimated_time_minutes: estimatedMinutes,
         internal_notes: (() => {
           const parts: string[] = [];
           if (estimatedTime) parts.push("Temps estimé: " + estimatedTime);

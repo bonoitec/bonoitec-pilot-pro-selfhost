@@ -85,17 +85,46 @@ export default function RepairTracking() {
         <Card className="overflow-hidden">
           <div className="p-6 text-center bg-primary/10 text-primary">
             <h2 className="text-xl font-bold">{bannerLabel}</h2>
-            {repair.estimated_completion && (
-              <p className="text-sm mt-1 opacity-80">
-                Estimation :{" "}
-                {new Date(repair.estimated_completion).toLocaleDateString("fr-FR", {
-                  day: "numeric",
-                  month: "long",
-                  hour: "2-digit",
-                  minute: "2-digit",
-                })}
-              </p>
-            )}
+            {(() => {
+              const estMin = repair.estimated_time_minutes;
+              const createdAt = new Date(repair.created_at);
+              if (estMin && estMin > 0) {
+                const readyAt = new Date(createdAt.getTime() + estMin * 60000);
+                const now = new Date();
+                const diffMs = readyAt.getTime() - now.getTime();
+                const diffMin = Math.round(diffMs / 60000);
+                let delayText: string;
+                if (diffMin <= 0) {
+                  delayText = "Délai estimé dépassé";
+                } else if (diffMin < 60) {
+                  delayText = `Délai estimé : environ ${diffMin} minutes`;
+                } else if (diffMin < 120) {
+                  const remainMin = diffMin % 60;
+                  delayText = remainMin > 0
+                    ? `Délai estimé : environ 1 heure ${remainMin} min`
+                    : `Délai estimé : environ 1 heure`;
+                } else {
+                  const h = Math.floor(diffMin / 60);
+                  delayText = `Délai estimé : environ ${h} heures`;
+                }
+                // If ready date is a different day, show date instead
+                const today = new Date();
+                if (readyAt.toDateString() !== today.toDateString()) {
+                  delayText = `Fin estimée le ${readyAt.toLocaleDateString("fr-FR", { day: "numeric", month: "long" })}`;
+                }
+                return <p className="text-sm mt-1 opacity-80">{delayText}</p>;
+              }
+              if (repair.estimated_completion) {
+                const estDate = new Date(repair.estimated_completion);
+                return (
+                  <p className="text-sm mt-1 opacity-80">
+                    Fin estimée le{" "}
+                    {estDate.toLocaleDateString("fr-FR", { day: "numeric", month: "long" })}
+                  </p>
+                );
+              }
+              return null;
+            })()}
           </div>
         </Card>
 
