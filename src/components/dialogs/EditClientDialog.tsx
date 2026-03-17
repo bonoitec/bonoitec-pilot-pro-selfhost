@@ -80,6 +80,10 @@ export function EditClientDialog({ open, onOpenChange, client }: Props) {
             <div><Label>Email</Label><Input type="email" value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} placeholder="client@email.com" /></div>
           </div>
           <div><Label>Adresse</Label><Input value={form.address} onChange={e => setForm({ ...form, address: e.target.value })} placeholder="Adresse complète" /></div>
+          <div className="grid grid-cols-2 gap-3">
+            <div><Label>Code postal</Label><Input value={form.postal_code} onChange={e => setForm({ ...form, postal_code: e.target.value })} placeholder="75001" /></div>
+            <div><Label>Ville</Label><Input value={form.city} onChange={e => setForm({ ...form, city: e.target.value })} placeholder="Paris" /></div>
+          </div>
           <div><Label>Notes</Label><Textarea value={form.notes} onChange={e => setForm({ ...form, notes: e.target.value })} placeholder="Notes..." rows={2} /></div>
         </div>
         <DialogFooter>

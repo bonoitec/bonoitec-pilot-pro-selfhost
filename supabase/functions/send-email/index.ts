@@ -99,7 +99,7 @@ const templates: Record<string, (data: Record<string, string>, orgContact?: { ph
           <p><strong>Appareil :</strong> ${d.device || "—"}</p>
           <p><strong>Montant TTC :</strong> ${d.totalTTC || "—"} €</p>
         </div>
-        <p>Ce devis est valable 30 jours. N'hésitez pas à nous contacter pour toute question.</p>
+        <p>Ce devis est valable 14 jours. N'hésitez pas à nous contacter pour toute question.</p>
         <p>Cordialement,<br><strong>L'équipe BonoitecPilot</strong></p>
       </div>
     `, `Votre devis ${d.reference} est disponible`, oc),
