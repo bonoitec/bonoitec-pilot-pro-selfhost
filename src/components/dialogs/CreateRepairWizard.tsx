@@ -54,7 +54,7 @@ const defaultChecklist = [
   "Son", "Réseau", "Face ID / empreinte", "Autres problèmes",
 ];
 
-const deviceCategories = ["Smartphone", "Tablette", "Ordinateur portable", "Console", "Montre connectée", "Autre"];
+const deviceCategories = ["Console", "GPS", "Montre", "Ordinateur", "Smartphone", "Tablette", "Universel"];
 
 function StarRating({ value, onChange, label }: { value: number; onChange: (v: number) => void; label: string }) {
   return (
@@ -265,7 +265,8 @@ export function CreateRepairWizard({ open, onOpenChange }: Props) {
           organization_id: orgId, client_id: clientId,
           type: device.category, brand: device.brand.trim(), model: device.model.trim(),
           serial_number: device.serial_number.trim() || null,
-          condition: device.storage.trim() || null,
+          accessories: device.accessories.trim() || null,
+          condition: device.storage.trim() ? `Stockage: ${device.storage.trim()}` : null,
         }).select("id").single();
         if (dErr) throw dErr;
         deviceId = newD.id;
