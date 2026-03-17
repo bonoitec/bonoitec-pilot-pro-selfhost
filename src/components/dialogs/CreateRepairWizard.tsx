@@ -313,7 +313,8 @@ export function CreateRepairWizard({ open, onOpenChange }: Props) {
         customer_signature_url: signatureUrl,
         photos: photoUrls,
         estimated_completion: plannedDate || null,
-        internal_notes: estimatedTime ? `Temps estimé: ${estimatedTime}` : null,
+        internal_notes: [estimatedTime ? `Temps estimé: ${estimatedTime}` : null, clientDescription ? `--- Diagnostic IA ---\n${diagnosticResult ? `Causes: ${diagnosticResult.causes_possibles.join(", ")}\nPièces: ${diagnosticResult.pieces_a_verifier.join(", ")}\nSolution: ${diagnosticResult.solution_probable}\nTemps: ${diagnosticResult.temps_estime} | Difficulté: ${diagnosticResult.difficulte}` : ""}`.trim() || null].filter(Boolean).join("\n\n") || null,
+        diagnostic: clientDescription || null,
       } as any).select("*, clients(name, phone, email, address), devices(brand, model)").single();
       if (rErr) throw rErr;
       return repair;
