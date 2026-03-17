@@ -897,7 +897,8 @@ export async function generateIntakePDF(org: OrgInfo, data: IntakePdfData, optio
     }
   }
 
-  currentY += cardH + 4;
+  const extraDeviceLines = intake?.accessories || intake?.password || intake?.observations ? [intake?.accessories, intake?.password, intake?.observations].filter(Boolean).length : 0;
+  currentY += cardH + (extraDeviceLines > 0 ? extraDeviceLines * 3.5 + 2 : 0) + 4;
 
   // ── PANNE SIGNALÉE ──
   currentY = drawSectionTitle(doc, "PANNE SIGNALÉE", currentY);
