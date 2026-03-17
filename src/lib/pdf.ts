@@ -792,461 +792,294 @@ export async function generateIntakePDF(org: OrgInfo, data: IntakePdfData, optio
   const shopName = org.name;
   const intake = data.intake;
 
-  // ═══════════════════════════════════════
-  // PAGE 1 — Header
-  // ═══════════════════════════════════════
+  const newPage = () => { doc.addPage(); doc.setFillColor(...PRIMARY); doc.rect(0, 0, 210, 5, "F"); };
+  const checkPage = (needed: number, cy: number): number => { if (cy + needed > PAGE_BOTTOM) { newPage(); return 14; } return cy; };
 
-  // Top accent bar
+  // ── HEADER ──
   doc.setFillColor(...PRIMARY);
   doc.rect(0, 0, 210, 5, "F");
 
   let headerY = 14;
-
-  // Logo — left
   if (org.logo_url) {
     const resolvedLogoUrl = await getSignedFileUrl(org.logo_url);
     const logoImg = await loadImageWithDimensions(resolvedLogoUrl);
     if (logoImg) {
-      const maxW = 36, maxH = 26;
+      const maxW = 34, maxH = 24;
       const ratio = Math.min(maxW / logoImg.width, maxH / logoImg.height);
-      const w = logoImg.width * ratio, h = logoImg.height * ratio;
-      try { doc.addImage(logoImg.data, detectImageFormat(logoImg.data), PAGE_LEFT, headerY, w, h); } catch {}
+      try { doc.addImage(logoImg.data, detectImageFormat(logoImg.data), PAGE_LEFT, headerY, logoImg.width * ratio, logoImg.height * ratio); } catch {}
     }
   }
 
-  // Company info — right
-  doc.setFontSize(13);
-  doc.setFont("helvetica", "bold");
-  doc.setTextColor(...GRAY_700);
+  doc.setFontSize(13); doc.setFont("helvetica", "bold"); doc.setTextColor(...GRAY_700);
   doc.text(org.name, PAGE_RIGHT, headerY, { align: "right" });
-  doc.setFontSize(7);
-  doc.setFont("helvetica", "normal");
-  doc.setTextColor(...GRAY_500);
+  doc.setFontSize(7); doc.setFont("helvetica", "normal"); doc.setTextColor(...GRAY_500);
   let infoY = headerY + 5;
-  if (org.legal_status) { doc.text(org.legal_status, PAGE_RIGHT, infoY, { align: "right" }); infoY += 3.2; }
-  if (fullAddress) { doc.text(fullAddress, PAGE_RIGHT, infoY, { align: "right" }); infoY += 3.2; }
-  if (org.phone) { doc.text(`Tél : ${org.phone}`, PAGE_RIGHT, infoY, { align: "right" }); infoY += 3.2; }
-  if (org.email) { doc.text(org.email, PAGE_RIGHT, infoY, { align: "right" }); infoY += 3.2; }
-  if (org.website) { doc.text(org.website, PAGE_RIGHT, infoY, { align: "right" }); infoY += 3.2; }
+  if (org.legal_status) { doc.text(org.legal_status, PAGE_RIGHT, infoY, { align: "right" }); infoY += 3; }
+  if (fullAddress) { doc.text(fullAddress, PAGE_RIGHT, infoY, { align: "right" }); infoY += 3; }
+  if (org.phone) { doc.text(`Tél : ${org.phone}`, PAGE_RIGHT, infoY, { align: "right" }); infoY += 3; }
+  if (org.email) { doc.text(org.email, PAGE_RIGHT, infoY, { align: "right" }); infoY += 3; }
+  if (org.website) { doc.text(org.website, PAGE_RIGHT, infoY, { align: "right" }); infoY += 3; }
   const legalParts: string[] = [];
   if (org.siret) legalParts.push(`SIRET : ${org.siret}`);
   if (org.vat_number) legalParts.push(`TVA : ${org.vat_number}`);
   if (org.ape_code) legalParts.push(`APE : ${org.ape_code}`);
-  if (legalParts.length) { doc.text(legalParts.join("  •  "), PAGE_RIGHT, infoY, { align: "right" }); infoY += 3.2; }
+  if (legalParts.length) { doc.text(legalParts.join("  •  "), PAGE_RIGHT, infoY, { align: "right" }); infoY += 3; }
 
-  // ═══════════════════════════════════════
-  // DOCUMENT TITLE
-  // ═══════════════════════════════════════
-
-  let currentY = Math.max(infoY + 5, 48);
-
-  // Thin separator
-  doc.setDrawColor(...PRIMARY);
-  doc.setLineWidth(0.5);
+  // ── TITLE ──
+  let currentY = Math.max(infoY + 4, 46);
+  doc.setDrawColor(...PRIMARY); doc.setLineWidth(0.5);
   doc.line(PAGE_LEFT, currentY, PAGE_RIGHT, currentY);
-  currentY += 5;
+  currentY += 4;
 
-  // Title badge
   const title = "PRISE EN CHARGE";
   doc.setFillColor(...PRIMARY);
-  const titleW = doc.getStringUnitWidth(title) * 16 / doc.internal.scaleFactor + 20;
-  doc.roundedRect(PAGE_LEFT, currentY, titleW, 11, 2, 2, "F");
-  doc.setFontSize(15);
-  doc.setFont("helvetica", "bold");
-  doc.setTextColor(...WHITE);
-  doc.text(title, PAGE_LEFT + titleW / 2, currentY + 8, { align: "center" });
+  const titleW = doc.getStringUnitWidth(title) * 14 / doc.internal.scaleFactor + 16;
+  doc.roundedRect(PAGE_LEFT, currentY, titleW, 9, 2, 2, "F");
+  doc.setFontSize(13); doc.setFont("helvetica", "bold"); doc.setTextColor(...WHITE);
+  doc.text(title, PAGE_LEFT + titleW / 2, currentY + 6.5, { align: "center" });
 
-  // Reference + Date — right of title
-  doc.setTextColor(...GRAY_700);
-  doc.setFontSize(9);
-  doc.setFont("helvetica", "bold");
-  doc.text(`N° ${data.reference}`, PAGE_RIGHT, currentY + 4.5, { align: "right" });
-  doc.setTextColor(...GRAY_500);
-  doc.setFontSize(8);
-  doc.setFont("helvetica", "normal");
-  doc.text(`Date : ${data.date}`, PAGE_RIGHT, currentY + 9.5, { align: "right" });
+  doc.setTextColor(...GRAY_700); doc.setFontSize(9); doc.setFont("helvetica", "bold");
+  doc.text(`N° ${data.reference}`, PAGE_RIGHT, currentY + 3.5, { align: "right" });
+  doc.setTextColor(...GRAY_500); doc.setFontSize(8); doc.setFont("helvetica", "normal");
+  doc.text(`Date : ${data.date}`, PAGE_RIGHT, currentY + 8, { align: "right" });
+  currentY += 14;
 
-  currentY += 18;
-
-  // ═══════════════════════════════════════
-  // CLIENT + APPAREIL — side by side cards
-  // ═══════════════════════════════════════
-
+  // ── CLIENT + APPAREIL side by side ──
   const hasDevice = intake && (intake.deviceBrand || intake.deviceModel);
   const colW = (CONTENT_WIDTH - 6) / 2;
+  const cardH = 26;
 
-  // CLIENT card
-  currentY = drawSectionTitle(doc, "INFORMATIONS CLIENT", currentY);
-  const clientCardY = currentY;
-
+  // Client card
   doc.setFillColor(...GRAY_50);
-  doc.roundedRect(PAGE_LEFT, clientCardY, hasDevice ? colW : CONTENT_WIDTH, 30, 1.5, 1.5, "F");
+  doc.roundedRect(PAGE_LEFT, currentY, hasDevice ? colW : CONTENT_WIDTH, cardH, 1.5, 1.5, "F");
+  doc.setFontSize(7); doc.setFont("helvetica", "bold"); doc.setTextColor(...PRIMARY);
+  doc.text("CLIENT", PAGE_LEFT + 4, currentY + 4.5);
+  doc.setTextColor(...GRAY_700); doc.setFontSize(8.5); doc.setFont("helvetica", "bold");
+  doc.text(data.clientName || "—", PAGE_LEFT + 4, currentY + 10);
+  doc.setFont("helvetica", "normal"); doc.setFontSize(7); doc.setTextColor(...GRAY_500);
+  let clY = currentY + 14;
+  if (data.clientAddress) { doc.text(data.clientAddress, PAGE_LEFT + 4, clY); clY += 3.2; }
+  if (data.clientPhone) { doc.text(`Tél : ${data.clientPhone}`, PAGE_LEFT + 4, clY); clY += 3.2; }
+  if (data.clientEmail) { doc.text(data.clientEmail, PAGE_LEFT + 4, clY); }
 
-  let cy = clientCardY + 5;
-  doc.setFontSize(9);
-  doc.setFont("helvetica", "bold");
-  doc.setTextColor(...GRAY_700);
-  doc.text(data.clientName || "—", PAGE_LEFT + 5, cy);
-  cy += 5;
-  doc.setFont("helvetica", "normal");
-  doc.setFontSize(7.5);
-  doc.setTextColor(...GRAY_500);
-  if (data.clientAddress) {
-    const addrLines = doc.splitTextToSize(data.clientAddress, (hasDevice ? colW : CONTENT_WIDTH) - 10);
-    doc.text(addrLines, PAGE_LEFT + 5, cy);
-    cy += addrLines.length * 3.5;
-  }
-  if (data.clientPhone) { doc.text(`Tél : ${data.clientPhone}`, PAGE_LEFT + 5, cy); cy += 3.5; }
-  if (data.clientEmail) { doc.text(data.clientEmail, PAGE_LEFT + 5, cy); cy += 3.5; }
-
-  // APPAREIL card — right column
+  // Device card
   if (hasDevice) {
     const devX = PAGE_LEFT + colW + 6;
     doc.setFillColor(...PRIMARY_LIGHT);
-    doc.roundedRect(devX, clientCardY, colW, 30, 1.5, 1.5, "F");
-
-    let dy = clientCardY + 5;
-    doc.setFontSize(9);
-    doc.setFont("helvetica", "bold");
-    doc.setTextColor(...GRAY_700);
-    doc.text([intake!.deviceBrand, intake!.deviceModel].filter(Boolean).join(" "), devX + 5, dy);
-    dy += 5;
-    doc.setFont("helvetica", "normal");
-    doc.setFontSize(7.5);
-    doc.setTextColor(...GRAY_500);
-    if (intake!.deviceCategory) { doc.text(`Type : ${intake!.deviceCategory}`, devX + 5, dy); dy += 3.5; }
-    if (intake!.serialNumber) { doc.text(`IMEI / N° série : ${intake!.serialNumber}`, devX + 5, dy); dy += 3.5; }
+    doc.roundedRect(devX, currentY, colW, cardH, 1.5, 1.5, "F");
+    doc.setFontSize(7); doc.setFont("helvetica", "bold"); doc.setTextColor(...PRIMARY);
+    doc.text("APPAREIL", devX + 4, currentY + 4.5);
+    doc.setTextColor(...GRAY_700); doc.setFontSize(8.5); doc.setFont("helvetica", "bold");
+    doc.text([intake!.deviceBrand, intake!.deviceModel].filter(Boolean).join(" "), devX + 4, currentY + 10);
+    doc.setFont("helvetica", "normal"); doc.setFontSize(7); doc.setTextColor(...GRAY_500);
+    let devY2 = currentY + 14;
+    if (intake!.deviceCategory) { doc.text(`Type : ${intake!.deviceCategory}`, devX + 4, devY2); devY2 += 3.2; }
+    if (intake!.serialNumber) { doc.text(`IMEI / Série : ${intake!.serialNumber}`, devX + 4, devY2); }
   }
 
-  currentY = clientCardY + 34;
+  currentY += cardH + 4;
 
-  // ═══════════════════════════════════════
-  // PANNE SIGNALÉE
-  // ═══════════════════════════════════════
-
+  // ── PANNE SIGNALÉE ──
   currentY = drawSectionTitle(doc, "PANNE SIGNALÉE", currentY);
-
-  doc.setFillColor(...GRAY_50);
-  const issueLines = doc.splitTextToSize(data.issue || "—", CONTENT_WIDTH - 14);
-  const issueBoxH = Math.max(12, issueLines.length * 4 + 8);
-  doc.roundedRect(PAGE_LEFT, currentY, CONTENT_WIDTH, issueBoxH, 1.5, 1.5, "F");
-  doc.setFontSize(8);
-  doc.setFont("helvetica", "normal");
-  doc.setTextColor(...GRAY_700);
-  doc.text(issueLines, PAGE_LEFT + 5, currentY + 5);
-
+  const issueLines = doc.splitTextToSize(data.issue || "—", CONTENT_WIDTH - 10);
+  doc.setFontSize(7.5); doc.setFont("helvetica", "normal"); doc.setTextColor(...GRAY_700);
+  doc.text(issueLines, PAGE_LEFT + 4, currentY);
+  currentY += issueLines.length * 3.5 + 2;
   if (data.repairType) {
-    doc.setFontSize(7);
-    doc.setFont("helvetica", "italic");
-    doc.setTextColor(...GRAY_500);
-    doc.text(`Type de réparation : ${data.repairType}`, PAGE_LEFT + 5, currentY + issueBoxH - 3);
+    doc.setFontSize(6.5); doc.setFont("helvetica", "italic"); doc.setTextColor(...GRAY_500);
+    doc.text(`Type : ${data.repairType}`, PAGE_LEFT + 4, currentY);
+    currentY += 4;
   }
+  currentY += 2;
 
-  currentY += issueBoxH + 4;
+  // ── ÉTAT DE L'APPAREIL — only filled data ──
+  const hasConditions = intake && (intake.screenCondition || intake.frameCondition || intake.backCondition);
+  const hasChecklist = intake?.checklist && intake.checklist.length > 0;
 
-  // ═══════════════════════════════════════
-  // ÉTAT DE L'APPAREIL — professional inspection table
-  // ═══════════════════════════════════════
+  if (hasConditions || hasChecklist) {
+    currentY = drawSectionTitle(doc, "ÉTAT DE L'APPAREIL", currentY);
 
-  currentY = drawSectionTitle(doc, "VÉRIFICATION DE L'ÉTAT DE L'APPAREIL", currentY);
+    // Build table rows only from actual data
+    type InspectionRow = [string, string];
+    const rows: InspectionRow[] = [];
 
-  // Build inspection rows from existing condition ratings + comprehensive list
-  type InspectionRow = [string, string];
-  const inspectionRows: InspectionRow[] = [];
+    const ratingLabel = (val: number): string => {
+      if (val >= 5) return "Excellent";
+      if (val >= 4) return "Bon";
+      if (val >= 3) return "Moyen";
+      if (val >= 2) return "Usé";
+      return "Mauvais";
+    };
+    const ratingStars = (val: number): string => `${"★".repeat(val)}${"☆".repeat(5 - val)}`;
 
-  const ratingToText = (val: number | undefined | null): string => {
-    if (!val) return "Non vérifié";
-    if (val >= 5) return "Excellent";
-    if (val >= 4) return "Bon";
-    if (val >= 3) return "Moyen";
-    if (val >= 2) return "Usé";
-    return "Mauvais";
-  };
+    if (intake?.screenCondition) rows.push(["Écran", `${ratingLabel(intake.screenCondition)} ${ratingStars(intake.screenCondition)}`]);
+    if (intake?.frameCondition) rows.push(["Châssis / Contours", `${ratingLabel(intake.frameCondition)} ${ratingStars(intake.frameCondition)}`]);
+    if (intake?.backCondition) rows.push(["Vitre arrière", `${ratingLabel(intake.backCondition)} ${ratingStars(intake.backCondition)}`]);
 
-  const ratingToSymbol = (val: number | undefined | null): string => {
-    if (!val) return "—";
-    return `${"★".repeat(val)}${"☆".repeat(5 - val)} (${val}/5)`;
-  };
+    // Add checklist items as verified rows
+    if (hasChecklist) {
+      for (const item of intake!.checklist!) {
+        // Avoid duplicating condition rows
+        const lower = item.toLowerCase();
+        if (lower.includes("écran") || lower.includes("châssis") || lower.includes("vitre")) continue;
+        rows.push([item, "✓ Vérifié"]);
+      }
+    }
 
-  // Map available condition data
-  const conditionMap: Record<string, number | undefined | null> = {
-    "Écran / Affichage": intake?.screenCondition,
-    "Châssis / Contours": intake?.frameCondition,
-    "Vitre arrière": intake?.backCondition,
-  };
-
-  // Build rows — rated items get their rating, others show checklist status
-  const checklistSet = new Set(intake?.checklist?.map(c => c.toLowerCase()) || []);
-
-  const allInspectionItems = [
-    "Écran / Affichage",
-    "Tactile fonctionnel",
-    "Vitre arrière",
-    "Châssis / Contours",
-    "Caméra avant",
-    "Caméra arrière",
-    "Face ID / Touch ID",
-    "Haut-parleur",
-    "Micro",
-    "Boutons physiques",
-    "Connecteur de charge",
-    "Batterie",
-    "Réseau / Wi-Fi",
-    "Oxydation visible",
-    "Appareil allumé",
-  ];
-
-  for (const item of allInspectionItems) {
-    const rating = conditionMap[item];
-    if (rating) {
-      inspectionRows.push([item, `${ratingToText(rating)} — ${ratingToSymbol(rating)}`]);
-    } else {
-      // Check if present in checklist
-      const found = intake?.checklist?.find(c => c.toLowerCase().includes(item.toLowerCase().split(" ")[0].toLowerCase()));
-      inspectionRows.push([item, found ? "✓ Vérifié" : "—"]);
+    if (rows.length > 0) {
+      autoTable(doc, {
+        startY: currentY,
+        head: [["Point de contrôle", "État constaté"]],
+        body: rows,
+        styles: {
+          fontSize: 7,
+          cellPadding: { top: 2, bottom: 2, left: 4, right: 4 },
+          textColor: [...GRAY_700],
+          lineColor: [...GRAY_200],
+          lineWidth: 0.15,
+        },
+        headStyles: {
+          fillColor: [...PRIMARY],
+          textColor: [...WHITE],
+          fontStyle: "bold",
+          fontSize: 6.5,
+          cellPadding: { top: 2.5, bottom: 2.5, left: 4, right: 4 },
+        },
+        alternateRowStyles: { fillColor: [...GRAY_50] },
+        columnStyles: {
+          0: { cellWidth: 50, fontStyle: "bold" },
+          1: { cellWidth: CONTENT_WIDTH - 50 },
+        },
+        theme: "plain",
+        margin: { left: PAGE_LEFT, right: 20, bottom: FOOTER_ZONE + 5 },
+        tableLineColor: [...GRAY_200],
+        tableLineWidth: 0.15,
+        didDrawPage: () => { doc.setFillColor(...PRIMARY); doc.rect(0, 0, 210, 5, "F"); },
+      });
+      currentY = (doc as any).lastAutoTable.finalY + 4;
     }
   }
 
-  autoTable(doc, {
-    startY: currentY,
-    head: [["Point de contrôle", "État constaté"]],
-    body: inspectionRows,
-    styles: {
-      fontSize: 7.5,
-      cellPadding: { top: 2.5, bottom: 2.5, left: 4, right: 4 },
-      textColor: [...GRAY_700],
-      lineColor: [...GRAY_200],
-      lineWidth: 0.15,
-    },
-    headStyles: {
-      fillColor: [...PRIMARY],
-      textColor: [...WHITE],
-      fontStyle: "bold",
-      fontSize: 7,
-      cellPadding: { top: 3, bottom: 3, left: 4, right: 4 },
-    },
-    alternateRowStyles: {
-      fillColor: [...GRAY_50],
-    },
-    columnStyles: {
-      0: { cellWidth: 55, fontStyle: "bold" },
-      1: { cellWidth: CONTENT_WIDTH - 55 },
-    },
-    theme: "plain",
-    margin: { left: PAGE_LEFT, right: 20, bottom: FOOTER_ZONE + 5 },
-    tableLineColor: [...GRAY_200],
-    tableLineWidth: 0.15,
-    didDrawPage: () => {
-      doc.setFillColor(...PRIMARY);
-      doc.rect(0, 0, 210, 5, "F");
-    },
-  });
-
-  currentY = (doc as any).lastAutoTable.finalY + 6;
-
-  // ═══════════════════════════════════════
-  // CHECKLIST (if extra items beyond inspection)
-  // ═══════════════════════════════════════
-
-  if (intake?.checklist && intake.checklist.length > 0) {
-    if (currentY > PAGE_BOTTOM - 20) { doc.addPage(); doc.setFillColor(...PRIMARY); doc.rect(0, 0, 210, 5, "F"); currentY = 14; }
-    currentY = drawSectionTitle(doc, "VÉRIFICATIONS COMPLÉMENTAIRES", currentY);
-    doc.setFontSize(7.5);
-    doc.setFont("helvetica", "normal");
-    doc.setTextColor(...GRAY_700);
-    const cols = 2;
-    const colWidth = (CONTENT_WIDTH - 4) / cols;
-    intake.checklist.forEach((item, i) => {
-      const col = i % cols;
-      const row = Math.floor(i / cols);
-      const x = PAGE_LEFT + 2 + col * colWidth;
-      const y = currentY + row * 4;
-      doc.text(`✓  ${item}`, x, y);
-    });
-    currentY += Math.ceil(intake.checklist.length / cols) * 4 + 4;
-  }
-
-  // ═══════════════════════════════════════
-  // OBSERVATIONS
-  // ═══════════════════════════════════════
-
+  // ── ESTIMATION ──
   if (data.estimatedPrice) {
-    if (currentY > PAGE_BOTTOM - 15) { doc.addPage(); doc.setFillColor(...PRIMARY); doc.rect(0, 0, 210, 5, "F"); currentY = 14; }
-    currentY = drawSectionTitle(doc, "ESTIMATION", currentY);
+    currentY = checkPage(12, currentY);
     doc.setFillColor(...PRIMARY_LIGHT);
-    doc.roundedRect(PAGE_LEFT, currentY, CONTENT_WIDTH, 10, 1.5, 1.5, "F");
-    doc.setFontSize(10);
-    doc.setFont("helvetica", "bold");
-    doc.setTextColor(...PRIMARY);
-    doc.text(`Prix estimé : ${data.estimatedPrice.toFixed(2)} €`, PAGE_LEFT + 5, currentY + 7);
-    currentY += 14;
+    doc.roundedRect(PAGE_LEFT, currentY, CONTENT_WIDTH, 9, 1.5, 1.5, "F");
+    doc.setFontSize(9); doc.setFont("helvetica", "bold"); doc.setTextColor(...PRIMARY);
+    doc.text(`Prix estimé : ${data.estimatedPrice.toFixed(2)} €`, PAGE_LEFT + 5, currentY + 6.2);
+    currentY += 13;
   }
 
-  // ═══════════════════════════════════════
-  // SIGNATURE
-  // ═══════════════════════════════════════
-
-  if (currentY > PAGE_BOTTOM - 40) { doc.addPage(); doc.setFillColor(...PRIMARY); doc.rect(0, 0, 210, 5, "F"); currentY = 14; }
-  currentY = drawSectionTitle(doc, "SIGNATURE DU CLIENT", currentY);
+  // ── SIGNATURE ──
+  currentY = checkPage(35, currentY);
+  doc.setFontSize(7); doc.setFont("helvetica", "bold"); doc.setTextColor(...PRIMARY);
+  doc.text("SIGNATURE CLIENT", PAGE_LEFT, currentY);
+  currentY += 4;
 
   if (intake?.signatureUrl) {
     const sigImg = await loadImage(intake.signatureUrl);
     if (sigImg) {
-      doc.setDrawColor(...GRAY_200);
-      doc.setLineWidth(0.3);
-      doc.roundedRect(PAGE_LEFT, currentY, 60, 25, 1, 1, "S");
-      try { doc.addImage(sigImg, detectImageFormat(sigImg), PAGE_LEFT + 2, currentY + 1, 56, 23); } catch {}
+      doc.setDrawColor(...GRAY_200); doc.setLineWidth(0.3);
+      doc.roundedRect(PAGE_LEFT, currentY, 55, 22, 1, 1, "S");
+      try { doc.addImage(sigImg, detectImageFormat(sigImg), PAGE_LEFT + 1, currentY + 1, 53, 20); } catch {}
     }
-    currentY += 28;
-    doc.setFontSize(7);
-    doc.setFont("helvetica", "italic");
-    doc.setTextColor(...GRAY_500);
-    doc.text(`Signé le : ${data.date}`, PAGE_LEFT, currentY);
-    currentY += 4;
-    doc.text("Le client reconnaît avoir lu et accepté les conditions générales figurant en page suivante.", PAGE_LEFT, currentY);
-    currentY += 8;
+    currentY += 24;
   } else {
-    // Empty signature box
-    doc.setDrawColor(...GRAY_200);
-    doc.setLineWidth(0.3);
-    doc.roundedRect(PAGE_LEFT, currentY, 60, 25, 1, 1, "S");
-    doc.setFontSize(6.5);
-    doc.setFont("helvetica", "italic");
-    doc.setTextColor(...GRAY_400);
-    doc.text("Signature du client", PAGE_LEFT + 5, currentY + 14);
-    currentY += 28;
-    doc.setFontSize(7);
-    doc.setFont("helvetica", "italic");
-    doc.setTextColor(...GRAY_500);
-    doc.text(`Date : ${data.date}`, PAGE_LEFT, currentY);
-    currentY += 4;
-    doc.text("Le client reconnaît avoir lu et accepté les conditions générales figurant en page suivante.", PAGE_LEFT, currentY);
-    currentY += 8;
+    doc.setDrawColor(...GRAY_200); doc.setLineWidth(0.3);
+    doc.roundedRect(PAGE_LEFT, currentY, 55, 22, 1, 1, "S");
+    doc.setFontSize(6.5); doc.setFont("helvetica", "italic"); doc.setTextColor(...GRAY_400);
+    doc.text("Signature du client", PAGE_LEFT + 5, currentY + 12);
+    currentY += 24;
   }
 
-  // ═══════════════════════════════════════
-  // CONDITIONS GÉNÉRALES — page 2
-  // ═══════════════════════════════════════
+  doc.setFontSize(6.5); doc.setFont("helvetica", "italic"); doc.setTextColor(...GRAY_500);
+  doc.text(`Signé le : ${data.date}`, PAGE_LEFT, currentY);
+  currentY += 3.5;
+  doc.text("Le client reconnaît avoir lu et accepté les conditions générales ci-dessous.", PAGE_LEFT, currentY);
+  currentY += 6;
 
-  doc.addPage();
-  doc.setFillColor(...PRIMARY);
-  doc.rect(0, 0, 210, 5, "F");
-
-  let condY = 14;
-  const lineH = 3.4;
-  const condMargin = PAGE_LEFT + 4;
-
-  function addCondSection(titleText: string, y: number): number {
-    if (y > PAGE_BOTTOM - 12) { doc.addPage(); doc.setFillColor(...PRIMARY); doc.rect(0, 0, 210, 5, "F"); y = 14; }
-    doc.setFillColor(...PRIMARY);
-    doc.roundedRect(PAGE_LEFT, y, CONTENT_WIDTH, 7, 1.5, 1.5, "F");
-    doc.setFontSize(8);
-    doc.setFont("helvetica", "bold");
-    doc.setTextColor(...WHITE);
-    doc.text(titleText, PAGE_LEFT + 5, y + 5);
-    return y + 11;
-  }
+  // ── CONDITIONS GÉNÉRALES — même page si possible, sinon page 2 ──
+  const lineH = 3.2;
+  const condMargin = PAGE_LEFT + 3;
 
   function addCondBullet(text: string, y: number): number {
-    if (y > PAGE_BOTTOM - 6) { doc.addPage(); doc.setFillColor(...PRIMARY); doc.rect(0, 0, 210, 5, "F"); y = 14; }
-    doc.setFontSize(6.5);
-    doc.setFont("helvetica", "normal");
-    doc.setTextColor(...GRAY_700);
-    const wrapped = doc.splitTextToSize(`• ${text}`, CONTENT_WIDTH - 8);
+    y = checkPage(8, y);
+    doc.setFontSize(6); doc.setFont("helvetica", "normal"); doc.setTextColor(...GRAY_700);
+    const wrapped = doc.splitTextToSize(`• ${text}`, CONTENT_WIDTH - 6);
     doc.text(wrapped, condMargin, y);
-    return y + wrapped.length * lineH + 1.2;
+    return y + wrapped.length * lineH + 0.8;
   }
 
   function addCondParagraph(text: string, y: number): number {
-    if (y > PAGE_BOTTOM - 6) { doc.addPage(); doc.setFillColor(...PRIMARY); doc.rect(0, 0, 210, 5, "F"); y = 14; }
-    doc.setFontSize(6.5);
-    doc.setFont("helvetica", "normal");
-    doc.setTextColor(...GRAY_700);
-    const wrapped = doc.splitTextToSize(text, CONTENT_WIDTH - 8);
+    y = checkPage(8, y);
+    doc.setFontSize(6); doc.setFont("helvetica", "normal"); doc.setTextColor(...GRAY_700);
+    const wrapped = doc.splitTextToSize(text, CONTENT_WIDTH - 6);
     doc.text(wrapped, condMargin, y);
-    return y + wrapped.length * lineH + 1.5;
+    return y + wrapped.length * lineH + 1;
   }
 
-  condY = addCondSection("CONDITIONS GÉNÉRALES DE RÉPARATION", condY);
+  // Section title inline (compact)
+  currentY = checkPage(10, currentY);
+  doc.setFontSize(7); doc.setFont("helvetica", "bold"); doc.setTextColor(...PRIMARY);
+  doc.text("CONDITIONS GÉNÉRALES DE RÉPARATION", PAGE_LEFT, currentY);
+  currentY += 4;
 
-  condY = addCondBullet(`Je reconnais avoir pris connaissance que ${shopName} ne peut être tenu responsable de la perte de mes données et que certaines pannes ne peuvent être révélées que lors du démontage de l'appareil.`, condY);
-  condY = addCondBullet("Certaines réparations sont effectuées avec des pièces compatibles et la garantie constructeur de mon appareil peut être annulée.", condY);
-  condY = addCondBullet("Un message indiquant l'usage de pièce non d'origine peut apparaitre dans les réglages de l'appareil.", condY);
-  condY = addCondBullet("Si une intervention est annulée par le client ou le réparateur, les frais de diagnostic seront appliqués (29€).", condY);
-  condY = addCondBullet(`${shopName} ne peut être tenu responsable de la panne d'un appareil quelle que soit la cause si le diagnostic est impossible à effectuer avant l'intervention.`, condY);
-  condY = addCondBullet("Votre réparation sera garantie pendant 12 mois (sauf contre-indication) pour tout usage correct de votre appareil, hors casse et oxydation.", condY);
-  condY = addCondBullet("La résistance à l'eau et à la poussière n'est jamais garantie après une intervention.", condY);
-  condY = addCondBullet("La garantie ne couvre pas : les logiciels internes et mises à jour ; les dommages cosmétiques, y compris, les fissures, rayures et éraflures ; les dommages causés par un accident, l'usage abusif, ou toute autre cause externe ; les dommages causés par une intervention réalisée par une personne autre que " + shopName + " ; les défauts résultant de l'usure normale ou du vieillissement normal d'une réparation ; les réparations et les diagnostics effectués sur un appareil oxydé ; et d'une manière générale les mauvaises utilisations faites avec l'appareil.", condY);
-  condY = addCondBullet("Vous certifiez avoir 18 ans ou plus et être en pleine possession de vos capacités.", condY);
+  currentY = addCondBullet(`Je reconnais avoir pris connaissance que ${shopName} ne peut être tenu responsable de la perte de mes données et que certaines pannes ne peuvent être révélées que lors du démontage de l'appareil.`, currentY);
+  currentY = addCondBullet("Certaines réparations sont effectuées avec des pièces compatibles et la garantie constructeur de mon appareil peut être annulée.", currentY);
+  currentY = addCondBullet("Un message indiquant l'usage de pièce non d'origine peut apparaitre dans les réglages de l'appareil.", currentY);
+  currentY = addCondBullet("Si une intervention est annulée par le client ou le réparateur, les frais de diagnostic seront appliqués (29€).", currentY);
+  currentY = addCondBullet(`${shopName} ne peut être tenu responsable de la panne d'un appareil quelle que soit la cause si le diagnostic est impossible à effectuer avant l'intervention.`, currentY);
+  currentY = addCondBullet("Votre réparation sera garantie pendant 12 mois (sauf contre-indication) pour tout usage correct de votre appareil, hors casse et oxydation.", currentY);
+  currentY = addCondBullet("La résistance à l'eau et à la poussière n'est jamais garantie après une intervention.", currentY);
+  currentY = addCondBullet("La garantie ne couvre pas : les logiciels internes et mises à jour ; les dommages cosmétiques ; les dommages causés par un accident, l'usage abusif, ou toute cause externe ; les dommages causés par une intervention réalisée par une personne autre que " + shopName + " ; les défauts résultant de l'usure normale ; les réparations sur un appareil oxydé ; et les mauvaises utilisations faites avec l'appareil.", currentY);
+  currentY = addCondBullet("Vous certifiez avoir 18 ans ou plus et être en pleine possession de vos capacités.", currentY);
 
-  condY += 4;
-  condY = addCondSection("ACCORD DE CONFIDENTIALITÉ", condY);
-  condY = addCondParagraph("Cet accord définit l'engagement de notre entreprise à respecter la confidentialité et la sécurité des données de nos clients.", condY);
-  condY += 1;
-  condY = addCondParagraph("1. Accès aux Données des Clients : Nous nous engageons à demander la permission à nos clients avant d'accéder à leurs données. Aucun accès non autorisé à ces informations ne sera effectué. Nous tenons à souligner que nous n'accédons pas aux données personnelles des clients pendant une réparation. Notre accès sera limité aux réglages ou à des applications natives pour effectuer des vérifications après la réparation et nous assurer qu'elle fonctionne correctement.", condY);
-  condY = addCondParagraph("2. Utilisation des Données : Nous nous engageons à n'utiliser les coordonnées des clients qu'aux fins de la réparation du smartphone et à ne conserver aucune information inutile.", condY);
-  condY = addCondParagraph("3. Sécurité des Données : Nous nous engageons à utiliser des logiciels et des protocoles de sécurité fiables pour prévenir toute fuite de données.", condY);
-  condY = addCondParagraph("4. Suppression des Données : Nous nous engageons à supprimer une fiche d'un client sur simple demande, cela implique que nous n'aurons plus l'historique des factures.", condY);
-  condY = addCondParagraph("5. Contrôle Qualité : Si le client ne souhaite pas partager son code lors de la prise en charge, nous nous engageons à effectuer le contrôle qualité en sa présence pour garantir la réparation.", condY);
-  condY += 2;
-  condY = addCondParagraph("En signant cet accord, nous nous engageons à respecter ces principes et à préserver la confiance de nos clients en garantissant la sécurité de leurs données.", condY);
+  currentY += 2;
+  currentY = checkPage(10, currentY);
+  doc.setFontSize(7); doc.setFont("helvetica", "bold"); doc.setTextColor(...PRIMARY);
+  doc.text("ACCORD DE CONFIDENTIALITÉ", PAGE_LEFT, currentY);
+  currentY += 4;
 
-  // ═══════════════════════════════════════
-  // PHOTOS (if any) — dedicated page
-  // ═══════════════════════════════════════
+  currentY = addCondParagraph("Cet accord définit l'engagement de notre entreprise à respecter la confidentialité et la sécurité des données de nos clients.", currentY);
+  currentY = addCondParagraph("1. Accès aux Données : Nous n'accédons pas aux données personnelles pendant une réparation. Notre accès est limité aux réglages ou applications natives pour vérifier le bon fonctionnement après réparation.", currentY);
+  currentY = addCondParagraph("2. Utilisation : Les coordonnées ne sont utilisées qu'aux fins de la réparation. Aucune information inutile n'est conservée.", currentY);
+  currentY = addCondParagraph("3. Sécurité : Nous utilisons des logiciels et protocoles de sécurité fiables pour prévenir toute fuite de données.", currentY);
+  currentY = addCondParagraph("4. Suppression : Nous supprimons une fiche client sur simple demande (cela implique la perte de l'historique des factures).", currentY);
+  currentY = addCondParagraph("5. Contrôle Qualité : Si le client ne partage pas son code, le contrôle qualité sera effectué en sa présence.", currentY);
+  currentY += 1;
+  currentY = addCondParagraph("En signant, nous nous engageons à respecter ces principes et à garantir la sécurité des données de nos clients.", currentY);
 
+  // ── PHOTOS — inline on remaining space, no extra page ──
   if (intake?.photoUrls && intake.photoUrls.length > 0) {
-    doc.addPage();
-    doc.setFillColor(...PRIMARY);
-    doc.rect(0, 0, 210, 5, "F");
-
-    let photoPageY = 14;
-    photoPageY = drawSectionTitle(doc, "PHOTOS DE L'APPAREIL", photoPageY);
-
-    const photoCols = 2;
-    const photoW = (CONTENT_WIDTH - 6) / photoCols;
-    const photoH = photoW * 0.75;
-
-    for (let i = 0; i < Math.min(intake.photoUrls.length, 6); i++) {
-      const col = i % photoCols;
-      const row = Math.floor(i / photoCols);
-      const x = PAGE_LEFT + col * (photoW + 6);
-      const y = photoPageY + row * (photoH + 6);
-
-      if (y + photoH > PAGE_BOTTOM) break;
-
-      const imgData = await loadImage(intake.photoUrls[i]);
+    currentY = checkPage(40, currentY);
+    doc.setFontSize(7); doc.setFont("helvetica", "bold"); doc.setTextColor(...PRIMARY);
+    doc.text("PHOTOS", PAGE_LEFT, currentY);
+    currentY += 4;
+    const photoW = 40, photoH = 30;
+    let px = PAGE_LEFT;
+    for (const url of intake.photoUrls.slice(0, 4)) {
+      if (px + photoW > PAGE_RIGHT) { px = PAGE_LEFT; currentY += photoH + 3; }
+      currentY = checkPage(photoH + 4, currentY);
+      const imgData = await loadImage(url);
       if (imgData) {
-        doc.setDrawColor(...GRAY_200);
-        doc.setLineWidth(0.2);
-        doc.roundedRect(x, y, photoW, photoH, 1, 1, "S");
-        try { doc.addImage(imgData, detectImageFormat(imgData), x + 1, y + 1, photoW - 2, photoH - 2); } catch { continue; }
+        doc.setDrawColor(...GRAY_200); doc.setLineWidth(0.2);
+        doc.roundedRect(px, currentY, photoW, photoH, 1, 1, "S");
+        try { doc.addImage(imgData, detectImageFormat(imgData), px + 1, currentY + 1, photoW - 2, photoH - 2); } catch {}
       }
+      px += photoW + 4;
     }
   }
 
-  // ═══════════════════════════════════════
-  // PAGE FOOTERS — all pages
-  // ═══════════════════════════════════════
-
+  // ── PAGE FOOTERS ──
   const totalPages = doc.getNumberOfPages();
   for (let i = 1; i <= totalPages; i++) {
     doc.setPage(i);
     const pageH = doc.internal.pageSize.getHeight();
-
-    // Bottom accent line
-    doc.setDrawColor(...PRIMARY);
-    doc.setLineWidth(0.5);
+    doc.setDrawColor(...PRIMARY); doc.setLineWidth(0.4);
     doc.line(PAGE_LEFT, pageH - 14, PAGE_RIGHT, pageH - 14);
-
-    // Company info
-    doc.setFontSize(6);
-    doc.setFont("helvetica", "normal");
-    doc.setTextColor(...GRAY_400);
-    const footerParts = [org.name, org.siret ? `SIRET : ${org.siret}` : "", org.vat_number ? `TVA : ${org.vat_number}` : "", fullAddress].filter(Boolean);
+    doc.setFontSize(6); doc.setFont("helvetica", "normal"); doc.setTextColor(...GRAY_400);
+    const footerParts = [org.name, org.siret ? `SIRET : ${org.siret}` : "", fullAddress].filter(Boolean);
     doc.text(footerParts.join("  •  "), 105, pageH - 9, { align: "center" });
-
-    // Page number
     doc.text(`Page ${i} / ${totalPages}`, PAGE_RIGHT, pageH - 5, { align: "right" });
     doc.setTextColor(0);
   }
