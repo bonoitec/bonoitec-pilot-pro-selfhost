@@ -690,6 +690,63 @@ export type Database = {
           },
         ]
       }
+      purchase_history: {
+        Row: {
+          created_at: string
+          id: string
+          inventory_id: string | null
+          notes: string | null
+          order_number: string | null
+          organization_id: string
+          purchased_at: string
+          quantity: number
+          supplier: string | null
+          total_ht: number
+          unit_price: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          inventory_id?: string | null
+          notes?: string | null
+          order_number?: string | null
+          organization_id: string
+          purchased_at?: string
+          quantity?: number
+          supplier?: string | null
+          total_ht?: number
+          unit_price?: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          inventory_id?: string | null
+          notes?: string | null
+          order_number?: string | null
+          organization_id?: string
+          purchased_at?: string
+          quantity?: number
+          supplier?: string | null
+          total_ht?: number
+          unit_price?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "purchase_history_inventory_id_fkey"
+            columns: ["inventory_id"]
+            isOneToOne: false
+            referencedRelation: "inventory"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "purchase_history_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       quotes: {
         Row: {
           client_id: string | null
