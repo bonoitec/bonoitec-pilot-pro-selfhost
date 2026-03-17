@@ -882,7 +882,12 @@ export async function generateIntakePDF(org: OrgInfo, data: IntakePdfData, optio
     // Extra device info below the card if present
     const extraLines: string[] = [];
     if (intake!.accessories) extraLines.push(`Accessoires : ${intake!.accessories}`);
-    if (intake!.password) extraLines.push(`Code / MdP confié : ${intake!.password}`);
+    if (intake!.password) {
+      const pwdDisplay = intake!.password.startsWith("pattern:")
+        ? `Schéma (${intake!.password.slice(8).split(",").length} points)`
+        : intake!.password;
+      extraLines.push(`Code / MdP confié : ${pwdDisplay}`);
+    }
     if (intake!.observations) extraLines.push(`Observations : ${intake!.observations}`);
     if (extraLines.length > 0) {
       // Extend card height dynamically
