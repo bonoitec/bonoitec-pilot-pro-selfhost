@@ -861,50 +861,6 @@ export function CreateRepairWizard({ open, onOpenChange }: Props) {
                           <p className="text-xs text-muted-foreground leading-relaxed">{diagnosticResult.solution_probable}</p>
                         </div>
 
-                        {clientDescription && (
-                          <div className="rounded-md bg-primary/10 border border-primary/20 p-3">
-                            <p className="text-[10px] uppercase tracking-wide text-primary font-semibold mb-1">Description client appliquée</p>
-                            <p className="text-xs text-foreground leading-relaxed">{clientDescription}</p>
-                          </div>
-                        )}
-
-                        <Button
-                          type="button"
-                          size="sm"
-                          className="w-full"
-                          disabled={diagnosticLoading || !!clientDescription}
-                          onClick={async () => {
-                            setDiagnosticLoading(true);
-                            try {
-                              const { data, error } = await supabase.functions.invoke("ai-diagnostic", {
-                                body: {
-                                  mode: "client-description",
-                                  messages: [{
-                                    role: "user",
-                                    content: `À partir de cette panne: "${issue.trim()}" et ce diagnostic:\nCauses: ${diagnosticResult.causes_possibles.join(", ")}\nSolution: ${diagnosticResult.solution_probable}\n\nGénère UNE SEULE description courte, claire et professionnelle destinée à un client non technicien. La description doit expliquer le problème et les pistes de réparation dans un langage simple. Pas de titre, pas de listes, juste un paragraphe. Réponds uniquement avec le texte de la description, rien d'autre.`
-                                  }],
-                                },
-                              });
-                              if (error) throw error;
-                              const content = data?.choices?.[0]?.message?.content;
-                              if (!content) throw new Error("Pas de réponse");
-                              setClientDescription(content.trim());
-                              toast({ title: "Diagnostic appliqué", description: "La description client a été générée." });
-                            } catch (e: any) {
-                              toast({ title: "Erreur", description: e.message, variant: "destructive" });
-                            } finally {
-                              setDiagnosticLoading(false);
-                            }
-                          }}
-                        >
-                          {diagnosticLoading ? (
-                            <><Loader2 className="h-4 w-4 animate-spin" />Génération...</>
-                          ) : clientDescription ? (
-                            <><CheckCircle2 className="h-4 w-4" />Appliqué</>
-                          ) : (
-                            <>Appliquer sur la fiche de réparation</>
-                          )}
-                        </Button>
                       </div>
                     )}
                   </div>
