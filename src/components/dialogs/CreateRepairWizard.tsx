@@ -118,6 +118,12 @@ export function CreateRepairWizard({ open, onOpenChange }: Props) {
   // Step 9 — Result
   const [createdRepair, setCreatedRepair] = useState<any>(null);
 
+  // AI Diagnostic state
+  const [showDiagnostic, setShowDiagnostic] = useState(false);
+  const [diagnosticLoading, setDiagnosticLoading] = useState(false);
+  const [diagnosticResult, setDiagnosticResult] = useState<DiagnosticResult | null>(null);
+  const [clientDescription, setClientDescription] = useState("");
+
   // Queries
   const { data: org } = useQuery({
     queryKey: ["organization"],
