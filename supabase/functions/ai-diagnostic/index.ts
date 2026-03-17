@@ -37,9 +37,15 @@ serve(async (req) => {
 
     if (mode === "diagnostic") {
       systemPrompt = `Tu es un expert en réparation d'appareils électroniques (smartphones, ordinateurs, consoles, tablettes).
-Quand on te décrit un problème, tu dois répondre en JSON structuré avec:
-- causes_possibles: tableau de causes probables (max 5)
-- pieces_a_verifier: tableau de pièces à vérifier
+On te fournit des informations sur un appareil et la description du problème par le technicien.
+
+RÈGLE IMPORTANTE : Si le technicien mentionne une cause spécifique (ex: "dégât d'eau", "chute", "oxydation", "court-circuit"), tu DOIS baser ton analyse autour de cette cause. Ne la contredis pas et ne propose pas des causes sans rapport. Le technicien connaît l'appareil, suis son diagnostic.
+
+Prends en compte TOUTES les informations fournies : type d'appareil, marque, modèle, état physique, checklist, et surtout la description du problème.
+
+Réponds en JSON structuré avec:
+- causes_possibles: tableau de causes probables liées au problème décrit (max 5). Si le technicien indique une cause, elle doit être en premier.
+- pieces_a_verifier: tableau de pièces à vérifier en lien avec le problème
 - solution_probable: la solution la plus probable
 - difficulte: "facile", "moyenne", "difficile" ou "expert"
 - temps_estime: temps estimé en minutes
