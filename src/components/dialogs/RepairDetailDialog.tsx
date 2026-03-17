@@ -445,6 +445,39 @@ export function RepairDetailDialog({ open, onOpenChange, repair }: Props) {
         </Tabs>
 
         <div className="flex justify-end gap-2 mt-2">
+          <Button variant="ghost" size="sm" onClick={async () => {
+            if (!org) return;
+            try {
+              const photoUrls = resolvedPhotos;
+              await generateIntakePDF(org as any, {
+                reference: repair.reference,
+                date: new Date(repair.created_at).toLocaleDateString("fr-FR"),
+                clientName: repair.clients?.name,
+                clientAddress: repair.clients?.address,
+                clientPhone: repair.clients?.phone,
+                clientEmail: repair.clients?.email,
+                issue: repair.issue,
+                estimatedPrice: repair.estimated_price,
+                intake: {
+                  deviceBrand: repair.devices?.brand,
+                  deviceModel: repair.devices?.model,
+                  serialNumber: repair.devices?.serial_number || undefined,
+                  deviceCategory: repair.devices?.type,
+                  checklist: intakeChecklist || undefined,
+                  screenCondition: repair.screen_condition,
+                  frameCondition: repair.frame_condition,
+                  backCondition: repair.back_condition,
+                  photoUrls,
+                  signatureUrl: resolvedSignature,
+                },
+              });
+              toast({ title: "Prise en charge téléchargée" });
+            } catch (e: any) {
+              toast({ title: "Erreur", description: e?.message, variant: "destructive" });
+            }
+          }}>
+            <Printer className="h-4 w-4 mr-1" />Réimprimer prise en charge
+          </Button>
           <Button variant="outline" onClick={() => onOpenChange(false)}>Fermer</Button>
           <Button onClick={() => mutation.mutate()} disabled={mutation.isPending}>
             {mutation.isPending ? "Mise à jour..." : "Enregistrer"}
