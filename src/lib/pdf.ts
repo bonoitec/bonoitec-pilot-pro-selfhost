@@ -551,7 +551,16 @@ export async function generatePDF(org: OrgInfo, data: DocData, options?: { previ
     finalY += 32;
   }
 
-  // ═══════════════════════════════════════════
+  // "Devis valable 14 jours" for quotes
+  if (!isInvoice) {
+    if (finalY + 10 > PAGE_BOTTOM) { doc.addPage(); doc.setFillColor(...PRIMARY); doc.rect(0, 0, 210, 4, "F"); finalY = 14; }
+    doc.setFontSize(8);
+    doc.setFont("helvetica", "italic");
+    doc.setTextColor(...GRAY_500);
+    doc.text("Devis valable 14 jours", PAGE_LEFT, finalY + 4);
+    finalY += 10;
+  }
+
   // DEVICE PHOTOS (new page)
   // ═══════════════════════════════════════════
 
