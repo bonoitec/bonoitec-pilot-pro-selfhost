@@ -40,6 +40,16 @@ interface IntakeInfo {
   signatureUrl?: string | null;
 }
 
+interface DiagnosticAnalysis {
+  causes_possibles: string[];
+  pieces_a_verifier: string[];
+  solution_probable: string;
+  difficulte: string;
+  temps_estime: string;
+  prix_estime: string;
+  conseils: string;
+}
+
 interface DocData {
   type: "invoice" | "quote";
   reference: string;
@@ -49,6 +59,7 @@ interface DocData {
   clientPhone?: string;
   clientEmail?: string;
   clientDiagnostic?: string;
+  diagnosticAnalysis?: DiagnosticAnalysis;
   lines: Line[];
   totalHT: number;
   totalTTC: number;
