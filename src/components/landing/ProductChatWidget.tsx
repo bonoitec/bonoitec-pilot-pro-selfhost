@@ -13,7 +13,7 @@ const SUGGESTIONS = [
   "Comment contacter le support ?",
 ];
 
-export function ProductChatWidget() {
+export const ProductChatWidget = forwardRef<HTMLDivElement>(function ProductChatWidget(_props, _ref) {
   const [open, setOpen] = useState(false);
   const [messages, setMessages] = useState<Msg[]>([]);
   const [input, setInput] = useState("");
