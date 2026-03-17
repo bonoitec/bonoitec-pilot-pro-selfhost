@@ -257,14 +257,14 @@ const templates: Record<string, (data: Record<string, string>, orgContact?: { ph
 
 // ─── Resend Send ────────────────────────────────────────────────────
 
-async function sendResend(to: string, subject: string, html: string, attachments?: Array<{ filename: string; content: string }>): Promise<void> {
+async function sendResend(to: string, subject: string, html: string, attachments?: Array<{ filename: string; content: string }>, replyTo?: string): Promise<void> {
   const apiKey = Deno.env.get("RESEND_API_KEY");
   if (!apiKey) throw new Error("RESEND_API_KEY is not configured");
 
   const payload: Record<string, unknown> = {
     from: FROM_EMAIL,
     to: [to],
-    reply_to: REPLY_TO,
+    reply_to: replyTo || REPLY_TO,
     subject,
     html,
   };
