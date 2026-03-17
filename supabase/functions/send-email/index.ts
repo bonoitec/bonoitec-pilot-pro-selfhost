@@ -405,7 +405,7 @@ Deno.serve(async (req) => {
     let errorMessage: string | null = null;
 
     try {
-      await sendResend(to, subject, html, attachments);
+      await sendResend(to, subject, html, attachments, orgContact?.email);
     } catch (sendError) {
       status = "failed";
       errorMessage = sendError instanceof Error ? sendError.message : "Resend error";
