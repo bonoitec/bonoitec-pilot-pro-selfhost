@@ -103,7 +103,8 @@ function drawStars(doc: jsPDF, x: number, y: number, rating: number, total: numb
     const cx = x + i * (starSize + gap) + starSize / 2;
     const cy = y - starSize / 2 + 0.5;
     const filled = i < rating;
-    doc.setFillColor(...(filled ? STAR_GOLD : STAR_EMPTY));
+    const color: [number, number, number] = filled ? [234, 179, 8] : [209, 213, 219];
+    doc.setFillColor(color[0], color[1], color[2]);
     // Draw a simple filled circle as a "star dot"
     doc.circle(cx, cy, starSize / 2.5, "F");
   }
