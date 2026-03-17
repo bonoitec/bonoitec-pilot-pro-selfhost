@@ -22,66 +22,70 @@ const BRAND = {
 function emailLayout(content: string, preheader = "", orgContact?: { phone?: string; email?: string }): string {
   const footerLines: string[] = [];
   if (orgContact?.email) {
-    footerLines.push(`<a href="mailto:${orgContact.email}">${orgContact.email}</a>`);
+    footerLines.push(`<a href="mailto:${orgContact.email}" style="color:${BRAND.primary};text-decoration:none;">${orgContact.email}</a>`);
   }
   if (orgContact?.phone) {
     footerLines.push(orgContact.phone);
   }
   const contactLine = footerLines.length > 0
-    ? footerLines.join(" · ")
-    : `<a href="mailto:contact@app.bonoitecpilot.fr">contact@app.bonoitecpilot.fr</a>`;
+    ? footerLines.join(" &middot; ")
+    : `<a href="mailto:contact@app.bonoitecpilot.fr" style="color:${BRAND.primary};text-decoration:none;">contact@app.bonoitecpilot.fr</a>`;
 
-  return `<!DOCTYPE html>
-<html lang="fr">
+  return `<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="fr">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="x-apple-disable-message-reformatting" />
+  <meta name="format-detection" content="telephone=no,address=no,email=no,date=no,url=no" />
   <title>BonoitecPilot</title>
-  <style>
-    body { margin: 0; padding: 0; background: ${BRAND.background}; font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
-    .wrapper { width: 100%; background: ${BRAND.background}; padding: 32px 0; }
-    .container { max-width: 580px; margin: 0 auto; background: ${BRAND.white}; border-radius: 12px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
-    .header { background: ${BRAND.primary}; padding: 28px 32px; text-align: center; }
-    .header h1 { color: ${BRAND.white}; font-size: 22px; font-weight: 700; margin: 0; letter-spacing: -0.3px; }
-    .header .subtitle { color: rgba(255,255,255,0.8); font-size: 12px; margin-top: 4px; }
-    .body { padding: 32px; }
-    .body h2 { color: ${BRAND.foreground}; font-size: 20px; font-weight: 700; margin: 0 0 16px; }
-    .body p { color: ${BRAND.muted}; font-size: 14px; line-height: 1.7; margin: 0 0 14px; }
-    .btn { display: inline-block; background: ${BRAND.primary}; color: ${BRAND.white} !important; text-decoration: none; padding: 12px 28px; border-radius: 8px; font-weight: 600; font-size: 14px; margin: 20px 0; }
-    .info-box { background: ${BRAND.primaryLight}; border-radius: 8px; padding: 16px 20px; margin: 20px 0; }
-    .info-box p { color: ${BRAND.foreground}; margin: 4px 0; font-size: 13px; }
-    .info-box strong { color: ${BRAND.primary}; }
-    .divider { border: none; border-top: 1px solid ${BRAND.border}; margin: 24px 0; }
-    .footer { background: ${BRAND.background}; padding: 24px 32px; text-align: center; border-top: 1px solid ${BRAND.border}; }
-    .footer p { color: ${BRAND.muted}; font-size: 12px; line-height: 1.6; margin: 0; }
-    .footer a { color: ${BRAND.primary}; text-decoration: none; }
-    @media (max-width: 600px) {
-      .container { margin: 0 12px; }
-      .body, .footer { padding: 24px 20px; }
-    }
-  </style>
+  <!--[if mso]>
+  <noscript>
+    <xml>
+      <o:OfficeDocumentSettings>
+        <o:AllowPNG/>
+        <o:PixelsPerInch>96</o:PixelsPerInch>
+      </o:OfficeDocumentSettings>
+    </xml>
+  </noscript>
+  <![endif]-->
 </head>
-<body>
-  ${preheader ? `<div style="display:none;max-height:0;overflow:hidden">${preheader}</div>` : ""}
-  <div class="wrapper">
-    <div class="container">
-      <div class="header">
-        <h1>⚡ BonoitecPilot</h1>
-        <div class="subtitle">Gestion professionnelle de réparations</div>
-      </div>
-      ${content}
-      <div class="footer">
-        <p>
-          BonoitecPilot — Votre atelier connecté<br>
-          ${contactLine}
-        </p>
-        <p style="margin-top:12px;font-size:11px;color:#94a3b8;">
-          Cet email a été envoyé automatiquement. Merci de ne pas y répondre directement.
-        </p>
-      </div>
-    </div>
-  </div>
+<body style="margin:0;padding:0;background-color:${BRAND.background};font-family:'Segoe UI',Tahoma,Geneva,Verdana,Arial,sans-serif;-webkit-text-size-adjust:100%;-ms-text-size-adjust:100%;">
+  ${preheader ? `<div style="display:none;font-size:1px;color:${BRAND.background};line-height:1px;max-height:0;max-width:0;opacity:0;overflow:hidden;">${preheader}&#847; &#847; &#847;</div>` : ""}
+  <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background-color:${BRAND.background};padding:32px 0;">
+    <tr>
+      <td align="center">
+        <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="580" style="max-width:580px;width:100%;background-color:${BRAND.white};border-radius:12px;overflow:hidden;border:1px solid ${BRAND.border};">
+          <!-- Header -->
+          <tr>
+            <td style="background-color:${BRAND.primary};padding:28px 32px;text-align:center;">
+              <h1 style="color:${BRAND.white};font-size:22px;font-weight:700;margin:0;letter-spacing:-0.3px;font-family:'Segoe UI',Tahoma,Geneva,Verdana,Arial,sans-serif;">&#9889; BonoitecPilot</h1>
+              <p style="color:rgba(255,255,255,0.8);font-size:12px;margin:4px 0 0 0;font-family:'Segoe UI',Tahoma,Geneva,Verdana,Arial,sans-serif;">Gestion professionnelle de r&eacute;parations</p>
+            </td>
+          </tr>
+          <!-- Body -->
+          <tr>
+            <td>
+              ${content}
+            </td>
+          </tr>
+          <!-- Footer -->
+          <tr>
+            <td style="background-color:${BRAND.background};padding:24px 32px;text-align:center;border-top:1px solid ${BRAND.border};">
+              <p style="color:${BRAND.muted};font-size:12px;line-height:1.6;margin:0;font-family:'Segoe UI',Tahoma,Geneva,Verdana,Arial,sans-serif;">
+                BonoitecPilot &mdash; Votre atelier connect&eacute;<br />
+                ${contactLine}
+              </p>
+              <p style="margin-top:12px;font-size:11px;color:#94a3b8;font-family:'Segoe UI',Tahoma,Geneva,Verdana,Arial,sans-serif;">
+                Cet email a &eacute;t&eacute; envoy&eacute; automatiquement. Merci de ne pas y r&eacute;pondre directement.
+              </p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
 </body>
 </html>`;
 }
