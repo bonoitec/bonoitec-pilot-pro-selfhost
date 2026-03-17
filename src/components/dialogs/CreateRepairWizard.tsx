@@ -15,7 +15,7 @@ import { Progress } from "@/components/ui/progress";
 import { useToast } from "@/hooks/use-toast";
 import { SignaturePad } from "@/components/SignaturePad";
 import { isValidIMEI, lookupTAC, lookupTACBroad } from "@/lib/imei";
-import { generatePDF } from "@/lib/pdf";
+import { generatePDF, generateIntakePDF } from "@/lib/pdf";
 import {
   User, Smartphone, ClipboardCheck, Star, Camera, Wrench,
   CalendarClock, PenTool, FileText, ChevronLeft, ChevronRight,
