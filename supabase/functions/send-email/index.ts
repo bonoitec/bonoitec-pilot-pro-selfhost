@@ -22,85 +22,97 @@ const BRAND = {
 function emailLayout(content: string, preheader = "", orgContact?: { phone?: string; email?: string }): string {
   const footerLines: string[] = [];
   if (orgContact?.email) {
-    footerLines.push(`<a href="mailto:${orgContact.email}">${orgContact.email}</a>`);
+    footerLines.push(`<a href="mailto:${orgContact.email}" style="color:${BRAND.primary};text-decoration:none;">${orgContact.email}</a>`);
   }
   if (orgContact?.phone) {
     footerLines.push(orgContact.phone);
   }
   const contactLine = footerLines.length > 0
-    ? footerLines.join(" · ")
-    : `<a href="mailto:contact@app.bonoitecpilot.fr">contact@app.bonoitecpilot.fr</a>`;
+    ? footerLines.join(" &middot; ")
+    : `<a href="mailto:contact@app.bonoitecpilot.fr" style="color:${BRAND.primary};text-decoration:none;">contact@app.bonoitecpilot.fr</a>`;
 
-  return `<!DOCTYPE html>
-<html lang="fr">
+  return `<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="fr">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="x-apple-disable-message-reformatting" />
+  <meta name="format-detection" content="telephone=no,address=no,email=no,date=no,url=no" />
   <title>BonoitecPilot</title>
-  <style>
-    body { margin: 0; padding: 0; background: ${BRAND.background}; font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
-    .wrapper { width: 100%; background: ${BRAND.background}; padding: 32px 0; }
-    .container { max-width: 580px; margin: 0 auto; background: ${BRAND.white}; border-radius: 12px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
-    .header { background: ${BRAND.primary}; padding: 28px 32px; text-align: center; }
-    .header h1 { color: ${BRAND.white}; font-size: 22px; font-weight: 700; margin: 0; letter-spacing: -0.3px; }
-    .header .subtitle { color: rgba(255,255,255,0.8); font-size: 12px; margin-top: 4px; }
-    .body { padding: 32px; }
-    .body h2 { color: ${BRAND.foreground}; font-size: 20px; font-weight: 700; margin: 0 0 16px; }
-    .body p { color: ${BRAND.muted}; font-size: 14px; line-height: 1.7; margin: 0 0 14px; }
-    .btn { display: inline-block; background: ${BRAND.primary}; color: ${BRAND.white} !important; text-decoration: none; padding: 12px 28px; border-radius: 8px; font-weight: 600; font-size: 14px; margin: 20px 0; }
-    .info-box { background: ${BRAND.primaryLight}; border-radius: 8px; padding: 16px 20px; margin: 20px 0; }
-    .info-box p { color: ${BRAND.foreground}; margin: 4px 0; font-size: 13px; }
-    .info-box strong { color: ${BRAND.primary}; }
-    .divider { border: none; border-top: 1px solid ${BRAND.border}; margin: 24px 0; }
-    .footer { background: ${BRAND.background}; padding: 24px 32px; text-align: center; border-top: 1px solid ${BRAND.border}; }
-    .footer p { color: ${BRAND.muted}; font-size: 12px; line-height: 1.6; margin: 0; }
-    .footer a { color: ${BRAND.primary}; text-decoration: none; }
-    @media (max-width: 600px) {
-      .container { margin: 0 12px; }
-      .body, .footer { padding: 24px 20px; }
-    }
-  </style>
+  <!--[if mso]>
+  <noscript>
+    <xml>
+      <o:OfficeDocumentSettings>
+        <o:AllowPNG/>
+        <o:PixelsPerInch>96</o:PixelsPerInch>
+      </o:OfficeDocumentSettings>
+    </xml>
+  </noscript>
+  <![endif]-->
 </head>
-<body>
-  ${preheader ? `<div style="display:none;max-height:0;overflow:hidden">${preheader}</div>` : ""}
-  <div class="wrapper">
-    <div class="container">
-      <div class="header">
-        <h1>⚡ BonoitecPilot</h1>
-        <div class="subtitle">Gestion professionnelle de réparations</div>
-      </div>
-      ${content}
-      <div class="footer">
-        <p>
-          BonoitecPilot — Votre atelier connecté<br>
-          ${contactLine}
-        </p>
-        <p style="margin-top:12px;font-size:11px;color:#94a3b8;">
-          Cet email a été envoyé automatiquement. Merci de ne pas y répondre directement.
-        </p>
-      </div>
-    </div>
-  </div>
+<body style="margin:0;padding:0;background-color:${BRAND.background};font-family:'Segoe UI',Tahoma,Geneva,Verdana,Arial,sans-serif;-webkit-text-size-adjust:100%;-ms-text-size-adjust:100%;">
+  ${preheader ? `<div style="display:none;font-size:1px;color:${BRAND.background};line-height:1px;max-height:0;max-width:0;opacity:0;overflow:hidden;">${preheader}&#847; &#847; &#847;</div>` : ""}
+  <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background-color:${BRAND.background};padding:32px 0;">
+    <tr>
+      <td align="center">
+        <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="580" style="max-width:580px;width:100%;background-color:${BRAND.white};border-radius:12px;overflow:hidden;border:1px solid ${BRAND.border};">
+          <!-- Header -->
+          <tr>
+            <td style="background-color:${BRAND.primary};padding:28px 32px;text-align:center;">
+              <h1 style="color:${BRAND.white};font-size:22px;font-weight:700;margin:0;letter-spacing:-0.3px;font-family:'Segoe UI',Tahoma,Geneva,Verdana,Arial,sans-serif;">&#9889; BonoitecPilot</h1>
+              <p style="color:rgba(255,255,255,0.8);font-size:12px;margin:4px 0 0 0;font-family:'Segoe UI',Tahoma,Geneva,Verdana,Arial,sans-serif;">Gestion professionnelle de r&eacute;parations</p>
+            </td>
+          </tr>
+          <!-- Body -->
+          <tr>
+            <td>
+              ${content}
+            </td>
+          </tr>
+          <!-- Footer -->
+          <tr>
+            <td style="background-color:${BRAND.background};padding:24px 32px;text-align:center;border-top:1px solid ${BRAND.border};">
+              <p style="color:${BRAND.muted};font-size:12px;line-height:1.6;margin:0;font-family:'Segoe UI',Tahoma,Geneva,Verdana,Arial,sans-serif;">
+                BonoitecPilot &mdash; Votre atelier connect&eacute;<br />
+                ${contactLine}
+              </p>
+              <p style="margin-top:12px;font-size:11px;color:#94a3b8;font-family:'Segoe UI',Tahoma,Geneva,Verdana,Arial,sans-serif;">
+                Cet email a &eacute;t&eacute; envoy&eacute; automatiquement. Merci de ne pas y r&eacute;pondre directement.
+              </p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
 </body>
 </html>`;
 }
+
+const BODY_STYLE = `padding:32px;font-family:'Segoe UI',Tahoma,Geneva,Verdana,Arial,sans-serif;`;
+const H2_STYLE = `color:${BRAND.foreground};font-size:20px;font-weight:700;margin:0 0 16px;font-family:'Segoe UI',Tahoma,Geneva,Verdana,Arial,sans-serif;`;
+const P_STYLE = `color:${BRAND.muted};font-size:14px;line-height:1.7;margin:0 0 14px;font-family:'Segoe UI',Tahoma,Geneva,Verdana,Arial,sans-serif;`;
+const INFO_BOX_STYLE = `background-color:${BRAND.primaryLight};border-radius:8px;padding:16px 20px;margin:20px 0;`;
+const INFO_P_STYLE = `color:${BRAND.foreground};margin:4px 0;font-size:13px;font-family:'Segoe UI',Tahoma,Geneva,Verdana,Arial,sans-serif;`;
+const BTN_STYLE = `display:inline-block;background-color:${BRAND.primary};color:${BRAND.white};text-decoration:none;padding:12px 28px;border-radius:8px;font-weight:600;font-size:14px;margin:20px 0;font-family:'Segoe UI',Tahoma,Geneva,Verdana,Arial,sans-serif;`;
+const DIVIDER_STYLE = `border:none;border-top:1px solid ${BRAND.border};margin:24px 0;`;
 
 const templates: Record<string, (data: Record<string, string>, orgContact?: { phone?: string; email?: string }) => { subject: string; html: string }> = {
   quote_ready: (d, oc) => ({
     subject: `Votre devis ${d.reference} est disponible`,
     html: emailLayout(`
-      <div class="body">
-        <h2>📋 Votre devis est prêt</h2>
-        <p>Bonjour ${d.clientName || ""},</p>
-        <p>Nous avons préparé un devis pour la réparation de votre appareil. Retrouvez les détails ci-dessous :</p>
-        <div class="info-box">
-          <p><strong>Référence :</strong> ${d.reference}</p>
-          <p><strong>Appareil :</strong> ${d.device || "—"}</p>
-          <p><strong>Montant TTC :</strong> ${d.totalTTC || "—"} €</p>
+      <div style="${BODY_STYLE}">
+        <h2 style="${H2_STYLE}">&#128203; Votre devis est pr&ecirc;t</h2>
+        <p style="${P_STYLE}">Bonjour ${d.clientName || ""},</p>
+        <p style="${P_STYLE}">Nous avons pr&eacute;par&eacute; un devis pour la r&eacute;paration de votre appareil. Retrouvez les d&eacute;tails ci-dessous :</p>
+        <div style="${INFO_BOX_STYLE}">
+          <p style="${INFO_P_STYLE}"><strong style="color:${BRAND.primary};">R&eacute;f&eacute;rence :</strong> ${d.reference}</p>
+          <p style="${INFO_P_STYLE}"><strong style="color:${BRAND.primary};">Appareil :</strong> ${d.device || "&mdash;"}</p>
+          <p style="${INFO_P_STYLE}"><strong style="color:${BRAND.primary};">Montant TTC :</strong> ${d.totalTTC || "&mdash;"} &euro;</p>
         </div>
-        <p>Ce devis est valable 30 jours. N'hésitez pas à nous contacter pour toute question.</p>
-        <p>Cordialement,<br><strong>L'équipe BonoitecPilot</strong></p>
+        <p style="${P_STYLE}">Ce devis est valable 14 jours. N'h&eacute;sitez pas &agrave; nous contacter pour toute question.</p>
+        <p style="${P_STYLE}">Cordialement,<br /><strong>L'&eacute;quipe BonoitecPilot</strong></p>
       </div>
     `, `Votre devis ${d.reference} est disponible`, oc),
   }),
@@ -108,18 +120,18 @@ const templates: Record<string, (data: Record<string, string>, orgContact?: { ph
   repair_completed: (d, oc) => ({
     subject: `Réparation ${d.reference} terminée — Appareil prêt`,
     html: emailLayout(`
-      <div class="body">
-        <h2>✅ Réparation terminée !</h2>
-        <p>Bonjour ${d.clientName || ""},</p>
-        <p>Bonne nouvelle ! La réparation de votre appareil est terminée et il est prêt à être récupéré.</p>
-        <div class="info-box">
-          <p><strong>Référence :</strong> ${d.reference}</p>
-          <p><strong>Appareil :</strong> ${d.device || "—"}</p>
-          <p><strong>Statut :</strong> ✅ Terminée</p>
+      <div style="${BODY_STYLE}">
+        <h2 style="${H2_STYLE}">&#9989; R&eacute;paration termin&eacute;e !</h2>
+        <p style="${P_STYLE}">Bonjour ${d.clientName || ""},</p>
+        <p style="${P_STYLE}">Bonne nouvelle ! La r&eacute;paration de votre appareil est termin&eacute;e et il est pr&ecirc;t &agrave; &ecirc;tre r&eacute;cup&eacute;r&eacute;.</p>
+        <div style="${INFO_BOX_STYLE}">
+          <p style="${INFO_P_STYLE}"><strong style="color:${BRAND.primary};">R&eacute;f&eacute;rence :</strong> ${d.reference}</p>
+          <p style="${INFO_P_STYLE}"><strong style="color:${BRAND.primary};">Appareil :</strong> ${d.device || "&mdash;"}</p>
+          <p style="${INFO_P_STYLE}"><strong style="color:${BRAND.primary};">Statut :</strong> &#9989; Termin&eacute;e</p>
         </div>
-        <p>Vous pouvez venir le récupérer à notre atelier aux horaires d'ouverture.</p>
-        ${d.trackingUrl ? `<a href="${d.trackingUrl}" class="btn">Suivre ma réparation</a>` : ""}
-        <p>Merci de votre confiance !<br><strong>L'équipe BonoitecPilot</strong></p>
+        <p style="${P_STYLE}">Vous pouvez venir le r&eacute;cup&eacute;rer &agrave; notre atelier aux horaires d'ouverture.</p>
+        ${d.trackingUrl ? `<a href="${d.trackingUrl}" style="${BTN_STYLE}">Suivre ma r&eacute;paration</a>` : ""}
+        <p style="${P_STYLE}">Merci de votre confiance !<br /><strong>L'&eacute;quipe BonoitecPilot</strong></p>
       </div>
     `, `Votre réparation ${d.reference} est terminée`, oc),
   }),
@@ -127,18 +139,18 @@ const templates: Record<string, (data: Record<string, string>, orgContact?: { ph
   invoice_sent: (d, oc) => ({
     subject: `Facture ${d.reference} — BonoitecPilot`,
     html: emailLayout(`
-      <div class="body">
-        <h2>🧾 Votre facture</h2>
-        <p>Bonjour ${d.clientName || ""},</p>
-        <p>Veuillez trouver ci-dessous les informations relatives à votre facture :</p>
-        <div class="info-box">
-          <p><strong>N° Facture :</strong> ${d.reference}</p>
-          <p><strong>Montant HT :</strong> ${d.totalHT || "—"} €</p>
-          <p><strong>Montant TTC :</strong> ${d.totalTTC || "—"} €</p>
-          ${d.paymentMethod ? `<p><strong>Paiement :</strong> ${d.paymentMethod}</p>` : ""}
+      <div style="${BODY_STYLE}">
+        <h2 style="${H2_STYLE}">&#129534; Votre facture</h2>
+        <p style="${P_STYLE}">Bonjour ${d.clientName || ""},</p>
+        <p style="${P_STYLE}">Veuillez trouver ci-dessous les informations relatives &agrave; votre facture :</p>
+        <div style="${INFO_BOX_STYLE}">
+          <p style="${INFO_P_STYLE}"><strong style="color:${BRAND.primary};">N&deg; Facture :</strong> ${d.reference}</p>
+          <p style="${INFO_P_STYLE}"><strong style="color:${BRAND.primary};">Montant HT :</strong> ${d.totalHT || "&mdash;"} &euro;</p>
+          <p style="${INFO_P_STYLE}"><strong style="color:${BRAND.primary};">Montant TTC :</strong> ${d.totalTTC || "&mdash;"} &euro;</p>
+          ${d.paymentMethod ? `<p style="${INFO_P_STYLE}"><strong style="color:${BRAND.primary};">Paiement :</strong> ${d.paymentMethod}</p>` : ""}
         </div>
-        <p>Pour toute question concernant cette facture, n'hésitez pas à nous contacter.</p>
-        <p>Cordialement,<br><strong>L'équipe BonoitecPilot</strong></p>
+        <p style="${P_STYLE}">Pour toute question concernant cette facture, n'h&eacute;sitez pas &agrave; nous contacter.</p>
+        <p style="${P_STYLE}">Cordialement,<br /><strong>L'&eacute;quipe BonoitecPilot</strong></p>
       </div>
     `, `Facture ${d.reference}`, oc),
   }),
@@ -146,23 +158,23 @@ const templates: Record<string, (data: Record<string, string>, orgContact?: { ph
   status_update: (d, oc) => ({
     subject: `Mise à jour — ${d.statusLabel || "Votre réparation"} (${d.reference})`,
     html: emailLayout(`
-      <div class="body">
-        <h2>🔔 ${d.statusLabel || "Mise à jour de réparation"}</h2>
-        <p>Bonjour ${d.clientName || ""},</p>
-        <p>${d.message || "Le statut de votre réparation a été mis à jour."}</p>
-        <div class="info-box">
-          <p><strong>Référence :</strong> ${d.reference}</p>
-          <p><strong>Appareil :</strong> ${d.device || "—"}</p>
-          <p><strong>Nouveau statut :</strong> ${d.statusLabel || d.status || "—"}</p>
+      <div style="${BODY_STYLE}">
+        <h2 style="${H2_STYLE}">&#128276; ${d.statusLabel || "Mise &agrave; jour de r&eacute;paration"}</h2>
+        <p style="${P_STYLE}">Bonjour ${d.clientName || ""},</p>
+        <p style="${P_STYLE}">${d.message || "Le statut de votre r&eacute;paration a &eacute;t&eacute; mis &agrave; jour."}</p>
+        <div style="${INFO_BOX_STYLE}">
+          <p style="${INFO_P_STYLE}"><strong style="color:${BRAND.primary};">R&eacute;f&eacute;rence :</strong> ${d.reference}</p>
+          <p style="${INFO_P_STYLE}"><strong style="color:${BRAND.primary};">Appareil :</strong> ${d.device || "&mdash;"}</p>
+          <p style="${INFO_P_STYLE}"><strong style="color:${BRAND.primary};">Nouveau statut :</strong> ${d.statusLabel || d.status || "&mdash;"}</p>
         </div>
-        ${d.trackingUrl ? `<a href="${d.trackingUrl}" class="btn">Suivre ma réparation</a>` : ""}
+        ${d.trackingUrl ? `<a href="${d.trackingUrl}" style="${BTN_STYLE}">Suivre ma r&eacute;paration</a>` : ""}
         ${d.googleReviewUrl ? `
-        <hr class="divider">
-        <p style="text-align:center;">⭐ <strong>Votre avis compte beaucoup pour nous</strong></p>
-        <p style="text-align:center;">Si vous êtes satisfait de notre service, n'hésitez pas à nous laisser un petit avis :</p>
-        <p style="text-align:center;"><a href="${d.googleReviewUrl}" class="btn" style="background:${BRAND.primary};">Laisser un avis</a></p>
+        <hr style="${DIVIDER_STYLE}" />
+        <p style="${P_STYLE}text-align:center;">&#11088; <strong>Votre avis compte beaucoup pour nous</strong></p>
+        <p style="${P_STYLE}text-align:center;">Si vous &ecirc;tes satisfait de notre service, n'h&eacute;sitez pas &agrave; nous laisser un petit avis :</p>
+        <p style="text-align:center;"><a href="${d.googleReviewUrl}" style="${BTN_STYLE}">Laisser un avis</a></p>
         ` : ""}
-        <p>Cordialement,<br><strong>L'équipe BonoitecPilot</strong></p>
+        <p style="${P_STYLE}">Cordialement,<br /><strong>L'&eacute;quipe BonoitecPilot</strong></p>
       </div>
     `, `Réparation ${d.reference} — ${d.statusLabel || "mise à jour"}`, oc),
   }),
@@ -170,12 +182,12 @@ const templates: Record<string, (data: Record<string, string>, orgContact?: { ph
   client_notification: (d, oc) => ({
     subject: d.subject || "Notification — BonoitecPilot",
     html: emailLayout(`
-      <div class="body">
-        <h2>📬 ${d.subject || "Message"}</h2>
-        <p>Bonjour ${d.clientName || ""},</p>
-        <p>${d.message || ""}</p>
-        ${d.trackingUrl ? `<a href="${d.trackingUrl}" class="btn">Accéder à mon espace</a>` : ""}
-        <p>Cordialement,<br><strong>L'équipe BonoitecPilot</strong></p>
+      <div style="${BODY_STYLE}">
+        <h2 style="${H2_STYLE}">&#128236; ${d.subject || "Message"}</h2>
+        <p style="${P_STYLE}">Bonjour ${d.clientName || ""},</p>
+        <p style="${P_STYLE}">${d.message || ""}</p>
+        ${d.trackingUrl ? `<a href="${d.trackingUrl}" style="${BTN_STYLE}">Acc&eacute;der &agrave; mon espace</a>` : ""}
+        <p style="${P_STYLE}">Cordialement,<br /><strong>L'&eacute;quipe BonoitecPilot</strong></p>
       </div>
     `, "", oc),
   }),
@@ -183,20 +195,20 @@ const templates: Record<string, (data: Record<string, string>, orgContact?: { ph
   welcome_signup: (d, oc) => ({
     subject: "Bienvenue sur BonoitecPilot — Votre compte a bien été créé ✅",
     html: emailLayout(`
-      <div class="body">
-        <h2>🎉 Bienvenue sur BonoitecPilot !</h2>
-        <p>Bonjour ${d.clientName || ""},</p>
-        <p>Votre inscription a bien été prise en compte. Nous sommes ravis de vous accueillir sur notre plateforme de gestion professionnelle pour ateliers de réparation.</p>
-        <div class="info-box">
-          <p><strong>✅ Votre compte est actif</strong></p>
-          <p>Vous bénéficiez d'un essai gratuit de 30 jours avec accès complet à toutes les fonctionnalités.</p>
+      <div style="${BODY_STYLE}">
+        <h2 style="${H2_STYLE}">&#127881; Bienvenue sur BonoitecPilot !</h2>
+        <p style="${P_STYLE}">Bonjour ${d.clientName || ""},</p>
+        <p style="${P_STYLE}">Votre inscription a bien &eacute;t&eacute; prise en compte. Nous sommes ravis de vous accueillir sur notre plateforme de gestion professionnelle pour ateliers de r&eacute;paration.</p>
+        <div style="${INFO_BOX_STYLE}">
+          <p style="${INFO_P_STYLE}"><strong style="color:${BRAND.primary};">&#9989; Votre compte est actif</strong></p>
+          <p style="${INFO_P_STYLE}">Vous b&eacute;n&eacute;ficiez d'un essai gratuit de 30 jours avec acc&egrave;s complet &agrave; toutes les fonctionnalit&eacute;s.</p>
         </div>
-        <p>Vous pouvez dès à présent :</p>
-        <p>• Créer vos premiers clients et appareils<br>• Enregistrer des réparations<br>• Générer des devis et factures<br>• Gérer votre stock de pièces</p>
-        <a href="https://bonoitec-pilot-pro.lovable.app/dashboard" class="btn">Accéder à mon tableau de bord</a>
-        <hr class="divider">
-        <p>Si vous avez la moindre question, n'hésitez pas à nous contacter. Nous sommes là pour vous accompagner.</p>
-        <p>À très vite,<br><strong>L'équipe BonoitecPilot</strong></p>
+        <p style="${P_STYLE}">Vous pouvez d&egrave;s &agrave; pr&eacute;sent :</p>
+        <p style="${P_STYLE}">&bull; Cr&eacute;er vos premiers clients et appareils<br />&bull; Enregistrer des r&eacute;parations<br />&bull; G&eacute;n&eacute;rer des devis et factures<br />&bull; G&eacute;rer votre stock de pi&egrave;ces</p>
+        <a href="https://bonoitec-pilot-pro.lovable.app/dashboard" style="${BTN_STYLE}">Acc&eacute;der &agrave; mon tableau de bord</a>
+        <hr style="${DIVIDER_STYLE}" />
+        <p style="${P_STYLE}">Si vous avez la moindre question, n'h&eacute;sitez pas &agrave; nous contacter. Nous sommes l&agrave; pour vous accompagner.</p>
+        <p style="${P_STYLE}">&Agrave; tr&egrave;s vite,<br /><strong>L'&eacute;quipe BonoitecPilot</strong></p>
       </div>
     `, "Bienvenue ! Votre compte BonoitecPilot est prêt.", oc),
   }),
@@ -204,20 +216,20 @@ const templates: Record<string, (data: Record<string, string>, orgContact?: { ph
   repair_created: (d, oc) => ({
     subject: `Réparation enregistrée — ${d.reference}`,
     html: emailLayout(`
-      <div class="body">
-        <h2>📱 Votre réparation a été enregistrée</h2>
-        <p>Bonjour ${d.clientName || ""},</p>
-        <p>Nous avons bien enregistré votre demande de réparation. Voici les détails :</p>
-        <div class="info-box">
-          <p><strong>Référence :</strong> ${d.reference}</p>
-          <p><strong>Appareil :</strong> ${d.device || "—"}</p>
-          <p><strong>Problème :</strong> ${d.issue || "—"}</p>
-          ${d.estimatedDelay ? `<p><strong>⏱ ${d.estimatedDelay}</strong></p>` : ""}
+      <div style="${BODY_STYLE}">
+        <h2 style="${H2_STYLE}">&#128241; Votre r&eacute;paration a &eacute;t&eacute; enregistr&eacute;e</h2>
+        <p style="${P_STYLE}">Bonjour ${d.clientName || ""},</p>
+        <p style="${P_STYLE}">Nous avons bien enregistr&eacute; votre demande de r&eacute;paration. Voici les d&eacute;tails :</p>
+        <div style="${INFO_BOX_STYLE}">
+          <p style="${INFO_P_STYLE}"><strong style="color:${BRAND.primary};">R&eacute;f&eacute;rence :</strong> ${d.reference}</p>
+          <p style="${INFO_P_STYLE}"><strong style="color:${BRAND.primary};">Appareil :</strong> ${d.device || "&mdash;"}</p>
+          <p style="${INFO_P_STYLE}"><strong style="color:${BRAND.primary};">Probl&egrave;me :</strong> ${d.issue || "&mdash;"}</p>
+          ${d.estimatedDelay ? `<p style="${INFO_P_STYLE}"><strong style="color:${BRAND.primary};">&#9201; ${d.estimatedDelay}</strong></p>` : ""}
         </div>
-        <p>Vous pouvez suivre l'avancement de votre réparation en temps réel grâce au lien ci-dessous :</p>
-        ${d.trackingUrl ? `<a href="${d.trackingUrl}" class="btn">Suivre ma réparation</a>` : ""}
-        <p>Nous vous tiendrons informé(e) à chaque étape.</p>
-        <p>Cordialement,<br><strong>L'équipe BonoitecPilot</strong></p>
+        <p style="${P_STYLE}">Vous pouvez suivre l'avancement de votre r&eacute;paration en temps r&eacute;el gr&acirc;ce au lien ci-dessous :</p>
+        ${d.trackingUrl ? `<a href="${d.trackingUrl}" style="${BTN_STYLE}">Suivre ma r&eacute;paration</a>` : ""}
+        <p style="${P_STYLE}">Nous vous tiendrons inform&eacute;(e) &agrave; chaque &eacute;tape.</p>
+        <p style="${P_STYLE}">Cordialement,<br /><strong>L'&eacute;quipe BonoitecPilot</strong></p>
       </div>
     `, `Réparation ${d.reference} enregistrée — suivez son avancement`, oc),
   }),
@@ -225,19 +237,19 @@ const templates: Record<string, (data: Record<string, string>, orgContact?: { ph
   login_alert: (d, oc) => ({
     subject: "🔐 Connexion détectée sur votre compte BonoitecPilot",
     html: emailLayout(`
-      <div class="body">
-        <h2>🔐 Connexion à votre compte</h2>
-        <p>Bonjour ${d.clientName || ""},</p>
-        <p>Une connexion à votre compte BonoitecPilot a été détectée.</p>
-        <div class="info-box">
-          <p><strong>📅 Date et heure :</strong> ${d.loginTime || new Date().toLocaleString("fr-FR")}</p>
+      <div style="${BODY_STYLE}">
+        <h2 style="${H2_STYLE}">&#128274; Connexion &agrave; votre compte</h2>
+        <p style="${P_STYLE}">Bonjour ${d.clientName || ""},</p>
+        <p style="${P_STYLE}">Une connexion &agrave; votre compte BonoitecPilot a &eacute;t&eacute; d&eacute;tect&eacute;e.</p>
+        <div style="${INFO_BOX_STYLE}">
+          <p style="${INFO_P_STYLE}"><strong style="color:${BRAND.primary};">&#128197; Date et heure :</strong> ${d.loginTime || new Date().toLocaleString("fr-FR")}</p>
         </div>
-        <p><strong>Si c'était bien vous</strong>, aucune action n'est nécessaire. Vous pouvez ignorer cet e-mail.</p>
-        <p><strong>Si ce n'était pas vous</strong>, nous vous recommandons de :</p>
-        <p>• Changer immédiatement votre mot de passe<br>• Vérifier les appareils connectés à votre compte<br>• Nous contacter rapidement</p>
-        <hr class="divider">
-        <p style="font-size:12px;color:${BRAND.muted};">Cet e-mail est envoyé automatiquement à chaque connexion pour garantir la sécurité de votre compte.</p>
-        <p>Cordialement,<br><strong>L'équipe BonoitecPilot</strong></p>
+        <p style="${P_STYLE}"><strong>Si c'&eacute;tait bien vous</strong>, aucune action n'est n&eacute;cessaire. Vous pouvez ignorer cet e-mail.</p>
+        <p style="${P_STYLE}"><strong>Si ce n'&eacute;tait pas vous</strong>, nous vous recommandons de :</p>
+        <p style="${P_STYLE}">&bull; Changer imm&eacute;diatement votre mot de passe<br />&bull; V&eacute;rifier les appareils connect&eacute;s &agrave; votre compte<br />&bull; Nous contacter rapidement</p>
+        <hr style="${DIVIDER_STYLE}" />
+        <p style="font-size:12px;color:${BRAND.muted};font-family:'Segoe UI',Tahoma,Geneva,Verdana,Arial,sans-serif;">Cet e-mail est envoy&eacute; automatiquement &agrave; chaque connexion pour garantir la s&eacute;curit&eacute; de votre compte.</p>
+        <p style="${P_STYLE}">Cordialement,<br /><strong>L'&eacute;quipe BonoitecPilot</strong></p>
       </div>
     `, "Une connexion a été détectée sur votre compte", oc),
   }),

@@ -16,7 +16,7 @@ interface Props {
 export function CreateClientDialog({ open, onOpenChange }: Props) {
   const { toast } = useToast();
   const qc = useQueryClient();
-  const [form, setForm] = useState({ name: "", phone: "", email: "", address: "", notes: "" });
+  const [form, setForm] = useState({ name: "", phone: "", email: "", address: "", city: "", postal_code: "", notes: "" });
 
   const mutation = useMutation({
     mutationFn: async () => {
@@ -28,6 +28,8 @@ export function CreateClientDialog({ open, onOpenChange }: Props) {
         phone: form.phone.trim() || null,
         email: form.email.trim() || null,
         address: form.address.trim() || null,
+        city: form.city.trim() || null,
+        postal_code: form.postal_code.trim() || null,
         notes: form.notes.trim() || null,
       });
       if (error) throw error;
@@ -35,7 +37,7 @@ export function CreateClientDialog({ open, onOpenChange }: Props) {
     onSuccess: () => {
       toast({ title: "Client créé avec succès" });
       qc.invalidateQueries({ queryKey: ["clients"] });
-      setForm({ name: "", phone: "", email: "", address: "", notes: "" });
+      setForm({ name: "", phone: "", email: "", address: "", city: "", postal_code: "", notes: "" });
       onOpenChange(false);
     },
     onError: (e: Error) => toast({ title: "Erreur", description: e.message, variant: "destructive" }),
@@ -55,6 +57,10 @@ export function CreateClientDialog({ open, onOpenChange }: Props) {
             <div><Label>Email</Label><Input type="email" value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} placeholder="client@email.com" /></div>
           </div>
           <div><Label>Adresse</Label><Input value={form.address} onChange={e => setForm({ ...form, address: e.target.value })} placeholder="Adresse complète" /></div>
+          <div className="grid grid-cols-2 gap-3">
+            <div><Label>Code postal</Label><Input value={form.postal_code} onChange={e => setForm({ ...form, postal_code: e.target.value })} placeholder="75001" /></div>
+            <div><Label>Ville</Label><Input value={form.city} onChange={e => setForm({ ...form, city: e.target.value })} placeholder="Paris" /></div>
+          </div>
           <div><Label>Notes</Label><Textarea value={form.notes} onChange={e => setForm({ ...form, notes: e.target.value })} placeholder="Notes..." rows={2} /></div>
         </div>
         <DialogFooter>
