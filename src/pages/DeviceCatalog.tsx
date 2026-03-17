@@ -149,14 +149,21 @@ export default function DeviceCatalog() {
         color_variants: [],
         organization_id: orgId,
       }));
+      let added = 0;
       for (let i = 0; i < rows.length; i += BATCH_SIZE) {
         const batch = rows.slice(i, i + BATCH_SIZE);
-        const { error } = await supabase.from("device_catalog").insert(batch);
+        const { data, error } = await supabase.from("device_catalog").upsert(batch, {
+          onConflict: "brand,model,organization_id",
+          ignoreDuplicates: true,
+        }).select("id");
         if (error) throw error;
+        added += (data?.length ?? 0);
       }
+      return added;
     },
-    onSuccess: () => {
-      toast({ title: "Catalogue pré-rempli", description: `${SEED_DEVICES.length} appareils ajoutés avec succès.` });
+    onSuccess: (added) => {
+      const skipped = SEED_DEVICES.length - added;
+      toast({ title: "Catalogue pré-rempli", description: `${added} modèles ajoutés${skipped > 0 ? `, ${skipped} déjà existants` : ""}.` });
       qc.invalidateQueries({ queryKey: ["device-catalog-admin"] });
       qc.invalidateQueries({ queryKey: ["device-catalog"] });
     },
