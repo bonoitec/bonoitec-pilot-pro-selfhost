@@ -511,7 +511,11 @@ export async function generatePDF(org: OrgInfo, data: DocData, options?: { previ
     doc.text("SIGNATURE CLIENT", PAGE_LEFT, finalY + 4);
     const sigImg = await loadImage(intake.signatureUrl);
     if (sigImg) {
-      doc.addImage(sigImg, "PNG", PAGE_LEFT, finalY + 7, 50, 20);
+      try {
+        doc.addImage(sigImg, detectImageFormat(sigImg), PAGE_LEFT, finalY + 7, 50, 20);
+      } catch (e) {
+        console.warn("Signature image could not be added to PDF:", e);
+      }
     }
     finalY += 32;
   }
