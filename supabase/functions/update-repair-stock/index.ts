@@ -56,12 +56,36 @@ Deno.serve(async (req) => {
 
     const orgId = profile.organization_id;
 
-    const { repair_id, updates, old_parts, new_parts } = await req.json() as {
+    const { repair_id, updates: rawUpdates, old_parts, new_parts } = await req.json() as {
       repair_id: string;
       updates: Record<string, unknown>;
       old_parts: PartUsed[];
       new_parts: PartUsed[];
     };
+
+    // Allowlist: only these fields can be updated via this endpoint
+    const ALLOWED_FIELDS = new Set([
+      "status", "parts_used", "services_used", "labor_cost",
+      "final_price", "estimated_price", "diagnostic", "internal_notes",
+      "technician_message", "repair_started_at", "repair_ended_at",
+      "estimated_completion", "technician_id", "payment_method",
+      "customer_signature_url", "photos", "intake_checklist",
+      "screen_condition", "back_condition", "frame_condition",
+    ]);
+
+    const updates: Record<string, unknown> = {};
+    for (const [key, value] of Object.entries(rawUpdates || {})) {
+      if (ALLOWED_FIELDS.has(key)) {
+        updates[key] = value;
+      }
+    }
+
+    if (Object.keys(updates).length === 0 && (!old_parts?.length && !new_parts?.length)) {
+      return new Response(JSON.stringify({ error: "Aucun champ valide à mettre à jour" }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
 
     if (!repair_id) {
       return new Response(JSON.stringify({ error: "repair_id requis" }), {
