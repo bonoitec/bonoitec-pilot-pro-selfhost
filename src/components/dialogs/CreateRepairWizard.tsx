@@ -913,7 +913,6 @@ export function CreateRepairWizard({ open, onOpenChange }: Props) {
               <Button onClick={handleGenerateIntake} className="w-full" variant="outline">
                 <FileText className="h-4 w-4 mr-2" />Imprimer la prise en charge PDF
               </Button>
-              </Button>
             </div>
           )}
         </div>
