@@ -327,16 +327,41 @@ Deno.serve(async (req) => {
       );
     }
 
-    // ── Verify user belongs to the organization ───────────────────
-    if (organization_id) {
-      const { data: profile } = await supabase
-        .from("profiles")
-        .select("organization_id")
-        .eq("user_id", userId)
+    // ── Resolve tenant context from authenticated user (source of truth) ──
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("organization_id")
+      .eq("user_id", userId)
+      .single();
+
+    if (!profile?.organization_id) {
+      return new Response(
+        JSON.stringify({ error: "Forbidden: no organization context" }),
+        { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    const effectiveOrgId = profile.organization_id;
+
+    // Optional payload org must match authenticated org
+    if (organization_id && organization_id !== effectiveOrgId) {
+      return new Response(
+        JSON.stringify({ error: "Forbidden: organization mismatch" }),
+        { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // If a repair is provided, it must belong to the same organization
+    if (repair_id) {
+      const { data: repair } = await supabase
+        .from("repairs")
+        .select("id, organization_id")
+        .eq("id", repair_id)
         .single();
-      if (!profile || profile.organization_id !== organization_id) {
+
+      if (!repair || repair.organization_id !== effectiveOrgId) {
         return new Response(
-          JSON.stringify({ error: "Forbidden: organization mismatch" }),
+          JSON.stringify({ error: "Forbidden: repair organization mismatch" }),
           { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
       }
@@ -352,15 +377,14 @@ Deno.serve(async (req) => {
 
     // Fetch organization contact info for dynamic footer
     let orgContact: { phone?: string; email?: string } | undefined;
-    if (organization_id) {
-      const { data: orgData } = await supabase
-        .from("organizations")
-        .select("phone, email")
-        .eq("id", organization_id)
-        .single();
-      if (orgData && (orgData.phone || orgData.email)) {
-        orgContact = { phone: orgData.phone || undefined, email: orgData.email || undefined };
-      }
+    const { data: orgData } = await supabase
+      .from("organizations")
+      .select("phone, email")
+      .eq("id", effectiveOrgId)
+      .single();
+
+    if (orgData && (orgData.phone || orgData.email)) {
+      orgContact = { phone: orgData.phone || undefined, email: orgData.email || undefined };
     }
 
     const { subject, html } = templateFn(data || {}, orgContact);
@@ -376,20 +400,17 @@ Deno.serve(async (req) => {
       console.error("Resend error:", errorMessage);
     }
 
-    // Log the email
-    if (organization_id) {
-      await supabase.from("notification_logs").insert({
-        organization_id,
-        repair_id: repair_id || null,
-        channel: "email",
-        recipient: to,
-        subject,
-        body: html,
-        status,
-        error_message: errorMessage,
-      });
-    }
-
+    // Log the email in the authenticated user's organization only
+    await supabase.from("notification_logs").insert({
+      organization_id: effectiveOrgId,
+      repair_id: repair_id || null,
+      channel: "email",
+      recipient: to,
+      subject,
+      body: html,
+      status,
+      error_message: errorMessage,
+    });
     if (status === "failed") {
       return new Response(
         JSON.stringify({ error: errorMessage, status: "failed" }),
