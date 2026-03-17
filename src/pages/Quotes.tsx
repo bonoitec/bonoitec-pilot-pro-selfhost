@@ -80,29 +80,17 @@ const Quotes = () => {
       signatureUrl: repair.customer_signature_url,
     } : undefined;
 
-    // Parse diagnostic analysis from internal_notes if available
+    // Extract diagnostic analysis from notes JSON if stored
     let diagnosticAnalysis: any = undefined;
-    if (repair?.internal_notes) {
+    let displayNotes: string | undefined = quote.notes;
+    if (quote.notes) {
       try {
-        const notes = repair.internal_notes;
-        // Try to extract structured data from notes
-        const causesMatch = notes.match(/Causes probables\s*:\s*\n([\s\S]*?)(?=\n\n|Pièces)/);
-        const piecesMatch = notes.match(/Pièces à vérifier\s*:\s*(.*?)(?:\n|$)/);
-        const tempsMatch = notes.match(/Temps estimé\s*:\s*(.*?)(?:\n|$)/i);
-        const difficulteMatch = notes.match(/Difficulté\s*:\s*(.*?)(?:\n|$)/i);
-        
-        if (causesMatch || tempsMatch) {
-          diagnosticAnalysis = {
-            causes_possibles: causesMatch ? causesMatch[1].split("\n").map((c: string) => c.replace(/^[•\-\s]+/, "").trim()).filter(Boolean) : [],
-            pieces_a_verifier: piecesMatch ? piecesMatch[1].split(",").map((p: string) => p.trim()).filter(Boolean) : [],
-            solution_probable: "",
-            difficulte: difficulteMatch ? difficulteMatch[1].trim() : "",
-            temps_estime: tempsMatch ? tempsMatch[1].trim() : "",
-            prix_estime: "",
-            conseils: "",
-          };
+        const parsed = JSON.parse(quote.notes);
+        if (parsed?.__diagnosticAnalysis) {
+          diagnosticAnalysis = parsed.__diagnosticAnalysis;
+          displayNotes = undefined; // Don't show raw JSON as notes
         }
-      } catch { /* ignore parse errors */ }
+      } catch { /* notes is plain text, keep as-is */ }
     }
 
     return {
