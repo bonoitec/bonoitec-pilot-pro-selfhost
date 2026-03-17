@@ -28,7 +28,7 @@ interface Props {
 export function EditClientDialog({ open, onOpenChange, client }: Props) {
   const { toast } = useToast();
   const qc = useQueryClient();
-  const [form, setForm] = useState({ name: "", phone: "", email: "", address: "", notes: "" });
+  const [form, setForm] = useState({ name: "", phone: "", email: "", address: "", city: "", postal_code: "", notes: "" });
 
   useEffect(() => {
     if (client) {
@@ -37,6 +37,8 @@ export function EditClientDialog({ open, onOpenChange, client }: Props) {
         phone: client.phone || "",
         email: client.email || "",
         address: client.address || "",
+        city: client.city || "",
+        postal_code: client.postal_code || "",
         notes: client.notes || "",
       });
     }
