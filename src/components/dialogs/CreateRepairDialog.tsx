@@ -152,6 +152,7 @@ export function CreateRepairDialog({ open, onOpenChange }: Props) {
         frame_condition: frameCondition,
         back_condition: backCondition,
         customer_signature_url: signatureUrl,
+        diagnostic: clientDescription || null,
       } as any);
       if (error) throw error;
     },
