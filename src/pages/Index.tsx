@@ -1,12 +1,12 @@
 import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { useSearchParams } from "react-router-dom";
+import { useSearchParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Wrench, Clock, CheckCircle2, DollarSign, AlertTriangle, TrendingUp, Plus } from "lucide-react";
+import { Wrench, Clock, CheckCircle2, DollarSign, AlertTriangle, TrendingUp, Plus, Package, Zap } from "lucide-react";
 import { CreateRepairWizard } from "@/components/dialogs/CreateRepairWizard";
 import { ProfitabilitySection } from "@/components/dashboard/ProfitabilitySection";
 import { useSubscription } from "@/hooks/useSubscription";
@@ -17,6 +17,7 @@ import { statusLabels, statusColors } from "@/lib/repairStatuses";
 const Index = () => {
   const [showWizard, setShowWizard] = useState(false);
   const [searchParams, setSearchParams] = useSearchParams();
+  const navigate = useNavigate();
   const { checkSubscription } = useSubscription();
 
   // Handle checkout success return
@@ -41,12 +42,12 @@ const Index = () => {
     staleTime: 15000,
   });
 
-  const { data: lowStock = [] } = useQuery({
+  const { data: lowStock = [], isLoading: loadingStock } = useQuery({
     queryKey: ["dashboard-low-stock"],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("inventory")
-        .select("name, quantity, min_quantity");
+        .select("name, quantity, min_quantity, category, supplier");
       if (error) throw error;
       return (data ?? []).filter((p) => p.quantity <= p.min_quantity);
     },
@@ -126,6 +127,63 @@ const Index = () => {
           )}
         </CardContent>
       </Card>
+
+      {/* Bloc Alertes stock */}
+      <Card>
+        <CardHeader className="pb-2">
+          <div className="flex items-center justify-between">
+            <CardTitle className="text-base font-display flex items-center gap-2">
+              <AlertTriangle className="h-4 w-4 text-destructive" />
+              Alertes stock
+            </CardTitle>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8"
+              onClick={() => navigate("/stock")}
+              title="Voir le stock"
+            >
+              <div className="relative">
+                <Package className="h-4 w-4" />
+                <Zap className="h-2.5 w-2.5 text-warning absolute -top-1 -right-1.5" />
+              </div>
+            </Button>
+          </div>
+        </CardHeader>
+        <CardContent>
+          {loadingStock ? (
+            <Skeleton className="h-24 w-full rounded-xl" />
+          ) : lowStock.length === 0 ? (
+            <div className="text-center py-6">
+              <CheckCircle2 className="h-10 w-10 text-success mx-auto mb-2" />
+              <p className="text-sm font-medium text-success">Tous les stocks sont à niveau</p>
+            </div>
+          ) : (
+            <div className="space-y-2">
+              {lowStock.slice(0, 5).map((item, i) => (
+                <div key={i} className="flex items-center justify-between p-3 rounded-xl bg-destructive/5 border border-destructive/10">
+                  <div className="min-w-0">
+                    <p className="text-sm font-medium truncate">{item.name}</p>
+                    <p className="text-xs text-muted-foreground">{item.category}{item.supplier ? ` · ${item.supplier}` : ""}</p>
+                  </div>
+                  <div className="text-right shrink-0 ml-2">
+                    <Badge variant="destructive" className="text-[11px]">
+                      <AlertTriangle className="h-3 w-3 mr-1" />{item.quantity} restant(s)
+                    </Badge>
+                    <p className="text-[10px] text-muted-foreground mt-0.5">Seuil : {item.min_quantity}</p>
+                  </div>
+                </div>
+              ))}
+              {lowStock.length > 5 && (
+                <p className="text-xs text-muted-foreground text-center pt-1">
+                  + {lowStock.length - 5} autre(s) alerte(s)
+                </p>
+              )}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
       <ProfitabilitySection />
       <CreateRepairWizard open={showWizard} onOpenChange={setShowWizard} />
     </div>
