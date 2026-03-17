@@ -845,7 +845,10 @@ export async function generateIntakePDF(org: OrgInfo, data: IntakePdfData, optio
     doc.text("SIGNATURE CLIENT", PAGE_LEFT, currentY + 4);
     const sigImg = await loadImage(intake.signatureUrl);
     if (sigImg) { try { doc.addImage(sigImg, detectImageFormat(sigImg), PAGE_LEFT, currentY + 7, 50, 20); } catch {} }
-    currentY += 32;
+    currentY += 30;
+    doc.setFontSize(7); doc.setFont("helvetica", "italic"); doc.setTextColor(...GRAY_500);
+    doc.text(`Signé le : ${data.date}`, PAGE_LEFT, currentY);
+    currentY += 6;
   }
 
   // ═══════════════════════════════════════════
