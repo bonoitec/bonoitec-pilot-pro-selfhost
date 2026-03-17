@@ -135,7 +135,7 @@ const Quotes = () => {
       if (!org) throw new Error("Organisation introuvable");
 
       // Generate PDF as base64
-      const pdfBase64 = await generatePDF(org, buildPdfParams(quote), { base64: true }) as string;
+      const pdfBase64 = await generatePDF(org, await buildPdfParams(quote), { base64: true }) as string;
 
       const device = quote.devices ? `${quote.devices.brand} ${quote.devices.model}` : "—";
       await sendTransactionalEmail({
