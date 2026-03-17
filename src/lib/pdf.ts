@@ -890,7 +890,7 @@ export async function generateIntakePDF(org: OrgInfo, data: IntakePdfData, optio
       doc.setFillColor(...PRIMARY_LIGHT);
       doc.roundedRect(devX, currentY + cardH, colW, extraH + 2, 0, 0, "F");
       let ey = currentY + cardH + 2;
-      doc.setFontSize(6.5); doc.setFont("helvetica", "normal"); doc.setTextColor(...GRAY_600);
+      doc.setFontSize(6.5); doc.setFont("helvetica", "normal"); doc.setTextColor(...GRAY_500);
       for (const line of extraLines) {
         doc.text(line, devX + 4, ey); ey += 3.5;
       }
