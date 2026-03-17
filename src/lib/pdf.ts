@@ -539,7 +539,12 @@ export async function generatePDF(org: OrgInfo, data: DocData, options?: { previ
     for (const url of intake.photoUrls.slice(0, 6)) {
       const imgData = await loadImage(url);
       if (imgData && photoY < 240) {
-        doc.addImage(imgData, "JPEG", PAGE_LEFT, photoY, 60, 45);
+        try {
+          doc.addImage(imgData, detectImageFormat(imgData), PAGE_LEFT, photoY, 60, 45);
+        } catch (e) {
+          console.warn("Photo could not be added to PDF:", e);
+          continue;
+        }
         photoY += 50;
       }
     }
