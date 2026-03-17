@@ -11,7 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
-import { User, Smartphone, AlertCircle, Settings, StickyNote, ClipboardCheck, Star, PenTool } from "lucide-react";
+import { User, Smartphone, AlertCircle, Settings, StickyNote, ClipboardCheck, Star, PenTool, Sparkles, Loader2, Clock, Gauge, Wrench, Search, CheckCircle2 } from "lucide-react";
 import { SignaturePad } from "@/components/SignaturePad";
 
 interface Props {
