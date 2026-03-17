@@ -52,6 +52,8 @@ export function EditClientDialog({ open, onOpenChange, client }: Props) {
         phone: form.phone.trim() || null,
         email: form.email.trim() || null,
         address: form.address.trim() || null,
+        city: form.city.trim() || null,
+        postal_code: form.postal_code.trim() || null,
         notes: form.notes.trim() || null,
       }).eq("id", client.id);
       if (error) throw error;
