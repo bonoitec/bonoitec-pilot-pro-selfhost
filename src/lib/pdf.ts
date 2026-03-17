@@ -370,15 +370,11 @@ export async function generatePDF(org: OrgInfo, data: DocData, options?: { previ
     // Calculate total height needed
     const causesLines = da.causes_possibles.length;
     const piecesText = da.pieces_a_verifier.join(", ");
-    const solutionLines = doc.splitTextToSize(da.solution_probable, CONTENT_WIDTH - 16);
-    const conseilsLines = da.conseils ? doc.splitTextToSize(da.conseils, CONTENT_WIDTH - 16) : [];
     
     const totalH = 10 + // header
       8 + // temps + difficulté line
       6 + causesLines * lineHeight + // causes
       6 + lineHeight + // pièces
-      6 + solutionLines.length * lineHeight + // solution
-      (conseilsLines.length > 0 ? 6 + conseilsLines.length * lineHeight : 0) +
       8; // padding
 
     if (currentY + totalH > PAGE_BOTTOM) { doc.addPage(); doc.setFillColor(...PRIMARY); doc.rect(0, 0, 210, 4, "F"); currentY = 14; }
@@ -426,26 +422,6 @@ export async function generatePDF(org: OrgInfo, data: DocData, options?: { previ
     doc.text(piecesText, PAGE_LEFT + 8, dy);
     dy += lineHeight + 2;
 
-    // Solution recommandée
-    doc.setFont("helvetica", "bold");
-    doc.setTextColor(...PRIMARY);
-    doc.text("Solution recommandée :", PAGE_LEFT + 6, dy);
-    dy += 4;
-    doc.setFont("helvetica", "normal");
-    doc.setTextColor(...GRAY_700);
-    doc.text(solutionLines, PAGE_LEFT + 8, dy);
-    dy += solutionLines.length * lineHeight + 2;
-
-    // Conseils
-    if (conseilsLines.length > 0) {
-      doc.setFont("helvetica", "bold");
-      doc.setTextColor(...PRIMARY);
-      doc.text("Conseils :", PAGE_LEFT + 6, dy);
-      dy += 4;
-      doc.setFont("helvetica", "normal");
-      doc.setTextColor(...GRAY_700);
-      doc.text(conseilsLines, PAGE_LEFT + 8, dy);
-    }
 
     currentY += totalH + 6;
   }
