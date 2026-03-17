@@ -275,4 +275,4 @@ export const ProductChatWidget = forwardRef<HTMLDivElement>(function ProductChat
       </AnimatePresence>
     </>
   );
-}
+});
