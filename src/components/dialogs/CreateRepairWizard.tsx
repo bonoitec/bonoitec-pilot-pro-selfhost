@@ -371,13 +371,13 @@ export function CreateRepairWizard({ open, onOpenChange }: Props) {
                 device: deviceLabel,
                 issue: repair.issue,
                 trackingUrl,
-                estimatedDelay: estimatedMinutes
-                  ? estimatedMinutes < 60
-                    ? `Délai estimé : environ ${estimatedMinutes} minutes`
-                    : estimatedMinutes < 120
-                      ? `Délai estimé : environ 1 heure${estimatedMinutes % 60 > 0 ? ` ${estimatedMinutes % 60} min` : ""}`
-                      : `Délai estimé : environ ${Math.floor(estimatedMinutes / 60)} heures`
-                  : "",
+                estimatedDelay: (() => {
+                  const etm = repair.estimated_time_minutes as number | null;
+                  if (!etm || etm <= 0) return "";
+                  if (etm < 60) return `Délai estimé : environ ${etm} minutes`;
+                  if (etm < 120) return `Délai estimé : environ 1 heure${etm % 60 > 0 ? ` ${etm % 60} min` : ""}`;
+                  return `Délai estimé : environ ${Math.floor(etm / 60)} heures`;
+                })(),
               },
               organization_id: repair.organization_id,
               repair_id: repair.id,
