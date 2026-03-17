@@ -25,14 +25,14 @@ interface DeviceCatalogSelectorProps {
 }
 
 const categoryIcons: Record<string, any> = {
+  Console: Gamepad2,
+  Montre: Watch,
+  Ordinateur: Laptop,
   Smartphone: Smartphone,
   Tablette: Tablet,
-  Ordinateur: Laptop,
-  Console: Gamepad2,
-  "Montre connectée": Watch,
 };
 
-const ALL_CATEGORIES = ["Smartphone", "Tablette", "Ordinateur", "Console", "Montre connectée"];
+const ALL_CATEGORIES = ["Console", "GPS", "Montre", "Ordinateur", "Smartphone", "Tablette", "Universel"];
 
 export const DeviceCatalogSelector = forwardRef<HTMLDivElement, DeviceCatalogSelectorProps>(function DeviceCatalogSelector({ onSelect, defaultBrand, defaultModel }, ref) {
   const [search, setSearch] = useState("");
