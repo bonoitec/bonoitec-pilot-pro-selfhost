@@ -613,9 +613,38 @@ export function CreateRepairWizard({ open, onOpenChange }: Props) {
                     <Label className="text-xs">Accessoires confiés</Label>
                     <Input value={device.accessories} onChange={e => setDevice(d => ({ ...d, accessories: e.target.value }))} placeholder="Chargeur, coque, câble..." />
                   </div>
-                  <div>
+                  <div className="col-span-2">
                     <Label className="text-xs">Code / Mot de passe confié</Label>
-                    <Input value={device.password} onChange={e => setDevice(d => ({ ...d, password: e.target.value }))} placeholder="1234, schéma..." />
+                    <div className="mt-1.5 flex gap-2 mb-2">
+                      <Button
+                        type="button" size="sm" variant={!isPatternPassword(device.password) ? "default" : "outline"}
+                        className="h-7 text-xs px-3"
+                        onClick={() => setDevice(d => ({ ...d, password: "" }))}
+                      >
+                        Code chiffré
+                      </Button>
+                      <Button
+                        type="button" size="sm" variant={isPatternPassword(device.password) ? "default" : "outline"}
+                        className="h-7 text-xs px-3"
+                        onClick={() => setDevice(d => ({ ...d, password: "pattern:" }))}
+                      >
+                        Schéma
+                      </Button>
+                    </div>
+                    {isPatternPassword(device.password) ? (
+                      <PatternLockInput
+                        value={deserializePattern(device.password) || []}
+                        onChange={(dots) => setDevice(d => ({ ...d, password: serializePattern(dots) }))}
+                        size={180}
+                      />
+                    ) : (
+                      <Input
+                        value={device.password}
+                        onChange={e => setDevice(d => ({ ...d, password: e.target.value }))}
+                        placeholder="1234, 000000..."
+                        inputMode="numeric"
+                      />
+                    )}
                   </div>
                   <div>
                     <Label className="text-xs">Observations</Label>
