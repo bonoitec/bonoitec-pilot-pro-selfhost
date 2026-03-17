@@ -425,6 +425,7 @@ export function CreateRepairWizard({ open, onOpenChange }: Props) {
         repair_id: createdRepair.id,
         lines: lines as any, total_ht: totalHT, total_ttc: totalTTC, vat_rate: vatRate,
         status: "brouillon",
+        notes: diagnosticResult ? JSON.stringify({ __diagnosticAnalysis: diagnosticResult }) : null,
       } as any);
       if (insertError) throw insertError;
 
