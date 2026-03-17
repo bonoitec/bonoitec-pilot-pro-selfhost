@@ -58,7 +58,7 @@ interface DocData {
   clientAddress?: string;
   clientPhone?: string;
   clientEmail?: string;
-  clientDiagnostic?: string;
+  
   diagnosticAnalysis?: DiagnosticAnalysis;
   lines: Line[];
   totalHT: number;
@@ -71,8 +71,14 @@ interface DocData {
 
 async function loadImage(url: string): Promise<string | null> {
   try {
+    // If it's already a data URL, return it directly
+    if (url.startsWith("data:")) return url;
+    
     const response = await fetch(url);
+    if (!response.ok) return null;
     const blob = await response.blob();
+    // Verify it's actually an image
+    if (!blob.type.startsWith("image/")) return null;
     return new Promise((resolve) => {
       const reader = new FileReader();
       reader.onloadend = () => resolve(reader.result as string);

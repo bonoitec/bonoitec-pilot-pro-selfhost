@@ -14,6 +14,7 @@ import { useToast } from "@/hooks/use-toast";
 import { generatePDF } from "@/lib/pdf";
 import { sendTransactionalEmail } from "@/lib/email";
 import { exportQuotesCsv } from "@/lib/csvExport";
+import { getSignedFileUrl, getSignedFileUrls } from "@/lib/storage";
 
 const statusLabels: Record<string, string> = {
   brouillon: "Brouillon", envoye: "Envoyé", accepte: "Accepté", refuse: "Refusé",
@@ -61,24 +62,37 @@ const Quotes = () => {
     onSuccess: () => { toast({ title: "Devis envoyé" }); qc.invalidateQueries({ queryKey: ["quotes"] }); },
   });
 
-  const buildPdfParams = (quote: any) => {
+  const buildPdfParams = async (quote: any) => {
     const lines = Array.isArray(quote.lines) ? quote.lines : [];
     const repair = quote.repairs;
     const device = quote.devices;
 
-    // Build intake info from linked repair
-    const intake = repair ? {
-      deviceBrand: device?.brand,
-      deviceModel: device?.model,
-      serialNumber: device?.serial_number || undefined,
-      deviceCategory: device?.type,
-      checklist: Array.isArray(repair.intake_checklist) ? repair.intake_checklist.filter((item: any) => typeof item === "string" || item?.checked).map((item: any) => typeof item === "string" ? item : item.label) : [],
-      screenCondition: repair.screen_condition ?? undefined,
-      frameCondition: repair.frame_condition ?? undefined,
-      backCondition: repair.back_condition ?? undefined,
-      photoUrls: Array.isArray(repair.photos) ? repair.photos as string[] : [],
-      signatureUrl: repair.customer_signature_url,
-    } : undefined;
+    // Build intake info from linked repair, resolving signed URLs for private storage
+    let intake: any = undefined;
+    if (repair) {
+      let signatureUrl = repair.customer_signature_url || undefined;
+      if (signatureUrl && !signatureUrl.startsWith("data:")) {
+        try { signatureUrl = await getSignedFileUrl(signatureUrl); } catch { /* keep raw */ }
+      }
+
+      let photoUrls: string[] = Array.isArray(repair.photos) ? repair.photos as string[] : [];
+      if (photoUrls.length > 0) {
+        try { photoUrls = await getSignedFileUrls(photoUrls); } catch { /* keep raw */ }
+      }
+
+      intake = {
+        deviceBrand: device?.brand,
+        deviceModel: device?.model,
+        serialNumber: device?.serial_number || undefined,
+        deviceCategory: device?.type,
+        checklist: Array.isArray(repair.intake_checklist) ? repair.intake_checklist.filter((item: any) => typeof item === "string" || item?.checked).map((item: any) => typeof item === "string" ? item : item.label) : [],
+        screenCondition: repair.screen_condition ?? undefined,
+        frameCondition: repair.frame_condition ?? undefined,
+        backCondition: repair.back_condition ?? undefined,
+        photoUrls,
+        signatureUrl,
+      };
+    }
 
     // Extract diagnostic analysis from notes JSON if stored
     let diagnosticAnalysis: any = undefined;
@@ -88,7 +102,7 @@ const Quotes = () => {
         const parsed = JSON.parse(quote.notes);
         if (parsed?.__diagnosticAnalysis) {
           diagnosticAnalysis = parsed.__diagnosticAnalysis;
-          displayNotes = undefined; // Don't show raw JSON as notes
+          displayNotes = undefined;
         }
       } catch { /* notes is plain text, keep as-is */ }
     }
@@ -121,7 +135,7 @@ const Quotes = () => {
       if (!org) throw new Error("Organisation introuvable");
 
       // Generate PDF as base64
-      const pdfBase64 = await generatePDF(org, buildPdfParams(quote), { base64: true }) as string;
+      const pdfBase64 = await generatePDF(org, await buildPdfParams(quote), { base64: true }) as string;
 
       const device = quote.devices ? `${quote.devices.brand} ${quote.devices.model}` : "—";
       await sendTransactionalEmail({
@@ -192,7 +206,7 @@ const Quotes = () => {
     try {
       const { data: org } = await supabase.rpc("get_org_safe_data").single();
       if (!org) return;
-      const url = await generatePDF(org, buildPdfParams(quote), { preview: true });
+      const url = await generatePDF(org, await buildPdfParams(quote), { preview: true });
       setPreviewUrl(url as string);
     } catch (e) {
       toast({ title: "Erreur", description: "Impossible de générer l'aperçu", variant: "destructive" });
@@ -205,13 +219,13 @@ const Quotes = () => {
     if (!previewQuote) return;
     const { data: org } = await supabase.rpc("get_org_safe_data").single();
     if (!org) return;
-    await generatePDF(org, buildPdfParams(previewQuote));
+    await generatePDF(org, await buildPdfParams(previewQuote));
   };
 
   const downloadPDF = async (quote: any) => {
     const { data: org } = await supabase.rpc("get_org_safe_data").single();
     if (!org) return;
-    await generatePDF(org, buildPdfParams(quote));
+    await generatePDF(org, await buildPdfParams(quote));
   };
 
   return (
