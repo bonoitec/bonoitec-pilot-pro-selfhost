@@ -16,7 +16,7 @@ interface Props {
 export function CreateClientDialog({ open, onOpenChange }: Props) {
   const { toast } = useToast();
   const qc = useQueryClient();
-  const [form, setForm] = useState({ name: "", phone: "", email: "", address: "", notes: "" });
+  const [form, setForm] = useState({ name: "", phone: "", email: "", address: "", city: "", postal_code: "", notes: "" });
 
   const mutation = useMutation({
     mutationFn: async () => {
