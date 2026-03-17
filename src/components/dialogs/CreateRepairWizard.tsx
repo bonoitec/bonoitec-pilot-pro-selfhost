@@ -405,7 +405,7 @@ export function CreateRepairWizard({ open, onOpenChange }: Props) {
     setStep(0);
     setClientSearch(""); setSelectedClientId(null);
     setNewClient({ name: "", phone: "", email: "", address: "", postal_code: "", city: "", country: "France" });
-    setDevice({ category: "Smartphone", brand: "", model: "", serial_number: "", storage: "" });
+    setDevice({ category: "Smartphone", brand: "", model: "", serial_number: "", storage: "", accessories: "", password: "", observations: "" });
     setSelectedDeviceId(null);
     setChecklist({}); setDiagnosticReason("");
     setScreenCondition(5); setFrameCondition(5); setBackCondition(5);
