@@ -93,9 +93,32 @@ async function loadImageWithDimensions(url: string): Promise<{ data: string; wid
   });
 }
 
-function starText(rating: number | undefined): string {
-  if (!rating) return "—";
-  return "★".repeat(rating) + "☆".repeat(5 - rating) + ` (${rating}/5)`;
+function drawStars(doc: jsPDF, x: number, y: number, rating: number, total: number = 5): number {
+  const starSize = 3;
+  const gap = 0.8;
+  const STAR_GOLD = [234, 179, 8] as const;
+  const STAR_EMPTY = [209, 213, 219] as const;
+
+  for (let i = 0; i < total; i++) {
+    const cx = x + i * (starSize + gap) + starSize / 2;
+    const cy = y - starSize / 2 + 0.5;
+    const filled = i < rating;
+    doc.setFillColor(...(filled ? STAR_GOLD : STAR_EMPTY));
+    // Draw a simple filled circle as a "star dot"
+    doc.circle(cx, cy, starSize / 2.5, "F");
+  }
+  // Return the X position after the last star for appending text
+  return x + total * (starSize + gap);
+}
+
+function drawConditionLine(doc: jsPDF, label: string, rating: number | undefined, x: number, y: number): void {
+  if (!rating) return;
+  doc.setFontSize(7);
+  doc.setFont("helvetica", "normal");
+  doc.text(`${label} : `, x, y);
+  const labelWidth = doc.getTextWidth(`${label} : `);
+  const afterStars = drawStars(doc, x + labelWidth, y, rating);
+  doc.text(` (${rating}/5)`, afterStars, y);
 }
 
 // Colors
