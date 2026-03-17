@@ -442,7 +442,7 @@ export function CreateRepairWizard({ open, onOpenChange }: Props) {
         clientAddress: createdRepair.clients?.address,
         clientPhone: createdRepair.clients?.phone,
         clientEmail: createdRepair.clients?.email,
-        
+        diagnosticAnalysis: diagnosticResult || undefined,
         lines, totalHT, totalTTC, vatRate,
         intake: {
           deviceBrand: createdRepair.devices?.brand || device.brand,
@@ -454,7 +454,7 @@ export function CreateRepairWizard({ open, onOpenChange }: Props) {
           frameCondition,
           backCondition,
           photoUrls,
-          signatureUrl: createdRepair.customer_signature_url,
+          signatureUrl: signatureDataUrl || createdRepair.customer_signature_url,
         },
       });
       toast({ title: "Devis généré et téléchargé" });
