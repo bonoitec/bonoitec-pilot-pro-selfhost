@@ -37,7 +37,7 @@ const defaultMessages: Record<string, { subject: string; body: string }> = {
   },
   reparation_en_cours: {
     subject: "Réparation en cours",
-    body: "Bonjour,\n\nLa réparation de votre {{device}} a débuté.\nRéférence : {{reference}}\n\nNous vous tiendrons informé(e) de l'avancement.\n\nCordialement,\nL'équipe BonoitecPilot",
+    body: "Bonjour,\n\nLa réparation de votre {{device}} a débuté.\nRéférence : {{reference}}\n{{delay}}\n\nNous vous tiendrons informé(e) de l'avancement.\n\nCordialement,\nL'équipe BonoitecPilot",
   },
   termine: {
     subject: "Réparation terminée",
