@@ -42,12 +42,12 @@ const Index = () => {
     staleTime: 15000,
   });
 
-  const { data: lowStock = [] } = useQuery({
+  const { data: lowStock = [], isLoading: loadingStock } = useQuery({
     queryKey: ["dashboard-low-stock"],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("inventory")
-        .select("name, quantity, min_quantity");
+        .select("name, quantity, min_quantity, category, supplier");
       if (error) throw error;
       return (data ?? []).filter((p) => p.quantity <= p.min_quantity);
     },
