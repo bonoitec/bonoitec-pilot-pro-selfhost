@@ -225,7 +225,7 @@ const Quotes = () => {
   const downloadPDF = async (quote: any) => {
     const { data: org } = await supabase.rpc("get_org_safe_data").single();
     if (!org) return;
-    await generatePDF(org, buildPdfParams(quote));
+    await generatePDF(org, await buildPdfParams(quote));
   };
 
   return (
