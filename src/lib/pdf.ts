@@ -314,9 +314,9 @@ export async function generatePDF(org: OrgInfo, data: DocData, options?: { previ
     doc.setFontSize(7.5);
     doc.setTextColor(...GRAY_700);
     currentY += 5;
-    if (intake.screenCondition) { doc.text(`Écran : ${starText(intake.screenCondition)}`, PAGE_LEFT + 2, currentY); currentY += 4; }
-    if (intake.frameCondition) { doc.text(`Châssis : ${starText(intake.frameCondition)}`, PAGE_LEFT + 2, currentY); currentY += 4; }
-    if (intake.backCondition) { doc.text(`Vitre arrière : ${starText(intake.backCondition)}`, PAGE_LEFT + 2, currentY); currentY += 4; }
+    if (intake.screenCondition) { drawConditionLine(doc, "Écran", intake.screenCondition, PAGE_LEFT + 2, currentY); currentY += 4; }
+    if (intake.frameCondition) { drawConditionLine(doc, "Châssis", intake.frameCondition, PAGE_LEFT + 2, currentY); currentY += 4; }
+    if (intake.backCondition) { drawConditionLine(doc, "Vitre arrière", intake.backCondition, PAGE_LEFT + 2, currentY); currentY += 4; }
     currentY += 6;
   }
 
