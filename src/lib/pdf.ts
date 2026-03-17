@@ -422,26 +422,6 @@ export async function generatePDF(org: OrgInfo, data: DocData, options?: { previ
     doc.text(piecesText, PAGE_LEFT + 8, dy);
     dy += lineHeight + 2;
 
-    // Solution recommandée
-    doc.setFont("helvetica", "bold");
-    doc.setTextColor(...PRIMARY);
-    doc.text("Solution recommandée :", PAGE_LEFT + 6, dy);
-    dy += 4;
-    doc.setFont("helvetica", "normal");
-    doc.setTextColor(...GRAY_700);
-    doc.text(solutionLines, PAGE_LEFT + 8, dy);
-    dy += solutionLines.length * lineHeight + 2;
-
-    // Conseils
-    if (conseilsLines.length > 0) {
-      doc.setFont("helvetica", "bold");
-      doc.setTextColor(...PRIMARY);
-      doc.text("Conseils :", PAGE_LEFT + 6, dy);
-      dy += 4;
-      doc.setFont("helvetica", "normal");
-      doc.setTextColor(...GRAY_700);
-      doc.text(conseilsLines, PAGE_LEFT + 8, dy);
-    }
 
     currentY += totalH + 6;
   }
