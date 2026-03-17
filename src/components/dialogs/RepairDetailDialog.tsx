@@ -15,7 +15,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
-import { Timer, Star, ClipboardCheck, Camera, CreditCard, Upload, MessageSquare, FileText, AlertTriangle } from "lucide-react";
+import { Timer, Star, ClipboardCheck, Camera, CreditCard, Upload, MessageSquare, FileText, AlertTriangle, Printer } from "lucide-react";
 import { RepairChat } from "@/components/messaging/RepairChat";
 import { StatusNotificationSuggester } from "@/components/messaging/StatusNotificationSuggester";
 import { MarginAnalysisCard } from "@/components/repairs/MarginAnalysisCard";
