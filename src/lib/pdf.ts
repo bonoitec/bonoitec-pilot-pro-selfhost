@@ -32,6 +32,9 @@ interface IntakeInfo {
   deviceModel?: string;
   serialNumber?: string;
   deviceCategory?: string;
+  accessories?: string;
+  password?: string;
+  observations?: string;
   checklist?: string[];
   screenCondition?: number;
   frameCondition?: number;
