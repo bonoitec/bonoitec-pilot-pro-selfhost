@@ -166,6 +166,9 @@ export function CreateRepairDialog({ open, onOpenChange }: Props) {
       setFrameCondition(5);
       setBackCondition(5);
       setSignatureDataUrl(null);
+      setShowDiagnostic(false);
+      setDiagnosticResult(null);
+      setClientDescription("");
       onOpenChange(false);
     },
     onError: (e: Error) => toast({ title: "Erreur", description: e.message, variant: "destructive" }),
