@@ -14,6 +14,7 @@ import { useToast } from "@/hooks/use-toast";
 import { generatePDF } from "@/lib/pdf";
 import { sendTransactionalEmail } from "@/lib/email";
 import { exportQuotesCsv } from "@/lib/csvExport";
+import { getSignedFileUrl, getSignedFileUrls } from "@/lib/storage";
 
 const statusLabels: Record<string, string> = {
   brouillon: "Brouillon", envoye: "Envoyé", accepte: "Accepté", refuse: "Refusé",
