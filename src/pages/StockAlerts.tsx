@@ -8,6 +8,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { AlertTriangle, Package, ShoppingBag, CheckCircle2, ArrowRight } from "lucide-react";
 
 const StockAlerts = () => {
+  const navigate = useNavigate();
+
   const { data: inventory = [], isLoading: loadingInv } = useQuery({
     queryKey: ["inventory"],
     queryFn: async () => {
@@ -33,9 +35,16 @@ const StockAlerts = () => {
 
   return (
     <div className="space-y-6 animate-fade-in">
-      <div>
-        <h1 className="text-2xl font-bold">Alertes stock</h1>
-        <p className="text-muted-foreground text-sm">Surveillez les niveaux de stock critiques</p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold">Alertes stock</h1>
+          <p className="text-muted-foreground text-sm">Surveillez les niveaux de stock critiques</p>
+        </div>
+        <Button variant="outline" onClick={() => navigate("/stock")} className="gap-2">
+          <Package className="h-4 w-4" />
+          Pièces détachées
+          <ArrowRight className="h-4 w-4" />
+        </Button>
       </div>
 
       {isLoading ? <Skeleton className="h-40 w-full" /> : totalAlerts === 0 ? (
