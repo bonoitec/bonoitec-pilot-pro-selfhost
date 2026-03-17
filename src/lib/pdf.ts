@@ -400,7 +400,7 @@ export async function generatePDF(org: OrgInfo, data: DocData, options?: { previ
     doc.setFontSize(7);
     doc.setFont("helvetica", "normal");
     doc.setTextColor(...GRAY_700);
-    doc.text(`Temps estimé : ${da.temps_estime}  •  Difficulté : ${da.difficulte}  •  Prix estimé : ${da.prix_estime}`, PAGE_LEFT + 6, dy);
+    doc.text(`Temps estimé : ${da.temps_estime}  •  Difficulté : ${da.difficulte}`, PAGE_LEFT + 6, dy);
     dy += 6;
 
     // Causes probables
