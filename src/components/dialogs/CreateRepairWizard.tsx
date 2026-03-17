@@ -85,7 +85,7 @@ export function CreateRepairWizard({ open, onOpenChange }: Props) {
   const [newClient, setNewClient] = useState({ name: "", phone: "", email: "", address: "", postal_code: "", city: "", country: "France" });
 
   // Step 2 — Device
-  const [device, setDevice] = useState({ category: "Smartphone", brand: "", model: "", serial_number: "", storage: "" });
+  const [device, setDevice] = useState({ category: "Smartphone", brand: "", model: "", serial_number: "", storage: "", accessories: "", password: "", observations: "" });
   const [selectedDeviceId, setSelectedDeviceId] = useState<string | null>(null);
 
   // Step 3 — Checklist
