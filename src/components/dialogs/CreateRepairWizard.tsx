@@ -122,7 +122,7 @@ export function CreateRepairWizard({ open, onOpenChange }: Props) {
   const [showDiagnostic, setShowDiagnostic] = useState(false);
   const [diagnosticLoading, setDiagnosticLoading] = useState(false);
   const [diagnosticResult, setDiagnosticResult] = useState<DiagnosticResult | null>(null);
-  const [clientDescription, setClientDescription] = useState("");
+  
 
   // Queries
   const { data: org } = useQuery({
