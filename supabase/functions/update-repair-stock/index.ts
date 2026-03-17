@@ -71,6 +71,7 @@ Deno.serve(async (req) => {
       "estimated_completion", "technician_id", "payment_method",
       "customer_signature_url", "photos", "intake_checklist",
       "screen_condition", "back_condition", "frame_condition",
+      "estimated_time_minutes",
     ]);
 
     const updates: Record<string, unknown> = {};

@@ -899,6 +899,7 @@ export type Database = {
           diagnostic: string | null
           estimated_completion: string | null
           estimated_price: number | null
+          estimated_time_minutes: number | null
           final_price: number | null
           frame_condition: number | null
           id: string
@@ -930,6 +931,7 @@ export type Database = {
           diagnostic?: string | null
           estimated_completion?: string | null
           estimated_price?: number | null
+          estimated_time_minutes?: number | null
           final_price?: number | null
           frame_condition?: number | null
           id?: string
@@ -961,6 +963,7 @@ export type Database = {
           diagnostic?: string | null
           estimated_completion?: string | null
           estimated_price?: number | null
+          estimated_time_minutes?: number | null
           final_price?: number | null
           frame_condition?: number | null
           id?: string

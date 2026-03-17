@@ -13,7 +13,7 @@ import { statusLabels } from "@/lib/repairStatuses";
 const defaultMessages: Record<string, { subject: string; body: string }> = {
   diagnostic: {
     subject: "Diagnostic en cours",
-    body: "Bonjour,\n\nVotre {{device}} est en cours de diagnostic.\nRéférence : {{reference}}\n\nNous vous informerons des résultats.\n\nCordialement,\nL'équipe BonoitecPilot",
+    body: "Bonjour,\n\nVotre {{device}} est en cours de diagnostic.\nRéférence : {{reference}}\n{{delay}}\n\nNous vous informerons des résultats.\n\nCordialement,\nL'équipe BonoitecPilot",
   },
   devis_en_attente: {
     subject: "Devis envoyé",
@@ -37,7 +37,7 @@ const defaultMessages: Record<string, { subject: string; body: string }> = {
   },
   reparation_en_cours: {
     subject: "Réparation en cours",
-    body: "Bonjour,\n\nLa réparation de votre {{device}} a débuté.\nRéférence : {{reference}}\n\nNous vous tiendrons informé(e) de l'avancement.\n\nCordialement,\nL'équipe BonoitecPilot",
+    body: "Bonjour,\n\nLa réparation de votre {{device}} a débuté.\nRéférence : {{reference}}\n{{delay}}\n\nNous vous tiendrons informé(e) de l'avancement.\n\nCordialement,\nL'équipe BonoitecPilot",
   },
   termine: {
     subject: "Réparation terminée",
@@ -63,8 +63,34 @@ export function StatusNotificationSuggester({ repair, newStatus, onDismiss }: Pr
   const device = repair.devices ? `${repair.devices.brand} ${repair.devices.model}` : "votre appareil";
   const reference = repair.reference || repair.tracking_code || "";
 
+  // Build estimated delay text
+  const buildDelayText = (): string => {
+    const estMin = repair.estimated_time_minutes;
+    if (!estMin || estMin <= 0) return "";
+    const createdAt = new Date(repair.created_at);
+    const readyAt = new Date(createdAt.getTime() + estMin * 60000);
+    const now = new Date();
+    const diffMs = readyAt.getTime() - now.getTime();
+    const diffMin = Math.round(diffMs / 60000);
+    if (readyAt.toDateString() !== now.toDateString()) {
+      return `Fin estimée le ${readyAt.toLocaleDateString("fr-FR", { day: "numeric", month: "long" })}`;
+    }
+    if (diffMin <= 0) return "";
+    if (diffMin < 60) return `Délai estimé : environ ${diffMin} minutes`;
+    if (diffMin < 120) {
+      const rm = diffMin % 60;
+      return rm > 0 ? `Délai estimé : environ 1 heure ${rm} min` : `Délai estimé : environ 1 heure`;
+    }
+    return `Délai estimé : environ ${Math.floor(diffMin / 60)} heures`;
+  };
+
+  const delayText = buildDelayText();
+
   const fillTemplate = (text: string) =>
-    text.replace(/\{\{device\}\}/g, device).replace(/\{\{reference\}\}/g, reference);
+    text
+      .replace(/\{\{device\}\}/g, device)
+      .replace(/\{\{reference\}\}/g, reference)
+      .replace(/\{\{delay\}\}/g, delayText);
 
   const [message, setMessage] = useState(template ? fillTemplate(template.body) : "");
 

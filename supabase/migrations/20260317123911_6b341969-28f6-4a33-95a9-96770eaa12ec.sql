@@ -1,0 +1,1 @@
+ALTER TABLE public.repairs ADD COLUMN IF NOT EXISTS estimated_time_minutes integer DEFAULT NULL;
