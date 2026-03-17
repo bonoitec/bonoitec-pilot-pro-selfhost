@@ -28,6 +28,8 @@ export function CreateClientDialog({ open, onOpenChange }: Props) {
         phone: form.phone.trim() || null,
         email: form.email.trim() || null,
         address: form.address.trim() || null,
+        city: form.city.trim() || null,
+        postal_code: form.postal_code.trim() || null,
         notes: form.notes.trim() || null,
       });
       if (error) throw error;
