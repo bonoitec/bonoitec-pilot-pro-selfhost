@@ -85,7 +85,7 @@ export function CreateRepairWizard({ open, onOpenChange }: Props) {
   const [newClient, setNewClient] = useState({ name: "", phone: "", email: "", address: "", postal_code: "", city: "", country: "France" });
 
   // Step 2 — Device
-  const [device, setDevice] = useState({ category: "Smartphone", brand: "", model: "", serial_number: "", storage: "" });
+  const [device, setDevice] = useState({ category: "Smartphone", brand: "", model: "", serial_number: "", storage: "", accessories: "", password: "", observations: "" });
   const [selectedDeviceId, setSelectedDeviceId] = useState<string | null>(null);
 
   // Step 3 — Checklist
@@ -405,7 +405,7 @@ export function CreateRepairWizard({ open, onOpenChange }: Props) {
     setStep(0);
     setClientSearch(""); setSelectedClientId(null);
     setNewClient({ name: "", phone: "", email: "", address: "", postal_code: "", city: "", country: "France" });
-    setDevice({ category: "Smartphone", brand: "", model: "", serial_number: "", storage: "" });
+    setDevice({ category: "Smartphone", brand: "", model: "", serial_number: "", storage: "", accessories: "", password: "", observations: "" });
     setSelectedDeviceId(null);
     setChecklist({}); setDiagnosticReason("");
     setScreenCondition(5); setFrameCondition(5); setBackCondition(5);
@@ -442,6 +442,9 @@ export function CreateRepairWizard({ open, onOpenChange }: Props) {
           deviceModel: createdRepair.devices?.model || device.model,
           serialNumber: device.serial_number || undefined,
           deviceCategory: device.category,
+          accessories: device.accessories || undefined,
+          password: device.password || undefined,
+          observations: device.observations || undefined,
           checklist: intakeChecklist,
           screenCondition,
           frameCondition,
@@ -600,9 +603,21 @@ export function CreateRepairWizard({ open, onOpenChange }: Props) {
                     <Label className="text-xs">Modèle *</Label>
                     <Input value={device.model} onChange={e => setDevice(d => ({ ...d, model: e.target.value }))} placeholder="iPhone 15 Pro..." />
                   </div>
-                  <div>
+                   <div>
                     <Label className="text-xs">Stockage (optionnel)</Label>
                     <Input value={device.storage} onChange={e => setDevice(d => ({ ...d, storage: e.target.value }))} placeholder="256 Go" />
+                  </div>
+                  <div className="col-span-2">
+                    <Label className="text-xs">Accessoires confiés</Label>
+                    <Input value={device.accessories} onChange={e => setDevice(d => ({ ...d, accessories: e.target.value }))} placeholder="Chargeur, coque, câble..." />
+                  </div>
+                  <div>
+                    <Label className="text-xs">Code / Mot de passe confié</Label>
+                    <Input value={device.password} onChange={e => setDevice(d => ({ ...d, password: e.target.value }))} placeholder="1234, schéma..." />
+                  </div>
+                  <div>
+                    <Label className="text-xs">Observations</Label>
+                    <Input value={device.observations} onChange={e => setDevice(d => ({ ...d, observations: e.target.value }))} placeholder="Remarques..." />
                   </div>
                 </div>
               )}

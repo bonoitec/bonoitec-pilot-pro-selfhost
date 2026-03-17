@@ -32,6 +32,9 @@ interface IntakeInfo {
   deviceModel?: string;
   serialNumber?: string;
   deviceCategory?: string;
+  accessories?: string;
+  password?: string;
+  observations?: string;
   checklist?: string[];
   screenCondition?: number;
   frameCondition?: number;
@@ -874,10 +877,28 @@ export async function generateIntakePDF(org: OrgInfo, data: IntakePdfData, optio
     doc.setFont("helvetica", "normal"); doc.setFontSize(7); doc.setTextColor(...GRAY_500);
     let devY2 = currentY + 14;
     if (intake!.deviceCategory) { doc.text(`Type : ${intake!.deviceCategory}`, devX + 4, devY2); devY2 += 3.2; }
-    if (intake!.serialNumber) { doc.text(`IMEI / Série : ${intake!.serialNumber}`, devX + 4, devY2); }
+    if (intake!.serialNumber) { doc.text(`IMEI / Série : ${intake!.serialNumber}`, devX + 4, devY2); devY2 += 3.2; }
+
+    // Extra device info below the card if present
+    const extraLines: string[] = [];
+    if (intake!.accessories) extraLines.push(`Accessoires : ${intake!.accessories}`);
+    if (intake!.password) extraLines.push(`Code / MdP confié : ${intake!.password}`);
+    if (intake!.observations) extraLines.push(`Observations : ${intake!.observations}`);
+    if (extraLines.length > 0) {
+      // Extend card height dynamically
+      const extraH = extraLines.length * 3.5;
+      doc.setFillColor(...PRIMARY_LIGHT);
+      doc.roundedRect(devX, currentY + cardH, colW, extraH + 2, 0, 0, "F");
+      let ey = currentY + cardH + 2;
+      doc.setFontSize(6.5); doc.setFont("helvetica", "normal"); doc.setTextColor(...GRAY_500);
+      for (const line of extraLines) {
+        doc.text(line, devX + 4, ey); ey += 3.5;
+      }
+    }
   }
 
-  currentY += cardH + 4;
+  const extraDeviceLines = intake?.accessories || intake?.password || intake?.observations ? [intake?.accessories, intake?.password, intake?.observations].filter(Boolean).length : 0;
+  currentY += cardH + (extraDeviceLines > 0 ? extraDeviceLines * 3.5 + 2 : 0) + 4;
 
   // ── PANNE SIGNALÉE ──
   currentY = drawSectionTitle(doc, "PANNE SIGNALÉE", currentY);
