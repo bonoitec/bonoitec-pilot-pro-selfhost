@@ -313,7 +313,12 @@ export function CreateRepairWizard({ open, onOpenChange }: Props) {
         customer_signature_url: signatureUrl,
         photos: photoUrls,
         estimated_completion: plannedDate || null,
-        internal_notes: [estimatedTime ? `Temps estimé: ${estimatedTime}` : null, clientDescription ? `--- Diagnostic IA ---\n${diagnosticResult ? `Causes: ${diagnosticResult.causes_possibles.join(", ")}\nPièces: ${diagnosticResult.pieces_a_verifier.join(", ")}\nSolution: ${diagnosticResult.solution_probable}\nTemps: ${diagnosticResult.temps_estime} | Difficulté: ${diagnosticResult.difficulte}` : ""}`.trim() || null].filter(Boolean).join("\n\n") || null,
+        internal_notes: (() => {
+          const parts: string[] = [];
+          if (estimatedTime) parts.push("Temps estimé: " + estimatedTime);
+          if (diagnosticResult) parts.push("--- Diagnostic IA ---\nCauses: " + diagnosticResult.causes_possibles.join(", ") + "\nPièces: " + diagnosticResult.pieces_a_verifier.join(", ") + "\nSolution: " + diagnosticResult.solution_probable + "\nTemps: " + diagnosticResult.temps_estime + " | Difficulté: " + diagnosticResult.difficulte);
+          return parts.length > 0 ? parts.join("\n\n") : null;
+        })(),
         diagnostic: clientDescription || null,
       } as any).select("*, clients(name, phone, email, address), devices(brand, model)").single();
       if (rErr) throw rErr;
