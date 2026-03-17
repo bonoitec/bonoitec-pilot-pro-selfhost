@@ -46,7 +46,7 @@ const Quotes = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("quotes")
-        .select("*, clients(name, address, email, phone), devices(brand, model)")
+        .select("*, clients(name, address, email, phone), devices(brand, model, serial_number, type), repairs(screen_condition, frame_condition, back_condition, intake_checklist, photos, customer_signature_url, diagnostic, internal_notes)")
         .order("created_at", { ascending: false });
       if (error) throw error;
       return data;
@@ -63,6 +63,36 @@ const Quotes = () => {
 
   const buildPdfParams = (quote: any) => {
     const lines = Array.isArray(quote.lines) ? quote.lines : [];
+    const repair = quote.repairs;
+    const device = quote.devices;
+
+    // Build intake info from linked repair
+    const intake = repair ? {
+      deviceBrand: device?.brand,
+      deviceModel: device?.model,
+      serialNumber: device?.serial_number || undefined,
+      deviceCategory: device?.type,
+      checklist: Array.isArray(repair.intake_checklist) ? repair.intake_checklist.filter((item: any) => typeof item === "string" || item?.checked).map((item: any) => typeof item === "string" ? item : item.label) : [],
+      screenCondition: repair.screen_condition ?? undefined,
+      frameCondition: repair.frame_condition ?? undefined,
+      backCondition: repair.back_condition ?? undefined,
+      photoUrls: Array.isArray(repair.photos) ? repair.photos as string[] : [],
+      signatureUrl: repair.customer_signature_url,
+    } : undefined;
+
+    // Extract diagnostic analysis from notes JSON if stored
+    let diagnosticAnalysis: any = undefined;
+    let displayNotes: string | undefined = quote.notes;
+    if (quote.notes) {
+      try {
+        const parsed = JSON.parse(quote.notes);
+        if (parsed?.__diagnosticAnalysis) {
+          diagnosticAnalysis = parsed.__diagnosticAnalysis;
+          displayNotes = undefined; // Don't show raw JSON as notes
+        }
+      } catch { /* notes is plain text, keep as-is */ }
+    }
+
     return {
       type: "quote" as const,
       reference: quote.reference,
@@ -71,11 +101,13 @@ const Quotes = () => {
       clientAddress: quote.clients?.address,
       clientPhone: quote.clients?.phone,
       clientEmail: quote.clients?.email,
+      diagnosticAnalysis,
       lines,
       totalHT: Number(quote.total_ht),
       totalTTC: Number(quote.total_ttc),
       vatRate: Number(quote.vat_rate),
-      notes: quote.notes,
+      notes: displayNotes,
+      intake,
     };
   };
 
