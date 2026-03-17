@@ -96,8 +96,6 @@ async function loadImageWithDimensions(url: string): Promise<{ data: string; wid
 function drawStars(doc: jsPDF, x: number, y: number, rating: number, total: number = 5): number {
   const starSize = 3;
   const gap = 0.8;
-  const STAR_GOLD = [234, 179, 8] as const;
-  const STAR_EMPTY = [209, 213, 219] as const;
 
   for (let i = 0; i < total; i++) {
     const cx = x + i * (starSize + gap) + starSize / 2;
