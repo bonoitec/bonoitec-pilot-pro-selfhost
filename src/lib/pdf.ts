@@ -370,15 +370,11 @@ export async function generatePDF(org: OrgInfo, data: DocData, options?: { previ
     // Calculate total height needed
     const causesLines = da.causes_possibles.length;
     const piecesText = da.pieces_a_verifier.join(", ");
-    const solutionLines = doc.splitTextToSize(da.solution_probable, CONTENT_WIDTH - 16);
-    const conseilsLines = da.conseils ? doc.splitTextToSize(da.conseils, CONTENT_WIDTH - 16) : [];
     
     const totalH = 10 + // header
       8 + // temps + difficulté line
       6 + causesLines * lineHeight + // causes
       6 + lineHeight + // pièces
-      6 + solutionLines.length * lineHeight + // solution
-      (conseilsLines.length > 0 ? 6 + conseilsLines.length * lineHeight : 0) +
       8; // padding
 
     if (currentY + totalH > PAGE_BOTTOM) { doc.addPage(); doc.setFillColor(...PRIMARY); doc.rect(0, 0, 210, 4, "F"); currentY = 14; }
