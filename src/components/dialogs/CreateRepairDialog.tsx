@@ -373,15 +373,15 @@ export function CreateRepairDialog({ open, onOpenChange }: Props) {
                       {/* Solution recommandée */}
                       <div>
                         <h4 className="text-xs font-semibold text-foreground mb-1.5 flex items-center gap-1.5">
-                          <CheckCircle2 className="h-3.5 w-3.5 text-green-500" />Solution recommandée
+                          <CheckCircle2 className="h-3.5 w-3.5 text-primary" />Solution recommandée
                         </h4>
                         <p className="text-xs text-muted-foreground leading-relaxed">{diagnosticResult.solution_probable}</p>
                       </div>
 
                       {/* Client description preview */}
                       {clientDescription && (
-                        <div className="rounded-md bg-green-500/10 border border-green-500/20 p-3">
-                          <p className="text-[10px] uppercase tracking-wide text-green-600 dark:text-green-400 font-semibold mb-1">Description client appliquée</p>
+                        <div className="rounded-md bg-primary/10 border border-primary/20 p-3">
+                          <p className="text-[10px] uppercase tracking-wide text-primary font-semibold mb-1">Description client appliquée</p>
                           <p className="text-xs text-foreground leading-relaxed">{clientDescription}</p>
                         </div>
                       )}
