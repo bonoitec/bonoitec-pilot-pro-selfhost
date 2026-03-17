@@ -147,7 +147,11 @@ export async function generatePDF(org: OrgInfo, data: DocData, options?: { previ
       const ratio = Math.min(maxW / logoImg.width, maxH / logoImg.height);
       const w = logoImg.width * ratio;
       const h = logoImg.height * ratio;
-      doc.addImage(logoImg.data, "PNG", PAGE_LEFT, headerY, w, h);
+      try {
+        doc.addImage(logoImg.data, detectImageFormat(logoImg.data), PAGE_LEFT, headerY, w, h);
+      } catch (e) {
+        console.warn("Logo image could not be added to PDF:", e);
+      }
       headerY += 2;
     }
   }
