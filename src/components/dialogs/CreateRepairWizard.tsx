@@ -385,7 +385,7 @@ export function CreateRepairWizard({ open, onOpenChange }: Props) {
     setRepairType(""); setIssue(""); setEstimatedPrice(""); setLaborCost(""); setSelectedServices([]);
     setTechnicianId(""); setEstimatedTime(""); setPlannedDate("");
     setSignatureDataUrl(null); setCreatedRepair(null);
-    setShowDiagnostic(false); setDiagnosticResult(null); setClientDescription("");
+    setShowDiagnostic(false); setDiagnosticResult(null);
     onOpenChange(false);
   };
 
