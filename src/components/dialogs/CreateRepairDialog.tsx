@@ -11,7 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
-import { User, Smartphone, AlertCircle, Settings, StickyNote, ClipboardCheck, Star, PenTool } from "lucide-react";
+import { User, Smartphone, AlertCircle, Settings, StickyNote, ClipboardCheck, Star, PenTool, Sparkles, Loader2, Clock, Gauge, Wrench, Search, CheckCircle2 } from "lucide-react";
 import { SignaturePad } from "@/components/SignaturePad";
 
 interface Props {
@@ -44,6 +44,16 @@ function StarRating({ value, onChange, label }: { value: number; onChange: (v: n
   );
 }
 
+interface DiagnosticResult {
+  causes_possibles: string[];
+  pieces_a_verifier: string[];
+  solution_probable: string;
+  difficulte: string;
+  temps_estime: string;
+  prix_estime: string;
+  conseils: string;
+}
+
 export function CreateRepairDialog({ open, onOpenChange }: Props) {
   const { toast } = useToast();
   const qc = useQueryClient();
@@ -57,6 +67,12 @@ export function CreateRepairDialog({ open, onOpenChange }: Props) {
   const [frameCondition, setFrameCondition] = useState(5);
   const [backCondition, setBackCondition] = useState(5);
   const [signatureDataUrl, setSignatureDataUrl] = useState<string | null>(null);
+
+  // AI Diagnostic state
+  const [showDiagnostic, setShowDiagnostic] = useState(false);
+  const [diagnosticLoading, setDiagnosticLoading] = useState(false);
+  const [diagnosticResult, setDiagnosticResult] = useState<DiagnosticResult | null>(null);
+  const [clientDescription, setClientDescription] = useState("");
 
   const { data: org } = useQuery({
     queryKey: ["organization"],
@@ -136,6 +152,7 @@ export function CreateRepairDialog({ open, onOpenChange }: Props) {
         frame_condition: frameCondition,
         back_condition: backCondition,
         customer_signature_url: signatureUrl,
+        diagnostic: clientDescription || null,
       } as any);
       if (error) throw error;
     },
@@ -149,6 +166,9 @@ export function CreateRepairDialog({ open, onOpenChange }: Props) {
       setFrameCondition(5);
       setBackCondition(5);
       setSignatureDataUrl(null);
+      setShowDiagnostic(false);
+      setDiagnosticResult(null);
+      setClientDescription("");
       onOpenChange(false);
     },
     onError: (e: Error) => toast({ title: "Erreur", description: e.message, variant: "destructive" }),
@@ -239,17 +259,176 @@ export function CreateRepairDialog({ open, onOpenChange }: Props) {
           {/* Issue */}
           <Card className="border-border/60">
             <CardHeader className="pb-3 pt-4 px-4">
-              <CardTitle className="text-sm font-medium flex items-center gap-2">
-                <AlertCircle className="h-4 w-4 text-destructive" />Problème décrit *
+              <CardTitle className="text-sm font-medium flex items-center justify-between">
+                <span className="flex items-center gap-2">
+                  <AlertCircle className="h-4 w-4 text-destructive" />Panne signalée *
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setShowDiagnostic(prev => !prev)}
+                  className="flex items-center gap-1.5 text-xs font-medium text-primary hover:text-primary/80 transition-colors"
+                >
+                  <Sparkles className="h-3.5 w-3.5" />
+                  IA Diagnostic
+                </button>
               </CardTitle>
             </CardHeader>
-            <CardContent className="px-4 pb-4">
+            <CardContent className="px-4 pb-4 space-y-3">
               <Textarea
                 value={form.issue}
                 onChange={e => setForm({ ...form, issue: e.target.value })}
                 placeholder="Description détaillée du problème..."
                 rows={3}
               />
+
+              {/* AI Diagnostic Panel */}
+              {showDiagnostic && (
+                <div className="rounded-lg border border-primary/20 bg-primary/5 p-4 space-y-4">
+                  {!diagnosticResult && (
+                    <div className="flex flex-col items-center gap-3 py-2">
+                      <p className="text-xs text-muted-foreground text-center">
+                        L'IA va analyser la panne décrite ci-dessus et proposer un diagnostic structuré.
+                      </p>
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="secondary"
+                        disabled={!form.issue.trim() || diagnosticLoading}
+                        onClick={async () => {
+                          setDiagnosticLoading(true);
+                          try {
+                            const { data, error } = await supabase.functions.invoke("ai-diagnostic", {
+                              body: {
+                                mode: "diagnostic",
+                                messages: [{ role: "user", content: form.issue.trim() }],
+                              },
+                            });
+                            if (error) throw error;
+                            const content = data?.choices?.[0]?.message?.content;
+                            if (!content) throw new Error("Pas de réponse");
+                            const parsed: DiagnosticResult = JSON.parse(content);
+                            setDiagnosticResult(parsed);
+                          } catch (e: any) {
+                            toast({ title: "Erreur IA", description: e.message || "Impossible d'analyser", variant: "destructive" });
+                          } finally {
+                            setDiagnosticLoading(false);
+                          }
+                        }}
+                      >
+                        {diagnosticLoading ? (
+                          <><Loader2 className="h-4 w-4 animate-spin" />Analyse en cours...</>
+                        ) : (
+                          <><Sparkles className="h-4 w-4" />Lancer analyse IA</>
+                        )}
+                      </Button>
+                    </div>
+                  )}
+
+                  {diagnosticResult && (
+                    <div className="space-y-4">
+                      {/* Temps & Difficulté */}
+                      <div className="grid grid-cols-2 gap-3">
+                        <div className="flex items-center gap-2 rounded-md bg-background p-2.5 border border-border/50">
+                          <Clock className="h-4 w-4 text-primary shrink-0" />
+                          <div>
+                            <p className="text-[10px] text-muted-foreground uppercase tracking-wide">Temps estimé</p>
+                            <p className="text-sm font-semibold">{diagnosticResult.temps_estime}</p>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2 rounded-md bg-background p-2.5 border border-border/50">
+                          <Gauge className="h-4 w-4 text-warning shrink-0" />
+                          <div>
+                            <p className="text-[10px] text-muted-foreground uppercase tracking-wide">Difficulté</p>
+                            <p className="text-sm font-semibold capitalize">{diagnosticResult.difficulte}</p>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Causes probables */}
+                      <div>
+                        <h4 className="text-xs font-semibold text-foreground mb-1.5 flex items-center gap-1.5">
+                          <Search className="h-3.5 w-3.5 text-primary" />Causes probables
+                        </h4>
+                        <ul className="space-y-1 pl-1">
+                          {diagnosticResult.causes_possibles.map((c, i) => (
+                            <li key={i} className="text-xs text-muted-foreground flex items-start gap-1.5">
+                              <span className="text-primary mt-0.5">•</span>{c}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+
+                      {/* Pièces à vérifier */}
+                      <div>
+                        <h4 className="text-xs font-semibold text-foreground mb-1.5 flex items-center gap-1.5">
+                          <Wrench className="h-3.5 w-3.5 text-primary" />Pièces à vérifier
+                        </h4>
+                        <div className="flex flex-wrap gap-1.5">
+                          {diagnosticResult.pieces_a_verifier.map((p, i) => (
+                            <span key={i} className="text-xs bg-background border border-border/50 rounded-md px-2 py-0.5">{p}</span>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Solution recommandée */}
+                      <div>
+                        <h4 className="text-xs font-semibold text-foreground mb-1.5 flex items-center gap-1.5">
+                          <CheckCircle2 className="h-3.5 w-3.5 text-primary" />Solution recommandée
+                        </h4>
+                        <p className="text-xs text-muted-foreground leading-relaxed">{diagnosticResult.solution_probable}</p>
+                      </div>
+
+                      {/* Client description preview */}
+                      {clientDescription && (
+                        <div className="rounded-md bg-primary/10 border border-primary/20 p-3">
+                          <p className="text-[10px] uppercase tracking-wide text-primary font-semibold mb-1">Description client appliquée</p>
+                          <p className="text-xs text-foreground leading-relaxed">{clientDescription}</p>
+                        </div>
+                      )}
+
+                      {/* Apply button */}
+                      <Button
+                        type="button"
+                        size="sm"
+                        className="w-full"
+                        disabled={diagnosticLoading || !!clientDescription}
+                        onClick={async () => {
+                          setDiagnosticLoading(true);
+                          try {
+                            const { data, error } = await supabase.functions.invoke("ai-diagnostic", {
+                              body: {
+                                mode: "chat",
+                                messages: [{
+                                  role: "user",
+                                  content: `À partir de cette panne: "${form.issue.trim()}" et ce diagnostic:\nCauses: ${diagnosticResult.causes_possibles.join(", ")}\nSolution: ${diagnosticResult.solution_probable}\n\nGénère UNE SEULE description courte, claire et professionnelle destinée à un client non technicien. La description doit expliquer le problème et les pistes de réparation dans un langage simple. Pas de titre, pas de listes, juste un paragraphe. Réponds uniquement avec le texte de la description, rien d'autre.`
+                                }],
+                              },
+                            });
+                            if (error) throw error;
+                            const content = data?.choices?.[0]?.message?.content;
+                            if (!content) throw new Error("Pas de réponse");
+                            setClientDescription(content.trim());
+                            setForm(f => ({ ...f, internal_notes: (f.internal_notes ? f.internal_notes + "\n\n" : "") + "--- Diagnostic IA ---\n" + `Causes: ${diagnosticResult.causes_possibles.join(", ")}\nPièces: ${diagnosticResult.pieces_a_verifier.join(", ")}\nSolution: ${diagnosticResult.solution_probable}\nTemps: ${diagnosticResult.temps_estime} | Difficulté: ${diagnosticResult.difficulte}` }));
+                            toast({ title: "Diagnostic appliqué", description: "La description client a été générée et les notes internes mises à jour." });
+                          } catch (e: any) {
+                            toast({ title: "Erreur", description: e.message, variant: "destructive" });
+                          } finally {
+                            setDiagnosticLoading(false);
+                          }
+                        }}
+                      >
+                        {diagnosticLoading ? (
+                          <><Loader2 className="h-4 w-4 animate-spin" />Génération...</>
+                        ) : clientDescription ? (
+                          <><CheckCircle2 className="h-4 w-4" />Appliqué</>
+                        ) : (
+                          <>Appliquer sur la fiche de réparation</>
+                        )}
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              )}
             </CardContent>
           </Card>
 
