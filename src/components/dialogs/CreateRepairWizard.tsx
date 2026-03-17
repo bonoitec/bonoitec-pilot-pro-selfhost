@@ -54,7 +54,7 @@ const defaultChecklist = [
   "Son", "Réseau", "Face ID / empreinte", "Autres problèmes",
 ];
 
-const deviceCategories = ["Smartphone", "Tablette", "Ordinateur portable", "Console", "Montre connectée", "Autre"];
+const deviceCategories = ["Console", "GPS", "Montre", "Ordinateur", "Smartphone", "Tablette", "Universel"];
 
 function StarRating({ value, onChange, label }: { value: number; onChange: (v: number) => void; label: string }) {
   return (
