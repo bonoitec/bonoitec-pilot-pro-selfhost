@@ -14,6 +14,7 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { useToast } from "@/hooks/use-toast";
 import { SignaturePad } from "@/components/SignaturePad";
+import { PatternLockInput, serializePattern, deserializePattern, isPatternPassword } from "@/components/PatternLockInput";
 import { isValidIMEI, lookupTAC, lookupTACBroad } from "@/lib/imei";
 import { generatePDF, generateIntakePDF } from "@/lib/pdf";
 import {
