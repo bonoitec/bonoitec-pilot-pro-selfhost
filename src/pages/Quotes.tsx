@@ -106,7 +106,7 @@ const Quotes = () => {
       totalHT: Number(quote.total_ht),
       totalTTC: Number(quote.total_ttc),
       vatRate: Number(quote.vat_rate),
-      notes: quote.notes,
+      notes: displayNotes,
       intake,
     };
   };
