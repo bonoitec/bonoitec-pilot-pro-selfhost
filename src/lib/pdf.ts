@@ -366,71 +366,9 @@ export async function generatePDF(org: OrgInfo, data: DocData, options?: { previ
   }
 
   // ═══════════════════════════════════════════
-  // ANALYSE TECHNIQUE (structured diagnostic)
+  // ANALYSE TECHNIQUE — REMOVED from client documents
+  // Diagnostic data is kept only in internal repair detail
   // ═══════════════════════════════════════════
-
-  if (data.diagnosticAnalysis) {
-    const da = data.diagnosticAnalysis;
-    const lineHeight = 3.8;
-    
-    // Calculate total height needed
-    const causesLines = da.causes_possibles.length;
-    const piecesText = da.pieces_a_verifier.join(", ");
-    
-    const totalH = 10 + // header
-      8 + // temps + difficulté line
-      6 + causesLines * lineHeight + // causes
-      6 + lineHeight + // pièces
-      8; // padding
-
-    if (currentY + totalH > PAGE_BOTTOM) { doc.addPage(); doc.setFillColor(...PRIMARY); doc.rect(0, 0, 210, 4, "F"); currentY = 14; }
-
-    // Background
-    doc.setFillColor(...PRIMARY_LIGHT);
-    doc.roundedRect(PAGE_LEFT, currentY, CONTENT_WIDTH, totalH, 2, 2, "F");
-
-    let dy = currentY + 6;
-
-    // Title
-    doc.setFontSize(7);
-    doc.setFont("helvetica", "bold");
-    doc.setTextColor(...PRIMARY);
-    doc.text("DIAGNOSTIC", PAGE_LEFT + 6, dy);
-    dy += 6;
-
-    // Temps estimé + Difficulté
-    doc.setFontSize(7);
-    doc.setFont("helvetica", "normal");
-    doc.setTextColor(...GRAY_700);
-    doc.text(`Temps estimé : ${da.temps_estime}  •  Difficulté : ${da.difficulte}`, PAGE_LEFT + 6, dy);
-    dy += 6;
-
-    // Causes probables
-    doc.setFont("helvetica", "bold");
-    doc.setTextColor(...PRIMARY);
-    doc.text("Causes probables :", PAGE_LEFT + 6, dy);
-    dy += 4;
-    doc.setFont("helvetica", "normal");
-    doc.setTextColor(...GRAY_700);
-    da.causes_possibles.forEach(cause => {
-      doc.text(`•  ${cause}`, PAGE_LEFT + 8, dy);
-      dy += lineHeight;
-    });
-    dy += 2;
-
-    // Pièces à vérifier
-    doc.setFont("helvetica", "bold");
-    doc.setTextColor(...PRIMARY);
-    doc.text("Pièces à vérifier :", PAGE_LEFT + 6, dy);
-    dy += 4;
-    doc.setFont("helvetica", "normal");
-    doc.setTextColor(...GRAY_700);
-    doc.text(piecesText, PAGE_LEFT + 8, dy);
-    dy += lineHeight + 2;
-
-
-    currentY += totalH + 6;
-  }
 
   // Page break check
   if (currentY > PAGE_BOTTOM - 40) {
