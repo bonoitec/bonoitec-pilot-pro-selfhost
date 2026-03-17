@@ -1,9 +1,11 @@
 import { useQuery } from "@tanstack/react-query";
+import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { AlertTriangle, Package, ShoppingBag, CheckCircle2 } from "lucide-react";
+import { AlertTriangle, Package, ShoppingBag, CheckCircle2, ArrowRight } from "lucide-react";
 
 const StockAlerts = () => {
   const { data: inventory = [], isLoading: loadingInv } = useQuery({
