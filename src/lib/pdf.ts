@@ -93,21 +93,34 @@ async function loadImageWithDimensions(url: string): Promise<{ data: string; wid
   });
 }
 
+function drawStar(doc: jsPDF, cx: number, cy: number, outerR: number, innerR: number) {
+  const points: [number, number][] = [];
+  for (let i = 0; i < 10; i++) {
+    const angle = (Math.PI / 2) + (i * Math.PI / 5);
+    const r = i % 2 === 0 ? outerR : innerR;
+    points.push([cx + r * Math.cos(angle), cy - r * Math.sin(angle)]);
+  }
+  // jsPDF doesn't have polygon, so use lines
+  const [first, ...rest] = points;
+  doc.lines(
+    rest.map((p, i) => [p[0] - (i === 0 ? first[0] : rest[i - 1][0]), p[1] - (i === 0 ? first[1] : rest[i - 1][1])]),
+    first[0], first[1], [1, 1], "F", true
+  );
+}
+
 function drawStars(doc: jsPDF, x: number, y: number, rating: number, total: number = 5): number {
-  const starSize = 3;
-  const gap = 0.8;
+  const size = 1.6;
+  const gap = 1.0;
 
   for (let i = 0; i < total; i++) {
-    const cx = x + i * (starSize + gap) + starSize / 2;
-    const cy = y - starSize / 2 + 0.5;
+    const cx = x + i * (size * 2 + gap) + size;
+    const cy = y - size + 0.3;
     const filled = i < rating;
     const color: [number, number, number] = filled ? [234, 179, 8] : [209, 213, 219];
     doc.setFillColor(color[0], color[1], color[2]);
-    // Draw a simple filled circle as a "star dot"
-    doc.circle(cx, cy, starSize / 2.5, "F");
+    drawStar(doc, cx, cy, size, size * 0.4);
   }
-  // Return the X position after the last star for appending text
-  return x + total * (starSize + gap);
+  return x + total * (size * 2 + gap);
 }
 
 function drawConditionLine(doc: jsPDF, label: string, rating: number | undefined, x: number, y: number): void {
