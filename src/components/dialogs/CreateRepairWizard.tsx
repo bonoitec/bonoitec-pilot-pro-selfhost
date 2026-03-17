@@ -754,8 +754,160 @@ export function CreateRepairWizard({ open, onOpenChange }: Props) {
                 </Select>
               </div>
               <div>
-                <Label className="text-xs">Description du problème *</Label>
+                <div className="flex items-center justify-between mb-1">
+                  <Label className="text-xs">Description du problème *</Label>
+                  <button
+                    type="button"
+                    onClick={() => setShowDiagnostic(prev => !prev)}
+                    className="flex items-center gap-1.5 text-xs font-medium text-primary hover:text-primary/80 transition-colors"
+                  >
+                    <Sparkles className="h-3.5 w-3.5" />
+                    IA Diagnostic
+                  </button>
+                </div>
                 <Textarea value={issue} onChange={e => setIssue(e.target.value)} placeholder="Décrivez le problème en détail..." rows={3} />
+
+                {/* AI Diagnostic Panel */}
+                {showDiagnostic && (
+                  <div className="mt-3 rounded-lg border border-primary/20 bg-primary/5 p-4 space-y-4">
+                    {!diagnosticResult && (
+                      <div className="flex flex-col items-center gap-3 py-2">
+                        <p className="text-xs text-muted-foreground text-center">
+                          L'IA va analyser la panne décrite ci-dessus et proposer un diagnostic structuré.
+                        </p>
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="secondary"
+                          disabled={!issue.trim() || diagnosticLoading}
+                          onClick={async () => {
+                            setDiagnosticLoading(true);
+                            try {
+                              const { data, error } = await supabase.functions.invoke("ai-diagnostic", {
+                                body: {
+                                  mode: "diagnostic",
+                                  messages: [{ role: "user", content: issue.trim() }],
+                                },
+                              });
+                              if (error) throw error;
+                              const content = data?.choices?.[0]?.message?.content;
+                              if (!content) throw new Error("Pas de réponse");
+                              const parsed: DiagnosticResult = JSON.parse(content);
+                              setDiagnosticResult(parsed);
+                            } catch (e: any) {
+                              toast({ title: "Erreur IA", description: e.message || "Impossible d'analyser", variant: "destructive" });
+                            } finally {
+                              setDiagnosticLoading(false);
+                            }
+                          }}
+                        >
+                          {diagnosticLoading ? (
+                            <><Loader2 className="h-4 w-4 animate-spin" />Analyse en cours...</>
+                          ) : (
+                            <><Sparkles className="h-4 w-4" />Lancer analyse IA</>
+                          )}
+                        </Button>
+                      </div>
+                    )}
+
+                    {diagnosticResult && (
+                      <div className="space-y-4">
+                        <div className="grid grid-cols-2 gap-3">
+                          <div className="flex items-center gap-2 rounded-md bg-background p-2.5 border border-border/50">
+                            <Clock className="h-4 w-4 text-primary shrink-0" />
+                            <div>
+                              <p className="text-[10px] text-muted-foreground uppercase tracking-wide">Temps estimé</p>
+                              <p className="text-sm font-semibold">{diagnosticResult.temps_estime}</p>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2 rounded-md bg-background p-2.5 border border-border/50">
+                            <Gauge className="h-4 w-4 text-warning shrink-0" />
+                            <div>
+                              <p className="text-[10px] text-muted-foreground uppercase tracking-wide">Difficulté</p>
+                              <p className="text-sm font-semibold capitalize">{diagnosticResult.difficulte}</p>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div>
+                          <h4 className="text-xs font-semibold text-foreground mb-1.5 flex items-center gap-1.5">
+                            <Search className="h-3.5 w-3.5 text-primary" />Causes probables
+                          </h4>
+                          <ul className="space-y-1 pl-1">
+                            {diagnosticResult.causes_possibles.map((c, i) => (
+                              <li key={i} className="text-xs text-muted-foreground flex items-start gap-1.5">
+                                <span className="text-primary mt-0.5">•</span>{c}
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+
+                        <div>
+                          <h4 className="text-xs font-semibold text-foreground mb-1.5 flex items-center gap-1.5">
+                            <Wrench className="h-3.5 w-3.5 text-primary" />Pièces à vérifier
+                          </h4>
+                          <div className="flex flex-wrap gap-1.5">
+                            {diagnosticResult.pieces_a_verifier.map((p, i) => (
+                              <span key={i} className="text-xs bg-background border border-border/50 rounded-md px-2 py-0.5">{p}</span>
+                            ))}
+                          </div>
+                        </div>
+
+                        <div>
+                          <h4 className="text-xs font-semibold text-foreground mb-1.5 flex items-center gap-1.5">
+                            <CheckCircle2 className="h-3.5 w-3.5 text-primary" />Solution recommandée
+                          </h4>
+                          <p className="text-xs text-muted-foreground leading-relaxed">{diagnosticResult.solution_probable}</p>
+                        </div>
+
+                        {clientDescription && (
+                          <div className="rounded-md bg-primary/10 border border-primary/20 p-3">
+                            <p className="text-[10px] uppercase tracking-wide text-primary font-semibold mb-1">Description client appliquée</p>
+                            <p className="text-xs text-foreground leading-relaxed">{clientDescription}</p>
+                          </div>
+                        )}
+
+                        <Button
+                          type="button"
+                          size="sm"
+                          className="w-full"
+                          disabled={diagnosticLoading || !!clientDescription}
+                          onClick={async () => {
+                            setDiagnosticLoading(true);
+                            try {
+                              const { data, error } = await supabase.functions.invoke("ai-diagnostic", {
+                                body: {
+                                  mode: "chat",
+                                  messages: [{
+                                    role: "user",
+                                    content: `À partir de cette panne: "${issue.trim()}" et ce diagnostic:\nCauses: ${diagnosticResult.causes_possibles.join(", ")}\nSolution: ${diagnosticResult.solution_probable}\n\nGénère UNE SEULE description courte, claire et professionnelle destinée à un client non technicien. La description doit expliquer le problème et les pistes de réparation dans un langage simple. Pas de titre, pas de listes, juste un paragraphe. Réponds uniquement avec le texte de la description, rien d'autre.`
+                                  }],
+                                },
+                              });
+                              if (error) throw error;
+                              const content = data?.choices?.[0]?.message?.content;
+                              if (!content) throw new Error("Pas de réponse");
+                              setClientDescription(content.trim());
+                              toast({ title: "Diagnostic appliqué", description: "La description client a été générée." });
+                            } catch (e: any) {
+                              toast({ title: "Erreur", description: e.message, variant: "destructive" });
+                            } finally {
+                              setDiagnosticLoading(false);
+                            }
+                          }}
+                        >
+                          {diagnosticLoading ? (
+                            <><Loader2 className="h-4 w-4 animate-spin" />Génération...</>
+                          ) : clientDescription ? (
+                            <><CheckCircle2 className="h-4 w-4" />Appliqué</>
+                          ) : (
+                            <>Appliquer sur la fiche de réparation</>
+                          )}
+                        </Button>
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
               <div>
                 <Label className="text-xs">Prix estimé (€){selectedServices.length > 0 ? " (calculé automatiquement)" : ""}</Label>
