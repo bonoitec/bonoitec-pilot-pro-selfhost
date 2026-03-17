@@ -442,7 +442,7 @@ export function CreateRepairWizard({ open, onOpenChange }: Props) {
         clientAddress: createdRepair.clients?.address,
         clientPhone: createdRepair.clients?.phone,
         clientEmail: createdRepair.clients?.email,
-        clientDiagnostic: clientDescription || createdRepair.diagnostic || undefined,
+        
         lines, totalHT, totalTTC, vatRate,
         intake: {
           deviceBrand: createdRepair.devices?.brand || device.brand,
