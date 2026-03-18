@@ -170,7 +170,7 @@ const Repairs = () => {
                               }`}
                             >
                               <div className="flex items-center gap-2 mb-2">
-                                <Badge variant="outline" className={`text-[10px] ${statusColors[status]}`}>{statusLabels[status]}</Badge>
+                                <Badge variant="outline" className={`text-[10px] ${statusColors[status]}`}>{label}</Badge>
                                 <span className="text-xs text-muted-foreground">{items.length}</span>
                               </div>
 
