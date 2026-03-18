@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
 interface SubscriptionState {
@@ -12,6 +13,7 @@ interface SubscriptionState {
 
 export function useSubscription() {
   const { user, session } = useAuth();
+  const queryClient = useQueryClient();
   const [state, setState] = useState<SubscriptionState>({
     subscribed: false,
     planName: null,
@@ -27,16 +29,22 @@ export function useSubscription() {
         headers: { Authorization: `Bearer ${session.access_token}` },
       });
       if (error) throw error;
+      const isSubscribed = data?.subscribed ?? false;
       setState({
-        subscribed: data?.subscribed ?? false,
+        subscribed: isSubscribed,
         planName: data?.plan_name ?? null,
         subscriptionEnd: data?.subscription_end ?? null,
         isLoading: false,
       });
+      // When subscription status changes, invalidate trial-status cache
+      // so useTrialStatus picks up the DB update immediately
+      if (isSubscribed) {
+        queryClient.invalidateQueries({ queryKey: ["trial-status"] });
+      }
     } catch {
       setState((s) => ({ ...s, isLoading: false }));
     }
-  }, [session?.access_token]);
+  }, [session?.access_token, queryClient]);
 
   // Check on mount and every 60s
   useEffect(() => {
