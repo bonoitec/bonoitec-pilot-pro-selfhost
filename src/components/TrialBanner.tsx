@@ -63,10 +63,10 @@ export function TrialBanner() {
   // Show cancellation warning banner from real Stripe state (even if org cache is stale)
   if (cancelAtPeriodEnd && subscriptionEnd) {
     const endDate = new Date(subscriptionEnd);
-    if (Number.isNaN(endDate.getTime())) return null;
 
-    const daysLeft = Math.max(0, Math.ceil((endDate.getTime() - Date.now()) / (1000 * 60 * 60 * 24)));
-    const endFormatted = format(endDate, "d MMMM yyyy 'à' HH:mm", { locale: fr });
+    if (!Number.isNaN(endDate.getTime())) {
+      const daysLeft = Math.max(0, Math.ceil((endDate.getTime() - Date.now()) / (1000 * 60 * 60 * 24)));
+      const endFormatted = format(endDate, "d MMMM yyyy 'à' HH:mm", { locale: fr });
 
     return (
       <div className="flex items-center gap-2 px-4 py-2 bg-destructive/10 border border-destructive/20 rounded-xl text-sm flex-wrap">
