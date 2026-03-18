@@ -1,0 +1,1 @@
+UPDATE organizations SET subscription_status = 'active', plan_name = 'monthly', stripe_customer_id = 'cus_UAgVpks9VpRCtr', stripe_subscription_id = 'sub_1TCL93Hmh4WVTxBvQqxNBJZb' WHERE id = '888460a9-9af0-43fc-a90a-4e78c24d8b26';

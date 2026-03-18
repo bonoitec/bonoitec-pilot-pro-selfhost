@@ -1,6 +1,6 @@
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
-import { Outlet, useNavigate } from "react-router-dom";
+import { Outlet, useNavigate, useSearchParams } from "react-router-dom";
 import { Search, LogOut } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -10,6 +10,9 @@ import { ThemeToggle } from "@/components/ThemeToggle";
 import { TrialBanner } from "@/components/TrialBanner";
 import { TrialExpiredWall } from "@/components/TrialExpiredWall";
 import { useTrialStatus } from "@/hooks/useTrialStatus";
+import { useSubscription } from "@/hooks/useSubscription";
+import { useEffect } from "react";
+import { toast } from "sonner";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -20,7 +23,18 @@ import {
 export function AppLayout() {
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const { isExpired, isLoading: trialLoading } = useTrialStatus();
+  const { checkSubscription } = useSubscription();
+
+  // Handle checkout success at layout level (before TrialExpiredWall blocks Outlet)
+  useEffect(() => {
+    if (searchParams.get("checkout") === "success") {
+      toast.success("Paiement réussi ! Votre abonnement est maintenant actif.");
+      checkSubscription();
+      setSearchParams({}, { replace: true });
+    }
+  }, [searchParams, checkSubscription, setSearchParams]);
 
   const handleSignOut = async () => {
     await signOut();
