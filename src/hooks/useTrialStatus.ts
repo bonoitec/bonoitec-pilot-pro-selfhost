@@ -29,7 +29,13 @@ export function useTrialStatus(): TrialStatus & { isLoading: boolean } {
   const now = new Date();
   const trialEndDate = data?.trial_end_date ?? null;
   const trialStartDate = data?.trial_start_date ?? null;
-  const subscriptionStatus = (data?.subscription_status ?? "trial") as TrialStatus["subscriptionStatus"];
+  const rawStatus = data?.subscription_status ?? "trial";
+
+  // Normalize: handle "trial_expired" from DB as "expired" for the UI
+  const subscriptionStatus: TrialStatus["subscriptionStatus"] =
+    rawStatus === "active" ? "active" :
+    rawStatus === "trial_expired" ? "expired" :
+    "trial";
 
   const endDate = trialEndDate ? new Date(trialEndDate) : null;
   const daysRemaining = endDate
@@ -38,7 +44,7 @@ export function useTrialStatus(): TrialStatus & { isLoading: boolean } {
 
   const isSubscribed = subscriptionStatus === "active";
   const isTrialActive = subscriptionStatus === "trial" && daysRemaining > 0;
-  const isExpired = subscriptionStatus === "trial" && daysRemaining <= 0 && !isSubscribed;
+  const isExpired = (subscriptionStatus === "trial" && daysRemaining <= 0 && !isSubscribed) || subscriptionStatus === "expired";
 
   return {
     subscriptionStatus,
