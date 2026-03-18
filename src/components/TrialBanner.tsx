@@ -77,7 +77,9 @@ export function TrialBanner() {
         <span className="text-foreground font-medium">{planLabel}</span>
         <span className="text-muted-foreground">·</span>
         <span className="text-foreground">
-          Fin le {endFormatted} ({daysLeft === 1 ? "1 jour restant" : `${daysLeft} jours restants`})
+          {endFormatted
+            ? `Fin le ${endFormatted} (${daysLeft === 1 ? "1 jour restant" : `${daysLeft} jours restants`})`
+            : "Actif jusqu'à la fin de la période en cours"}
         </span>
         <Button
           variant="premium"

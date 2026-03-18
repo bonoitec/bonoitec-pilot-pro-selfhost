@@ -45,8 +45,8 @@ export function AppLayout() {
     ? user.user_metadata.full_name.split(" ").map((n: string) => n[0]).join("").toUpperCase().slice(0, 2)
     : user?.email?.slice(0, 2).toUpperCase() ?? "?";
 
-  // Block access if trial expired
-  if (!trialLoading && isExpired) {
+  // Block access if trial expired — wait for both trial AND subscription checks
+  if (!trialLoading && !subLoading && isExpired && !subscribed) {
     return <TrialExpiredWall />;
   }
 
