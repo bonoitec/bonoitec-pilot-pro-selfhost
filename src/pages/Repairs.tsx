@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Plus, Search, LayoutGrid, List, Timer, GripVertical } from "lucide-react";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { CreateRepairWizard } from "@/components/dialogs/CreateRepairWizard";
 import { RepairDetailDialog } from "@/components/dialogs/RepairDetailDialog";
 import { RestitutionDialog } from "@/components/dialogs/RestitutionDialog";
