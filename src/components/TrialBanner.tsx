@@ -71,10 +71,12 @@ export function TrialBanner() {
     return (
       <div className="flex items-center gap-2 px-4 py-2 bg-destructive/10 border border-destructive/20 rounded-xl text-sm flex-wrap">
         <AlertTriangle className="h-4 w-4 text-destructive shrink-0" />
-        <span className="text-foreground font-medium">Abonnement annulé</span>
-        <span className="text-muted-foreground">—</span>
+        <span className="text-foreground font-medium">Annulé — actif jusqu'à la fin de période</span>
+        <span className="text-muted-foreground">·</span>
+        <span className="text-foreground font-medium">{planLabel}</span>
+        <span className="text-muted-foreground">·</span>
         <span className="text-foreground">
-          Accès maintenu jusqu'au {endFormatted} ({daysLeft === 1 ? "1 jour restant" : `${daysLeft} jours restants`})
+          Fin le {endFormatted} ({daysLeft === 1 ? "1 jour restant" : `${daysLeft} jours restants`})
         </span>
         <Button
           variant="premium"
