@@ -78,10 +78,19 @@ serve(async (req) => {
       stripeSubscriptionId = subscription.id;
       cancelAtPeriodEnd = subscription.cancel_at_period_end === true;
 
-      // Safe date conversion
+      // Robust date conversion – handle number, string, or object
       const periodEndTs = subscription.current_period_end;
-      if (periodEndTs && typeof periodEndTs === "number" && periodEndTs > 0) {
-        subscriptionEnd = new Date(periodEndTs * 1000).toISOString();
+      let parsedEnd: number | null = null;
+      if (typeof periodEndTs === "number" && periodEndTs > 0) {
+        parsedEnd = periodEndTs;
+      } else if (typeof periodEndTs === "string") {
+        const ms = new Date(periodEndTs).getTime();
+        if (!Number.isNaN(ms)) parsedEnd = Math.floor(ms / 1000);
+      } else if (periodEndTs && typeof periodEndTs === "object" && "seconds" in (periodEndTs as Record<string, unknown>)) {
+        parsedEnd = (periodEndTs as unknown as { seconds: number }).seconds;
+      }
+      if (parsedEnd && parsedEnd > 0) {
+        subscriptionEnd = new Date(parsedEnd * 1000).toISOString();
       }
 
       const priceId = subscription.items.data[0]?.price?.id;
