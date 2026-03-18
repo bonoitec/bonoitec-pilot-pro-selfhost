@@ -37,12 +37,22 @@ const plans = [
 
 export function TrialBanner() {
   const { isTrialActive, isSubscribed, daysRemaining, trialEndDate, isLoading } = useTrialStatus();
-  const { startCheckout, cancelAtPeriodEnd, subscriptionEnd } = useSubscription();
+  const { startCheckout, cancelAtPeriodEnd, subscriptionEnd, planName } = useSubscription();
   const [open, setOpen] = useState(false);
   const [selected, setSelected] = useState<"monthly" | "quarterly" | "annual">("annual");
   const [loading, setLoading] = useState(false);
 
   if (isLoading) return null;
+
+  const planKey = (planName ?? "").replace("_cancelling", "");
+  const planLabel =
+    planKey === "monthly"
+      ? "Mensuel"
+      : planKey === "quarterly"
+        ? "Trimestriel"
+        : planKey === "annual"
+          ? "Annuel"
+          : "Abonnement";
 
   const handleSubscribe = async () => {
     setLoading(true);
@@ -50,19 +60,23 @@ export function TrialBanner() {
     setLoading(false);
   };
 
-  // Show cancellation warning banner for subscribed users who cancelled
-  if (isSubscribed && cancelAtPeriodEnd && subscriptionEnd) {
+  // Show cancellation warning banner from real Stripe state (even if org cache is stale)
+  if (cancelAtPeriodEnd && subscriptionEnd) {
     const endDate = new Date(subscriptionEnd);
-    const daysLeft = Math.max(0, Math.ceil((endDate.getTime() - Date.now()) / (1000 * 60 * 60 * 24)));
-    const endFormatted = format(endDate, "d MMMM yyyy", { locale: fr });
+
+    if (!Number.isNaN(endDate.getTime())) {
+      const daysLeft = Math.max(0, Math.ceil((endDate.getTime() - Date.now()) / (1000 * 60 * 60 * 24)));
+      const endFormatted = format(endDate, "d MMMM yyyy 'à' HH:mm", { locale: fr });
 
     return (
       <div className="flex items-center gap-2 px-4 py-2 bg-destructive/10 border border-destructive/20 rounded-xl text-sm flex-wrap">
         <AlertTriangle className="h-4 w-4 text-destructive shrink-0" />
-        <span className="text-foreground font-medium">Abonnement annulé</span>
-        <span className="text-muted-foreground">—</span>
+        <span className="text-foreground font-medium">Annulé — actif jusqu'à la fin de période</span>
+        <span className="text-muted-foreground">·</span>
+        <span className="text-foreground font-medium">{planLabel}</span>
+        <span className="text-muted-foreground">·</span>
         <span className="text-foreground">
-          Accès maintenu jusqu'au {endFormatted} ({daysLeft === 1 ? "1 jour restant" : `${daysLeft} jours restants`})
+          Fin le {endFormatted} ({daysLeft === 1 ? "1 jour restant" : `${daysLeft} jours restants`})
         </span>
         <Button
           variant="premium"
@@ -145,6 +159,7 @@ export function TrialBanner() {
         </Dialog>
       </div>
     );
+    }
   }
 
   if (isSubscribed) return null;
