@@ -20,7 +20,7 @@ export function useSubscription() {
     planName: null,
     subscriptionEnd: null,
     cancelAtPeriodEnd: false,
-    isLoading: false,
+    isLoading: true,
   });
 
   const checkSubscription = useCallback(async () => {
