@@ -152,17 +152,18 @@ const Repairs = () => {
           <>
             <TabsContent value="kanban" className="mt-4">
               <DragDropContext onDragEnd={onDragEnd}>
-                <div className="">
-                  <div className="grid grid-cols-6 gap-3">
+                <div className="overflow-x-auto -mx-2 px-2 pb-2">
+                  <div className="flex gap-3 md:grid md:grid-cols-6">
                     {statusOrder.map((status) => {
                       const items = filtered.filter((r) => r.status === status);
+                      const label = isMobile ? statusLabelsMobile[status] : statusLabels[status];
                       return (
                         <Droppable droppableId={status} key={status}>
                           {(provided, snapshot) => (
                             <div
                               ref={provided.innerRef}
                               {...provided.droppableProps}
-                              className={`space-y-2 min-h-[120px] rounded-lg p-2 transition-all duration-300 ${
+                              className={`min-w-[130px] flex-shrink-0 md:min-w-0 md:flex-shrink space-y-2 min-h-[120px] rounded-lg p-2 transition-all duration-300 ${
                                 snapshot.isDraggingOver
                                   ? "bg-primary/5 ring-2 ring-primary/20 scale-[1.01]"
                                   : "hover:bg-muted/30"
