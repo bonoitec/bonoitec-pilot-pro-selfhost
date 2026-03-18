@@ -8,12 +8,13 @@ import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Plus, Search, LayoutGrid, List, Timer, GripVertical } from "lucide-react";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { CreateRepairWizard } from "@/components/dialogs/CreateRepairWizard";
 import { RepairDetailDialog } from "@/components/dialogs/RepairDetailDialog";
 import { RestitutionDialog } from "@/components/dialogs/RestitutionDialog";
 import { DragDropContext, Droppable, Draggable, DropResult } from "@hello-pangea/dnd";
 import { useToast } from "@/hooks/use-toast";
-import { statusLabels, statusOrder, statusColors, statusHelpText } from "@/lib/repairStatuses";
+import { statusLabels, statusLabelsMobile, statusOrder, statusColors, statusHelpText } from "@/lib/repairStatuses";
 import { sendTransactionalEmail } from "@/lib/email";
 
 function formatDuration(startedAt: string | null) {
@@ -25,6 +26,7 @@ function formatDuration(startedAt: string | null) {
 }
 
 const Repairs = () => {
+  const isMobile = useIsMobile();
   const [search, setSearch] = useState("");
   const [showCreate, setShowCreate] = useState(false);
   const [selectedRepair, setSelectedRepair] = useState<any>(null);
@@ -150,24 +152,25 @@ const Repairs = () => {
           <>
             <TabsContent value="kanban" className="mt-4">
               <DragDropContext onDragEnd={onDragEnd}>
-                <div className="">
-                  <div className="grid grid-cols-6 gap-3">
+                <div className="overflow-x-auto -mx-2 px-2 pb-2">
+                  <div className="flex gap-3 md:grid md:grid-cols-6">
                     {statusOrder.map((status) => {
                       const items = filtered.filter((r) => r.status === status);
+                      const label = isMobile ? statusLabelsMobile[status] : statusLabels[status];
                       return (
                         <Droppable droppableId={status} key={status}>
                           {(provided, snapshot) => (
                             <div
                               ref={provided.innerRef}
                               {...provided.droppableProps}
-                              className={`space-y-2 min-h-[120px] rounded-lg p-2 transition-all duration-300 ${
+                              className={`min-w-[130px] flex-shrink-0 md:min-w-0 md:flex-shrink space-y-2 min-h-[120px] rounded-lg p-2 transition-all duration-300 ${
                                 snapshot.isDraggingOver
                                   ? "bg-primary/5 ring-2 ring-primary/20 scale-[1.01]"
                                   : "hover:bg-muted/30"
                               }`}
                             >
                               <div className="flex items-center gap-2 mb-2">
-                                <Badge variant="outline" className={`text-[10px] ${statusColors[status]}`}>{statusLabels[status]}</Badge>
+                                <Badge variant="outline" className={`text-[10px] ${statusColors[status]}`}>{label}</Badge>
                                 <span className="text-xs text-muted-foreground">{items.length}</span>
                               </div>
 

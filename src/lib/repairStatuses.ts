@@ -10,6 +10,15 @@ export const statusLabels: Record<string, string> = {
   pret_a_recuperer: "Restitué",
 };
 
+export const statusLabelsMobile: Record<string, string> = {
+  nouveau: "Reçu",
+  en_cours: "À commander",
+  en_attente_piece: "Livraison",
+  reparation_en_cours: "Débuté",
+  termine: "Terminé",
+  pret_a_recuperer: "Restitué",
+};
+
 // Full admin status order (used in Kanban columns and status select)
 export const statusOrder = [
   "nouveau",
