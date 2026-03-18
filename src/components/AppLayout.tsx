@@ -25,7 +25,7 @@ export function AppLayout() {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const { isExpired, isLoading: trialLoading } = useTrialStatus();
-  const { checkSubscription } = useSubscription();
+  const { checkSubscription, subscribed, isLoading: subLoading } = useSubscription();
 
   // Handle checkout success at layout level (before TrialExpiredWall blocks Outlet)
   useEffect(() => {
