@@ -159,6 +159,7 @@ export function TrialBanner() {
         </Dialog>
       </div>
     );
+    }
   }
 
   if (isSubscribed) return null;
