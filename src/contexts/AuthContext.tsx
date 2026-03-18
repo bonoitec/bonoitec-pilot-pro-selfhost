@@ -27,8 +27,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
-        // If the user was deleted or token refresh failed, force sign out
-        if (event === "SIGNED_OUT" || event === "USER_DELETED") {
+        if (event === "SIGNED_OUT") {
           setSession(null);
           setLoading(false);
           hadSessionRef.current = false;
