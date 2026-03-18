@@ -37,12 +37,22 @@ const plans = [
 
 export function TrialBanner() {
   const { isTrialActive, isSubscribed, daysRemaining, trialEndDate, isLoading } = useTrialStatus();
-  const { startCheckout, cancelAtPeriodEnd, subscriptionEnd } = useSubscription();
+  const { startCheckout, cancelAtPeriodEnd, subscriptionEnd, planName } = useSubscription();
   const [open, setOpen] = useState(false);
   const [selected, setSelected] = useState<"monthly" | "quarterly" | "annual">("annual");
   const [loading, setLoading] = useState(false);
 
   if (isLoading) return null;
+
+  const planKey = (planName ?? "").replace("_cancelling", "");
+  const planLabel =
+    planKey === "monthly"
+      ? "Mensuel"
+      : planKey === "quarterly"
+        ? "Trimestriel"
+        : planKey === "annual"
+          ? "Annuel"
+          : "Abonnement";
 
   const handleSubscribe = async () => {
     setLoading(true);
@@ -50,11 +60,13 @@ export function TrialBanner() {
     setLoading(false);
   };
 
-  // Show cancellation warning banner for subscribed users who cancelled
-  if (isSubscribed && cancelAtPeriodEnd && subscriptionEnd) {
+  // Show cancellation warning banner from real Stripe state (even if org cache is stale)
+  if (cancelAtPeriodEnd && subscriptionEnd) {
     const endDate = new Date(subscriptionEnd);
+    if (Number.isNaN(endDate.getTime())) return null;
+
     const daysLeft = Math.max(0, Math.ceil((endDate.getTime() - Date.now()) / (1000 * 60 * 60 * 24)));
-    const endFormatted = format(endDate, "d MMMM yyyy", { locale: fr });
+    const endFormatted = format(endDate, "d MMMM yyyy 'à' HH:mm", { locale: fr });
 
     return (
       <div className="flex items-center gap-2 px-4 py-2 bg-destructive/10 border border-destructive/20 rounded-xl text-sm flex-wrap">
