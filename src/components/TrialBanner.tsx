@@ -72,20 +72,20 @@ export function TrialBanner() {
     return (
       <div className="flex items-center gap-2 px-4 py-2 bg-destructive/10 border border-destructive/20 rounded-xl text-sm flex-wrap">
         <AlertTriangle className="h-4 w-4 text-destructive shrink-0" />
-        <span className="text-foreground font-medium">Annulé — actif jusqu'à la fin de période</span>
+        <span className="text-foreground font-medium">Annulé</span>
         <span className="text-muted-foreground">·</span>
         <span className="text-foreground font-medium">{planLabel}</span>
         <span className="text-muted-foreground">·</span>
         <span className="text-foreground">
           {endFormatted
-            ? `Fin le ${endFormatted} (${daysLeft === 1 ? "1 jour restant" : `${daysLeft} jours restants`})`
+            ? `Actif jusqu'au ${endFormatted} (${daysLeft === 1 ? "1 jour restant" : `${daysLeft} jours restants`})`
             : "Actif jusqu'à la fin de la période en cours"}
         </span>
         <Button
           variant="premium"
           size="sm"
           className="ml-auto rounded-full text-xs px-4"
-          onClick={() => setOpen(true)}
+          onClick={() => openCustomerPortal()}
         >
           <CreditCard className="h-3 w-3 mr-1" />
           Reprendre l'abonnement
