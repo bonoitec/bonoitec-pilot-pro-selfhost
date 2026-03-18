@@ -21,7 +21,6 @@ serve(async (req) => {
   const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
   const anonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
 
-  // Service role client for DB operations
   const supabaseClient = createClient(supabaseUrl, serviceKey, {
     auth: { persistSession: false },
   });
@@ -35,7 +34,6 @@ serve(async (req) => {
     const authHeader = req.headers.get("Authorization");
     if (!authHeader?.startsWith("Bearer ")) throw new Error("No authorization header provided");
 
-    // Validate JWT using anon-key client with getClaims (works with ES256 on Lovable Cloud)
     const authClient = createClient(supabaseUrl, anonKey, {
       global: { headers: { Authorization: authHeader } },
     });
@@ -62,6 +60,7 @@ serve(async (req) => {
     const customerId = customers.data[0].id;
     logStep("Found Stripe customer", { customerId });
 
+    // Check active subscriptions (includes cancelled-but-not-yet-expired)
     const subscriptions = await stripe.subscriptions.list({
       customer: customerId,
       status: "active",
@@ -72,20 +71,26 @@ serve(async (req) => {
     let subscriptionEnd: string | null = null;
     let planName: string | null = null;
     let stripeSubscriptionId: string | null = null;
+    let cancelAtPeriodEnd = false;
 
     if (hasActiveSub) {
       const subscription = subscriptions.data[0];
       stripeSubscriptionId = subscription.id;
-      subscriptionEnd = new Date(subscription.current_period_end * 1000).toISOString();
-      const priceId = subscription.items.data[0].price.id;
+      cancelAtPeriodEnd = subscription.cancel_at_period_end === true;
 
-      // Map price to plan name
+      // Safe date conversion
+      const periodEndTs = subscription.current_period_end;
+      if (periodEndTs && typeof periodEndTs === "number" && periodEndTs > 0) {
+        subscriptionEnd = new Date(periodEndTs * 1000).toISOString();
+      }
+
+      const priceId = subscription.items.data[0]?.price?.id;
       if (priceId === "price_1T9nqPHmh4WVTxBvFDvkWtdP") planName = "monthly";
       else if (priceId === "price_1T9nrsHmh4WVTxBv9mcT2zp1") planName = "quarterly";
       else if (priceId === "price_1T9nslHmh4WVTxBvmPNLhhz2") planName = "annual";
       else planName = "active";
 
-      logStep("Active subscription found", { stripeSubscriptionId, planName, subscriptionEnd });
+      logStep("Active subscription found", { stripeSubscriptionId, planName, subscriptionEnd, cancelAtPeriodEnd });
 
       // Update organization in DB
       const { data: profile } = await supabaseClient
@@ -101,7 +106,7 @@ serve(async (req) => {
             subscription_status: "active",
             stripe_customer_id: customerId,
             stripe_subscription_id: stripeSubscriptionId,
-            plan_name: planName,
+            plan_name: cancelAtPeriodEnd ? `${planName}_cancelling` : planName,
           })
           .eq("id", profile.organization_id);
         logStep("Organization updated", { orgId: profile.organization_id });
@@ -142,6 +147,7 @@ serve(async (req) => {
         plan_name: planName,
         subscription_end: subscriptionEnd,
         stripe_subscription_id: stripeSubscriptionId,
+        cancel_at_period_end: cancelAtPeriodEnd,
       }),
       {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
