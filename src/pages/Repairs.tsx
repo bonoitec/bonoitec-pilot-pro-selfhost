@@ -26,7 +26,7 @@ function formatDuration(startedAt: string | null) {
 }
 
 const Repairs = () => {
-  const [search, setSearch] = useState("");
+  const isMobile = useIsMobile();
   const [showCreate, setShowCreate] = useState(false);
   const [selectedRepair, setSelectedRepair] = useState<any>(null);
   const [restitutionRepair, setRestitutionRepair] = useState<any>(null);
