@@ -8,6 +8,7 @@ interface SubscriptionState {
   subscribed: boolean;
   planName: string | null;
   subscriptionEnd: string | null;
+  cancelAtPeriodEnd: boolean;
   isLoading: boolean;
 }
 
@@ -18,6 +19,7 @@ export function useSubscription() {
     subscribed: false,
     planName: null,
     subscriptionEnd: null,
+    cancelAtPeriodEnd: false,
     isLoading: false,
   });
 
@@ -34,13 +36,12 @@ export function useSubscription() {
         subscribed: isSubscribed,
         planName: data?.plan_name ?? null,
         subscriptionEnd: data?.subscription_end ?? null,
+        cancelAtPeriodEnd: data?.cancel_at_period_end ?? false,
         isLoading: false,
       });
       // When subscription status changes, invalidate trial-status cache
       // so useTrialStatus picks up the DB update immediately
-      if (isSubscribed) {
-        queryClient.invalidateQueries({ queryKey: ["trial-status"] });
-      }
+      queryClient.invalidateQueries({ queryKey: ["trial-status"] });
     } catch {
       setState((s) => ({ ...s, isLoading: false }));
     }
