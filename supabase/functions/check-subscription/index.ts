@@ -108,6 +108,32 @@ serve(async (req) => {
       }
     } else {
       logStep("No active subscription found");
+
+      // Update org to reflect cancelled/expired subscription
+      const { data: profile } = await supabaseClient
+        .from("profiles")
+        .select("organization_id")
+        .eq("user_id", userId)
+        .single();
+
+      if (profile?.organization_id) {
+        const { data: org } = await supabaseClient
+          .from("organizations")
+          .select("subscription_status")
+          .eq("id", profile.organization_id)
+          .single();
+
+        if (org?.subscription_status === "active") {
+          await supabaseClient
+            .from("organizations")
+            .update({
+              subscription_status: "trial_expired",
+              plan_name: null,
+            })
+            .eq("id", profile.organization_id);
+          logStep("Organization downgraded to expired", { orgId: profile.organization_id });
+        }
+      }
     }
 
     return new Response(
