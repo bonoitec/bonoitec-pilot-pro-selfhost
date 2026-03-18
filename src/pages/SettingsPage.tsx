@@ -371,7 +371,7 @@ const SettingsPage = () => {
 };
 
 function SubscriptionCard() {
-  const { subscribed, planName, subscriptionEnd, isLoading, openCustomerPortal } = useSubscription();
+  const { subscribed, planName, subscriptionEnd, cancelAtPeriodEnd, isLoading, openCustomerPortal, startCheckout } = useSubscription();
   const [portalLoading, setPortalLoading] = useState(false);
 
   const handlePortal = async () => {
@@ -379,6 +379,18 @@ function SubscriptionCard() {
     await openCustomerPortal();
     setPortalLoading(false);
   };
+
+  const planLabels: Record<string, string> = {
+    monthly: "Mensuel — 19,99 €/mois",
+    quarterly: "Trimestriel — 17,99 €/mois",
+    annual: "Annuel — 14,99 €/mois",
+    monthly_cancelling: "Mensuel — 19,99 €/mois",
+    quarterly_cancelling: "Trimestriel — 17,99 €/mois",
+    annual_cancelling: "Annuel — 14,99 €/mois",
+    active: "Abonnement actif",
+  };
+
+  const displayPlan = planName ? (planLabels[planName] || planName) : "Abonnement actif";
 
   return (
     <Card>
@@ -391,21 +403,35 @@ function SubscriptionCard() {
       </CardHeader>
       <CardContent className="space-y-3">
         {isLoading ? (
-          <p className="text-sm text-muted-foreground">Chargement...</p>
+          <div className="flex items-center gap-2">
+            <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+            <p className="text-sm text-muted-foreground">Vérification de l'abonnement...</p>
+          </div>
         ) : subscribed ? (
           <>
-            <div className="flex items-center gap-2">
-              <span className="inline-flex items-center rounded-full bg-green-100 dark:bg-green-900/30 px-2.5 py-0.5 text-xs font-medium text-green-700 dark:text-green-400">Actif</span>
-              {planName && <span className="text-sm font-medium">{planName}</span>}
+            <div className="flex items-center gap-2 flex-wrap">
+              {cancelAtPeriodEnd ? (
+                <span className="inline-flex items-center rounded-full bg-orange-100 dark:bg-orange-900/30 px-2.5 py-0.5 text-xs font-medium text-orange-700 dark:text-orange-400">
+                  Annulé — actif jusqu'à la fin de période
+                </span>
+              ) : (
+                <span className="inline-flex items-center rounded-full bg-green-100 dark:bg-green-900/30 px-2.5 py-0.5 text-xs font-medium text-green-700 dark:text-green-400">
+                  Actif
+                </span>
+              )}
+              <span className="text-sm font-medium">{displayPlan}</span>
             </div>
             {subscriptionEnd && (
               <p className="text-xs text-muted-foreground">
-                Prochain renouvellement : {new Date(subscriptionEnd).toLocaleDateString("fr-FR")}
+                {cancelAtPeriodEnd
+                  ? `Accès maintenu jusqu'au ${new Date(subscriptionEnd).toLocaleDateString("fr-FR")}`
+                  : `Prochain renouvellement : ${new Date(subscriptionEnd).toLocaleDateString("fr-FR")}`
+                }
               </p>
             )}
             <Button variant="outline" size="sm" onClick={handlePortal} disabled={portalLoading}>
               {portalLoading ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <CreditCard className="h-4 w-4 mr-2" />}
-              Gérer mon abonnement
+              {cancelAtPeriodEnd ? "Reprendre / Gérer l'abonnement" : "Gérer mon abonnement"}
             </Button>
           </>
         ) : (
