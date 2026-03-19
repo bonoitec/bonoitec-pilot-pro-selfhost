@@ -12,6 +12,7 @@ import { TrialExpiredWall } from "@/components/TrialExpiredWall";
 import { useTrialStatus } from "@/hooks/useTrialStatus";
 import { useSubscription } from "@/hooks/useSubscription";
 import { useEffect } from "react";
+import { isSuperAdmin } from "@/lib/superAdmin";
 import { toast } from "sonner";
 import {
   DropdownMenu,
