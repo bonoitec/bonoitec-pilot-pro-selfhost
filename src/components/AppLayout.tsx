@@ -12,6 +12,7 @@ import { TrialExpiredWall } from "@/components/TrialExpiredWall";
 import { useTrialStatus } from "@/hooks/useTrialStatus";
 import { useSubscription } from "@/hooks/useSubscription";
 import { useEffect } from "react";
+import { isSuperAdmin } from "@/lib/superAdmin";
 import { toast } from "sonner";
 import {
   DropdownMenu,
@@ -46,7 +47,8 @@ export function AppLayout() {
     : user?.email?.slice(0, 2).toUpperCase() ?? "?";
 
   // Block access if trial expired — wait for both trial AND subscription checks
-  if (!trialLoading && !subLoading && isExpired && !subscribed) {
+  // Super admin bypasses all restrictions
+  if (!trialLoading && !subLoading && isExpired && !subscribed && !isSuperAdmin(user?.email)) {
     return <TrialExpiredWall />;
   }
 
