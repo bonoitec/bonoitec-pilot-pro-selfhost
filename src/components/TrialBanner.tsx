@@ -40,6 +40,7 @@ const plans = [
 export function TrialBanner() {
   const { isTrialActive, isSubscribed, daysRemaining, trialEndDate, isLoading } = useTrialStatus();
   const { startCheckout, cancelAtPeriodEnd, subscriptionEnd, planName, openCustomerPortal } = useSubscription();
+  const { user } = useAuth();
   const [open, setOpen] = useState(false);
   const [selected, setSelected] = useState<"monthly" | "quarterly" | "annual">("annual");
   const [loading, setLoading] = useState(false);
