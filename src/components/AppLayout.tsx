@@ -47,7 +47,8 @@ export function AppLayout() {
     : user?.email?.slice(0, 2).toUpperCase() ?? "?";
 
   // Block access if trial expired — wait for both trial AND subscription checks
-  if (!trialLoading && !subLoading && isExpired && !subscribed) {
+  // Super admin bypasses all restrictions
+  if (!trialLoading && !subLoading && isExpired && !subscribed && !isSuperAdmin(user?.email)) {
     return <TrialExpiredWall />;
   }
 

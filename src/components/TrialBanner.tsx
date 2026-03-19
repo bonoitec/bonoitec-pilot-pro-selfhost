@@ -46,6 +46,7 @@ export function TrialBanner() {
   const [loading, setLoading] = useState(false);
 
   if (isLoading) return null;
+  if (isSuperAdmin(user?.email)) return null;
 
   const planKey = (planName ?? "").replace("_cancelling", "");
   const planLabel =
