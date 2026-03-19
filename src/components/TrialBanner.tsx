@@ -6,6 +6,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { useState } from "react";
+import { useAuth } from "@/contexts/AuthContext";
+import { isSuperAdmin } from "@/lib/superAdmin";
 
 const plans = [
   {
