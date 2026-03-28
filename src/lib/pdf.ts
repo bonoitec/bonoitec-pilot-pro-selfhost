@@ -1058,7 +1058,7 @@ export async function generateIntakePDF(org: OrgInfo, data: IntakePdfData, optio
       const qrSize = 24;
       const boxW = CONTENT_WIDTH;
       const boxH = qrSize + 14;
-      currentY = checkPage(boxH + 4, currentY);
+      // Place QR at bottom of page 1 — never overflow to page 2
       doc.setDrawColor(...GRAY_200); doc.setFillColor(248, 250, 252); doc.setLineWidth(0.3);
       doc.roundedRect(PAGE_LEFT, currentY, boxW, boxH, 1.5, 1.5, "FD");
       doc.setFontSize(7); doc.setFont("helvetica", "bold"); doc.setTextColor(...PRIMARY);
