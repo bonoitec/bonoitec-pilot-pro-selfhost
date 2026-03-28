@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.99.0";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -84,8 +85,18 @@ serve(async (req) => {
     if (!LOVABLE_API_KEY)
       throw new Error("LOVABLE_API_KEY is not configured");
 
-    // Limit conversation history to last 10 messages to keep context tight
+    // Rate-limit: restrict message history length to prevent abuse
     const recentMessages = (messages || []).slice(-10);
+
+    // Validate message content length
+    for (const msg of recentMessages) {
+      if (typeof msg.content === "string" && msg.content.length > 2000) {
+        return new Response(
+          JSON.stringify({ error: "Message trop long (max 2000 caractères)" }),
+          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+    }
 
     const response = await fetch(
       "https://ai.gateway.lovable.dev/v1/chat/completions",
@@ -102,7 +113,7 @@ serve(async (req) => {
             ...recentMessages,
           ],
           stream: true,
-          max_tokens: 300, // Keep responses short
+          max_tokens: 300,
         }),
       }
     );
@@ -110,32 +121,21 @@ serve(async (req) => {
     if (!response.ok) {
       if (response.status === 429) {
         return new Response(
-          JSON.stringify({
-            error: "Trop de requêtes. Réessayez dans quelques secondes.",
-          }),
-          {
-            status: 429,
-            headers: { ...corsHeaders, "Content-Type": "application/json" },
-          }
+          JSON.stringify({ error: "Trop de requêtes. Réessayez dans quelques secondes." }),
+          { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
       }
       if (response.status === 402) {
         return new Response(
           JSON.stringify({ error: "Service temporairement indisponible." }),
-          {
-            status: 402,
-            headers: { ...corsHeaders, "Content-Type": "application/json" },
-          }
+          { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
       }
       const t = await response.text();
       console.error("AI gateway error:", response.status, t);
       return new Response(
         JSON.stringify({ error: "Erreur du service IA" }),
-        {
-          status: 500,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        }
+        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
@@ -145,13 +145,8 @@ serve(async (req) => {
   } catch (e) {
     console.error("product-assistant error:", e);
     return new Response(
-      JSON.stringify({
-        error: e instanceof Error ? e.message : "Erreur inconnue",
-      }),
-      {
-        status: 500,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      }
+      JSON.stringify({ error: e instanceof Error ? e.message : "Erreur inconnue" }),
+      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }
 });
