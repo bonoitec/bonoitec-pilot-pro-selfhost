@@ -1,4 +1,4 @@
-import { forwardRef, useEffect } from "react";
+import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import PageMeta from "@/components/PageMeta";
@@ -12,7 +12,7 @@ import BlogSection from "@/components/landing/BlogSection";
 import SupportSection from "@/components/landing/SupportSection";
 import CTASection from "@/components/landing/CTASection";
 
-const Landing = forwardRef<HTMLDivElement>((_, ref) => {
+const Landing = () => {
   const { session, loading } = useAuth();
   const navigate = useNavigate();
 
@@ -23,7 +23,7 @@ const Landing = forwardRef<HTMLDivElement>((_, ref) => {
   }, [session, loading, navigate]);
 
   return (
-    <div ref={ref}>
+    <div>
       <PageMeta
         title="BonoitecPilot – Logiciel de gestion pour atelier de réparation"
         description="Gérez vos réparations, clients, stock, devis et facturation depuis une seule interface. Essai gratuit 14 jours."
@@ -39,8 +39,6 @@ const Landing = forwardRef<HTMLDivElement>((_, ref) => {
       <CTASection />
     </div>
   );
-});
-
-Landing.displayName = "Landing";
+};
 
 export default Landing;
