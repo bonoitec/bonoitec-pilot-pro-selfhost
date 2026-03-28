@@ -557,7 +557,10 @@ const Auth = () => {
                   {errors.confirmPassword && <p className="text-[11px] text-destructive">{errors.confirmPassword}</p>}
                 </div>
 
-                <Button type="submit" variant="premium" className="w-full h-[42px] text-sm font-semibold mt-1 rounded-xl" disabled={loading}>
+                {/* Cloudflare Turnstile CAPTCHA */}
+                <div ref={turnstileRef} className="flex justify-center" />
+
+                <Button type="submit" variant="premium" className="w-full h-[42px] text-sm font-semibold mt-1 rounded-xl" disabled={loading || !turnstileToken}>
                   {loading && <Loader2 className="h-4 w-4 animate-spin" />}
                   Créer mon compte
                 </Button>
