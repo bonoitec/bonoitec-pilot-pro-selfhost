@@ -77,13 +77,6 @@ const Auth = () => {
     }
   }, []);
 
-  useEffect(() => {
-    if (activeTab === "signup") {
-      // Small delay to ensure DOM is ready
-      const timer = setTimeout(renderTurnstile, 100);
-      return () => clearTimeout(timer);
-    }
-  }, [activeTab, renderTurnstile]);
 
   // Redirect to dashboard if already authenticated
   // Forward-declare email helpers for use in useEffect
