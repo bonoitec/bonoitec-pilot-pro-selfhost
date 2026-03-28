@@ -39,24 +39,30 @@ const Auth = () => {
   const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
   const turnstileRef = useRef<HTMLDivElement>(null);
   const turnstileWidgetId = useRef<string | null>(null);
+  const [loginTurnstileToken, setLoginTurnstileToken] = useState<string | null>(null);
+  const loginTurnstileRef = useRef<HTMLDivElement>(null);
+  const loginTurnstileWidgetId = useRef<string | null>(null);
 
-  // Load Turnstile script and render widget
-  const renderTurnstile = useCallback(() => {
-    if (!turnstileRef.current) return;
-    // Clean up previous widget
-    if (turnstileWidgetId.current !== null && window.turnstile) {
-      try { window.turnstile.remove(turnstileWidgetId.current); } catch {}
-      turnstileWidgetId.current = null;
+  // Generic Turnstile renderer
+  const renderTurnstileWidget = useCallback((
+    containerRef: React.RefObject<HTMLDivElement>,
+    widgetIdRef: React.MutableRefObject<string | null>,
+    setToken: (token: string | null) => void,
+  ) => {
+    if (!containerRef.current) return;
+    if (widgetIdRef.current !== null && window.turnstile) {
+      try { window.turnstile.remove(widgetIdRef.current); } catch {}
+      widgetIdRef.current = null;
     }
-    setTurnstileToken(null);
+    setToken(null);
 
     const render = () => {
-      if (!turnstileRef.current || !window.turnstile) return;
-      turnstileWidgetId.current = window.turnstile.render(turnstileRef.current, {
+      if (!containerRef.current || !window.turnstile) return;
+      widgetIdRef.current = window.turnstile.render(containerRef.current, {
         sitekey: TURNSTILE_SITE_KEY,
-        callback: (token: string) => setTurnstileToken(token),
-        "expired-callback": () => setTurnstileToken(null),
-        "error-callback": () => setTurnstileToken(null),
+        callback: (token: string) => setToken(token),
+        "expired-callback": () => setToken(null),
+        "error-callback": () => setToken(null),
         theme: "auto",
         size: "flexible",
       });
@@ -65,7 +71,6 @@ const Auth = () => {
     if (window.turnstile) {
       render();
     } else {
-      // Load the script once
       if (!document.getElementById("cf-turnstile-script")) {
         const script = document.createElement("script");
         script.id = "cf-turnstile-script";
@@ -172,11 +177,15 @@ const Auth = () => {
   const [activeTab, setActiveTab] = useState<"login" | "signup">("signup");
 
   useEffect(() => {
-    if (activeTab === "signup") {
-      const timer = setTimeout(renderTurnstile, 100);
-      return () => clearTimeout(timer);
-    }
-  }, [activeTab, renderTurnstile]);
+    const timer = setTimeout(() => {
+      if (activeTab === "signup") {
+        renderTurnstileWidget(turnstileRef, turnstileWidgetId, setTurnstileToken);
+      } else {
+        renderTurnstileWidget(loginTurnstileRef, loginTurnstileWidgetId, setLoginTurnstileToken);
+      }
+    }, 100);
+    return () => clearTimeout(timer);
+  }, [activeTab, renderTurnstileWidget]);
 
   const [loginEmail, setLoginEmail] = useState("");
   const [loginPassword, setLoginPassword] = useState("");
@@ -258,7 +267,35 @@ const Auth = () => {
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrors({});
+
+    // Turnstile CAPTCHA verification
+    if (!loginTurnstileToken) {
+      toast.error("Veuillez compléter la vérification anti-bot.");
+      return;
+    }
+
     setLoading(true);
+
+    // Server-side Turnstile verification
+    try {
+      const { data: verifyData, error: verifyError } = await supabase.functions.invoke("verify-turnstile", {
+        body: { token: loginTurnstileToken },
+      });
+      if (verifyError || !verifyData?.success) {
+        setLoading(false);
+        toast.error("La vérification anti-bot a échoué.", { description: "Veuillez réessayer." });
+        if (loginTurnstileWidgetId.current && window.turnstile) {
+          window.turnstile.reset(loginTurnstileWidgetId.current);
+        }
+        setLoginTurnstileToken(null);
+        return;
+      }
+    } catch {
+      setLoading(false);
+      toast.error("Erreur lors de la vérification. Veuillez réessayer.");
+      return;
+    }
+
     const { data, error } = await supabase.auth.signInWithPassword({ email: loginEmail, password: loginPassword });
     setLoading(false);
     if (error) {
@@ -620,7 +657,10 @@ const Auth = () => {
                   <label htmlFor="remember" className="text-[11px] text-muted-foreground cursor-pointer select-none">Se souvenir de moi</label>
                 </div>
 
-                <Button type="submit" variant="premium" className="w-full h-[42px] text-sm font-semibold mt-1 rounded-xl" disabled={loading}>
+                {/* Cloudflare Turnstile CAPTCHA */}
+                <div ref={loginTurnstileRef} className="flex justify-center" />
+
+                <Button type="submit" variant="premium" className="w-full h-[42px] text-sm font-semibold mt-1 rounded-xl" disabled={loading || !loginTurnstileToken}>
                   {loading && <Loader2 className="h-4 w-4 animate-spin" />}
                   Se connecter
                 </Button>
