@@ -6,6 +6,37 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
+// ── Per-user rate limiter (authenticated endpoint) ───────────────────
+const WINDOW = 60_000; // 1 min
+const MAX_PER_WINDOW = 15; // 15 AI calls per minute per user
+
+interface HitRecord { timestamps: number[] }
+const userHits = new Map<string, HitRecord>();
+
+setInterval(() => {
+  const cutoff = Date.now() - WINDOW * 2;
+  for (const [uid, record] of userHits) {
+    record.timestamps = record.timestamps.filter((t) => t > cutoff);
+    if (record.timestamps.length === 0) userHits.delete(uid);
+  }
+}, 120_000);
+
+function checkUserRateLimit(userId: string): { allowed: boolean; retryAfter?: number } {
+  const now = Date.now();
+  let record = userHits.get(userId);
+  if (!record) {
+    record = { timestamps: [] };
+    userHits.set(userId, record);
+  }
+  record.timestamps = record.timestamps.filter((t) => t > now - WINDOW);
+  if (record.timestamps.length >= MAX_PER_WINDOW) {
+    const retryAfter = Math.ceil((record.timestamps[0] + WINDOW - now) / 1000);
+    return { allowed: false, retryAfter };
+  }
+  record.timestamps.push(now);
+  return { allowed: true };
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
@@ -22,16 +53,44 @@ serve(async (req) => {
     const authClient = createClient(supabaseUrl, anonKey, {
       global: { headers: { Authorization: authHeader } },
     });
-    const { data: userData, error: userError } = await authClient.auth.getUser();
-    if (userError || !userData?.user) {
+    const token = authHeader.replace("Bearer ", "");
+    const { data: claimsData, error: claimsError } = await authClient.auth.getClaims(token);
+    if (claimsError || !claimsData?.claims) {
       return new Response(JSON.stringify({ error: "Invalid token" }), {
         status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
+    }
+    const userId = claimsData.claims.sub as string;
+
+    // ── Rate limiting per authenticated user ──────────────────────
+    const rateCheck = checkUserRateLimit(userId);
+    if (!rateCheck.allowed) {
+      console.warn(`[AI-DIAGNOSTIC RATE-LIMIT] Blocked user=${userId} retryAfter=${rateCheck.retryAfter}s`);
+      return new Response(
+        JSON.stringify({ error: "Trop de requêtes IA. Réessayez dans quelques secondes." }),
+        {
+          status: 429,
+          headers: { ...corsHeaders, "Content-Type": "application/json", "Retry-After": String(rateCheck.retryAfter ?? 60) },
+        }
+      );
     }
 
     const { messages, mode } = await req.json();
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
+
+    // Validate message content length
+    const safeMessages = (messages || []).slice(-10);
+    for (const msg of safeMessages) {
+      if (typeof msg.content === "string" && msg.content.length > 5000) {
+        return new Response(
+          JSON.stringify({ error: "Message trop long (max 5000 caractères)" }),
+          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+    }
+
+    console.info(`[AI-DIAGNOSTIC] user=${userId} mode=${mode}`);
 
     let systemPrompt = "";
 
@@ -92,7 +151,7 @@ Réponds en français, de manière claire et concise. Utilise le format markdown
         model: "google/gemini-3-flash-preview",
         messages: [
           { role: "system", content: systemPrompt },
-          ...messages,
+          ...safeMessages,
         ],
         stream: mode === "chat",
       }),
