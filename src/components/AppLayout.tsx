@@ -46,9 +46,18 @@ export function AppLayout() {
     ? user.user_metadata.full_name.split(" ").map((n: string) => n[0]).join("").toUpperCase().slice(0, 2)
     : user?.email?.slice(0, 2).toUpperCase() ?? "?";
 
-  // Block access if trial expired — wait for both trial AND subscription checks
-  // Super admin bypasses all restrictions
-  if (!trialLoading && !subLoading && isExpired && !subscribed && !isSuperAdmin(user?.email)) {
+  // Show loader while trial/subscription status is being determined
+  // This prevents expired users from briefly seeing dashboard content
+  if (trialLoading || subLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  // Block access if trial expired — super admin bypasses all restrictions
+  if (isExpired && !subscribed && !isSuperAdmin(user?.email)) {
     return <TrialExpiredWall />;
   }
 
