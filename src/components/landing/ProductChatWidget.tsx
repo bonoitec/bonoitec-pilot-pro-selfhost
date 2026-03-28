@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useCallback, forwardRef } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { MessageSquare, X, Send, Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -275,4 +275,4 @@ export const ProductChatWidget = function ProductChatWidget() {
       </AnimatePresence>
     </>
   );
-});
+};
