@@ -134,12 +134,61 @@ const Auth = () => {
 
   const [errors, setErrors] = useState<Record<string, string>>({});
 
+  // ── Anti-bot: disposable email domains blocklist ──
+  const BLOCKED_DOMAINS = new Set([
+    "sharebot.net", "test.invalid", "mailinator.com", "guerrillamail.com", "guerrillamailblock.com",
+    "tempmail.com", "throwaway.email", "temp-mail.org", "fakeinbox.com", "trashmail.com",
+    "yopmail.com", "10minutemail.com", "dispostable.com", "maildrop.cc", "getairmail.com",
+    "mohmal.com", "getnada.com", "mailnesia.com", "tempail.com", "burnermail.io",
+    "grr.la", "sharklasers.com", "guerrillamail.info", "spam4.me", "byom.de",
+    "trashmail.net", "trashmail.me", "discard.email", "mailsac.com", "inboxkitten.com",
+    "temp-mail.io", "emailondeck.com", "mintemail.com", "tempinbox.com",
+  ]);
+
+  const isDisposableEmail = (email: string): boolean => {
+    const domain = email.split("@")[1]?.toLowerCase();
+    if (!domain) return false;
+    if (BLOCKED_DOMAINS.has(domain)) return true;
+    // Block .invalid TLD and other suspicious TLDs
+    if (domain.endsWith(".invalid") || domain.endsWith(".test") || domain.endsWith(".example")) return true;
+    return false;
+  };
+
+  // ── Anti-bot: client-side rate limiting ──
+  const RATE_LIMIT_KEY = "signup_attempts";
+  const RATE_LIMIT_MAX = 3;
+  const RATE_LIMIT_WINDOW_MS = 10 * 60 * 1000; // 10 minutes
+
+  const isRateLimited = (): boolean => {
+    try {
+      const raw = localStorage.getItem(RATE_LIMIT_KEY);
+      if (!raw) return false;
+      const attempts: number[] = JSON.parse(raw);
+      const recent = attempts.filter((t) => Date.now() - t < RATE_LIMIT_WINDOW_MS);
+      return recent.length >= RATE_LIMIT_MAX;
+    } catch {
+      return false;
+    }
+  };
+
+  const recordSignupAttempt = () => {
+    try {
+      const raw = localStorage.getItem(RATE_LIMIT_KEY);
+      const attempts: number[] = raw ? JSON.parse(raw) : [];
+      attempts.push(Date.now());
+      // Keep only recent attempts
+      const recent = attempts.filter((t) => Date.now() - t < RATE_LIMIT_WINDOW_MS);
+      localStorage.setItem(RATE_LIMIT_KEY, JSON.stringify(recent));
+    } catch { /* ignore */ }
+  };
+
   const validateSignup = () => {
     const e: Record<string, string> = {};
     if (!signupFirstName.trim()) e.firstName = "Requis";
     if (!signupLastName.trim()) e.lastName = "Requis";
     if (!signupEmail.trim()) e.email = "Requis";
     else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(signupEmail)) e.email = "E-mail invalide";
+    else if (isDisposableEmail(signupEmail)) e.email = "Les adresses e-mail jetables ne sont pas acceptées";
     if (signupPassword.length < 6) e.password = "6 caractères minimum";
     if (signupPassword !== signupConfirmPassword) e.confirmPassword = "Ne correspond pas";
     setErrors(e);
@@ -178,6 +227,17 @@ const Auth = () => {
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!validateSignup()) return;
+
+    // Rate limiting check
+    if (isRateLimited()) {
+      toast.error("Trop de tentatives d'inscription.", {
+        description: "Veuillez patienter quelques minutes avant de réessayer.",
+        duration: 6000,
+      });
+      return;
+    }
+
+    recordSignupAttempt();
     setLoading(true);
     const { data: signupData, error } = await supabase.auth.signUp({
       email: signupEmail,
