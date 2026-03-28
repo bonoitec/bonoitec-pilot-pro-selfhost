@@ -470,6 +470,7 @@ export function RepairDetailDialog({ open, onOpenChange, repair }: Props) {
                   photoUrls,
                   signatureUrl: resolvedSignature,
                 },
+                trackingCode: repair.tracking_code,
               });
               toast({ title: "Prise en charge téléchargée" });
             } catch (e: any) {
