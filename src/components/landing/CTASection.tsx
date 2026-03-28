@@ -2,9 +2,9 @@ import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, CalendarDays } from "lucide-react";
 import { motion, useInView } from "framer-motion";
-import { forwardRef, useRef } from "react";
+import { useRef } from "react";
 
-const CTASection = forwardRef<HTMLElement>((_, forwardedRef) => {
+const CTASection = () => {
   const ref = useRef(null);
   const isInView = useInView(ref, { once: true, margin: "-80px" });
 
@@ -57,8 +57,6 @@ const CTASection = forwardRef<HTMLElement>((_, forwardedRef) => {
       </div>
     </section>
   );
-});
-
-CTASection.displayName = "CTASection";
+};
 
 export default CTASection;

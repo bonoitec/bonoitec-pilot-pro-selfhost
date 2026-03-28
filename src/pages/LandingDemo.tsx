@@ -1,4 +1,4 @@
-import { forwardRef, useRef } from "react";
+import { useRef } from "react";
 import PageMeta from "@/components/PageMeta";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -107,9 +107,9 @@ const trustItems = [
 ];
 
 /* ─── Component ────────────────────────────────────────────── */
-const LandingDemo = forwardRef<HTMLDivElement>((_, forwardedRef) => {
+const LandingDemo = () => {
   return (
-    <div ref={forwardedRef}>
+    <div>
       <PageMeta
         title="Démo – BonoitecPilot | Découvrez le logiciel en action"
         description="Explorez les fonctionnalités de BonoitecPilot en détail : gestion des réparations, suivi client, facturation et statistiques en temps réel."
@@ -122,8 +122,7 @@ const LandingDemo = forwardRef<HTMLDivElement>((_, forwardedRef) => {
       <FinalCTA />
     </div>
   );
-});
-LandingDemo.displayName = "LandingDemo";
+};
 export default LandingDemo;
 
 /* ─── 1. Hero ──────────────────────────────────────────────── */

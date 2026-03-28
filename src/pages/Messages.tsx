@@ -1,4 +1,4 @@
-import { useState, forwardRef, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
@@ -28,7 +28,7 @@ interface MessageRow {
   created_at: string;
 }
 
-const Messages = forwardRef<HTMLDivElement>(function Messages(_props, ref) {
+const Messages = () => {
   const [search, setSearch] = useState("");
   const [selectedRepairId, setSelectedRepairId] = useState<string | null>(null);
   const [selectedOrgId, setSelectedOrgId] = useState<string>("");
@@ -295,6 +295,6 @@ const Messages = forwardRef<HTMLDivElement>(function Messages(_props, ref) {
       </div>
     </div>
   );
-});
+};
 
 export default Messages;
