@@ -763,6 +763,7 @@ interface IntakePdfData {
   repairType?: string;
   estimatedPrice?: number | null;
   intake?: IntakeInfo;
+  trackingCode?: string;
 }
 
 // Section title helper
@@ -1049,7 +1050,39 @@ export async function generateIntakePDF(org: OrgInfo, data: IntakePdfData, optio
   doc.text("Le client reconnaît avoir lu et accepté les conditions générales ci-dessous.", PAGE_LEFT, currentY);
   currentY += 6;
 
-  // ── CONDITIONS GÉNÉRALES — même page si possible, sinon page 2 ──
+  // ── QR CODE DE SUIVI ──
+  if (data.trackingCode) {
+    const trackingUrl = `https://bonoitec-pilot-pro.lovable.app/repair/${data.trackingCode}`;
+    try {
+      const qrDataUrl = await QRCode.toDataURL(trackingUrl, { width: 200, margin: 1, color: { dark: "#1a1a2e", light: "#ffffff" } });
+      const qrSize = 24;
+      const boxW = CONTENT_WIDTH;
+      const boxH = qrSize + 14;
+      currentY = checkPage(boxH + 4, currentY);
+      doc.setDrawColor(...GRAY_200); doc.setFillColor(248, 250, 252); doc.setLineWidth(0.3);
+      doc.roundedRect(PAGE_LEFT, currentY, boxW, boxH, 1.5, 1.5, "FD");
+      doc.setFontSize(7); doc.setFont("helvetica", "bold"); doc.setTextColor(...PRIMARY);
+      doc.text("ACCÈS AU SUIVI EN LIGNE", PAGE_LEFT + 4, currentY + 5);
+      try { doc.addImage(qrDataUrl, "PNG", PAGE_LEFT + 4, currentY + 8, qrSize, qrSize); } catch {}
+      const textX = PAGE_LEFT + qrSize + 10;
+      doc.setFontSize(6.5); doc.setFont("helvetica", "normal"); doc.setTextColor(...GRAY_700);
+      doc.text("Scannez pour suivre votre réparation", textX, currentY + 14);
+      doc.setFontSize(6); doc.setFont("helvetica", "italic"); doc.setTextColor(...GRAY_500);
+      doc.text(`Code de suivi : ${data.trackingCode}`, textX, currentY + 19);
+      doc.setFontSize(5.5); doc.setTextColor(...GRAY_400);
+      doc.text(trackingUrl, textX, currentY + 24);
+      currentY += boxH + 4;
+    } catch (e) {
+      console.error("QR code generation failed:", e);
+    }
+  }
+
+  // ── Force page 2 for CGV ──
+  doc.addPage();
+  doc.setFillColor(...PRIMARY); doc.rect(0, 0, 210, 4, "F");
+  currentY = 14;
+
+  // ── CONDITIONS GÉNÉRALES ──
   const lineH = 3.2;
   const condMargin = PAGE_LEFT + 3;
 

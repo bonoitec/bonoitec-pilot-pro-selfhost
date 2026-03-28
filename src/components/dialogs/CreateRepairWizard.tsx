@@ -454,6 +454,7 @@ export function CreateRepairWizard({ open, onOpenChange }: Props) {
           photoUrls,
           signatureUrl: signatureDataUrl || createdRepair.customer_signature_url,
         },
+        trackingCode: createdRepair.tracking_code,
       });
       toast({ title: "Prise en charge générée et téléchargée" });
     } catch (e: any) {
