@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable/index";
@@ -20,10 +20,63 @@ import { motion, AnimatePresence } from "framer-motion";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import heroDashboard from "@/assets/hero-dashboard.png";
 
+const TURNSTILE_SITE_KEY = "0x4AAAAAACxKnuYwjuSJueXn";
+
+declare global {
+  interface Window {
+    turnstile?: {
+      render: (element: HTMLElement, options: Record<string, unknown>) => string;
+      remove: (widgetId: string) => void;
+      reset: (widgetId: string) => void;
+    };
+  }
+}
+
 const Auth = () => {
   const navigate = useNavigate();
   const { session, loading: authLoading } = useAuth();
   const [loading, setLoading] = useState(false);
+  const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
+  const turnstileRef = useRef<HTMLDivElement>(null);
+  const turnstileWidgetId = useRef<string | null>(null);
+
+  // Load Turnstile script and render widget
+  const renderTurnstile = useCallback(() => {
+    if (!turnstileRef.current) return;
+    // Clean up previous widget
+    if (turnstileWidgetId.current !== null && window.turnstile) {
+      try { window.turnstile.remove(turnstileWidgetId.current); } catch {}
+      turnstileWidgetId.current = null;
+    }
+    setTurnstileToken(null);
+
+    const render = () => {
+      if (!turnstileRef.current || !window.turnstile) return;
+      turnstileWidgetId.current = window.turnstile.render(turnstileRef.current, {
+        sitekey: TURNSTILE_SITE_KEY,
+        callback: (token: string) => setTurnstileToken(token),
+        "expired-callback": () => setTurnstileToken(null),
+        "error-callback": () => setTurnstileToken(null),
+        theme: "auto",
+        size: "flexible",
+      });
+    };
+
+    if (window.turnstile) {
+      render();
+    } else {
+      // Load the script once
+      if (!document.getElementById("cf-turnstile-script")) {
+        const script = document.createElement("script");
+        script.id = "cf-turnstile-script";
+        script.src = "https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit";
+        script.async = true;
+        script.onload = () => render();
+        document.head.appendChild(script);
+      }
+    }
+  }, []);
+
 
   // Redirect to dashboard if already authenticated
   // Forward-declare email helpers for use in useEffect
@@ -117,6 +170,13 @@ const Auth = () => {
     }
   }, [session, authLoading, navigate]);
   const [activeTab, setActiveTab] = useState<"login" | "signup">("signup");
+
+  useEffect(() => {
+    if (activeTab === "signup") {
+      const timer = setTimeout(renderTurnstile, 100);
+      return () => clearTimeout(timer);
+    }
+  }, [activeTab, renderTurnstile]);
 
   const [loginEmail, setLoginEmail] = useState("");
   const [loginPassword, setLoginPassword] = useState("");
@@ -237,8 +297,38 @@ const Auth = () => {
       return;
     }
 
+    // Turnstile CAPTCHA verification
+    if (!turnstileToken) {
+      toast.error("Veuillez compléter la vérification anti-bot.");
+      return;
+    }
+
     recordSignupAttempt();
     setLoading(true);
+
+    // Server-side Turnstile verification
+    try {
+      const { data: verifyData, error: verifyError } = await supabase.functions.invoke("verify-turnstile", {
+        body: { token: turnstileToken },
+      });
+      if (verifyError || !verifyData?.success) {
+        setLoading(false);
+        toast.error("La vérification anti-bot a échoué.", {
+          description: "Veuillez réessayer.",
+        });
+        // Reset the widget
+        if (turnstileWidgetId.current && window.turnstile) {
+          window.turnstile.reset(turnstileWidgetId.current);
+        }
+        setTurnstileToken(null);
+        return;
+      }
+    } catch {
+      setLoading(false);
+      toast.error("Erreur lors de la vérification. Veuillez réessayer.");
+      return;
+    }
+
     const { data: signupData, error } = await supabase.auth.signUp({
       email: signupEmail,
       password: signupPassword,
@@ -467,7 +557,10 @@ const Auth = () => {
                   {errors.confirmPassword && <p className="text-[11px] text-destructive">{errors.confirmPassword}</p>}
                 </div>
 
-                <Button type="submit" variant="premium" className="w-full h-[42px] text-sm font-semibold mt-1 rounded-xl" disabled={loading}>
+                {/* Cloudflare Turnstile CAPTCHA */}
+                <div ref={turnstileRef} className="flex justify-center" />
+
+                <Button type="submit" variant="premium" className="w-full h-[42px] text-sm font-semibold mt-1 rounded-xl" disabled={loading || !turnstileToken}>
                   {loading && <Loader2 className="h-4 w-4 animate-spin" />}
                   Créer mon compte
                 </Button>
