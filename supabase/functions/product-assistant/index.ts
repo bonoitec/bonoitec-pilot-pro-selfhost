@@ -1,5 +1,4 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.99.0";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -7,7 +6,66 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
-// System prompt is defined server-side — never on the client.
+// ── In-memory sliding-window rate limiter ────────────────────────────
+// Limits per IP: 10 requests per 60 seconds, 30 per 600 seconds
+const WINDOW_SHORT = 60_000;   // 1 min
+const MAX_SHORT = 10;
+const WINDOW_LONG = 600_000;   // 10 min
+const MAX_LONG = 30;
+
+interface HitRecord { timestamps: number[] }
+const ipHits = new Map<string, HitRecord>();
+
+// Cleanup stale IPs every 5 minutes to prevent memory leak
+setInterval(() => {
+  const cutoff = Date.now() - WINDOW_LONG;
+  for (const [ip, record] of ipHits) {
+    record.timestamps = record.timestamps.filter((t) => t > cutoff);
+    if (record.timestamps.length === 0) ipHits.delete(ip);
+  }
+}, 300_000);
+
+function getClientIp(req: Request): string {
+  // Cloudflare / CDN headers (most reliable → least reliable)
+  return (
+    req.headers.get("cf-connecting-ip") ||
+    req.headers.get("x-real-ip") ||
+    req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
+    "unknown"
+  );
+}
+
+function checkRateLimit(ip: string): { allowed: boolean; retryAfter?: number } {
+  const now = Date.now();
+  let record = ipHits.get(ip);
+  if (!record) {
+    record = { timestamps: [] };
+    ipHits.set(ip, record);
+  }
+
+  // Prune old timestamps
+  record.timestamps = record.timestamps.filter((t) => t > now - WINDOW_LONG);
+
+  // Check short window
+  const recentShort = record.timestamps.filter((t) => t > now - WINDOW_SHORT).length;
+  if (recentShort >= MAX_SHORT) {
+    const oldestInWindow = record.timestamps.filter((t) => t > now - WINDOW_SHORT)[0];
+    const retryAfter = Math.ceil((oldestInWindow + WINDOW_SHORT - now) / 1000);
+    return { allowed: false, retryAfter };
+  }
+
+  // Check long window
+  if (record.timestamps.length >= MAX_LONG) {
+    const oldestInWindow = record.timestamps[0];
+    const retryAfter = Math.ceil((oldestInWindow + WINDOW_LONG - now) / 1000);
+    return { allowed: false, retryAfter };
+  }
+
+  record.timestamps.push(now);
+  return { allowed: true };
+}
+
+// ── System prompt ────────────────────────────────────────────────────
 const SYSTEM_PROMPT = `Tu es l'assistant officiel de BonoitecPilot. Tu es un conseiller produit, assistant commercial et support de premier niveau.
 
 PRINCIPE FONDAMENTAL :
@@ -80,6 +138,25 @@ serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
 
   try {
+    // ── Rate limiting ──────────────────────────────────────────────
+    const clientIp = getClientIp(req);
+    const rateCheck = checkRateLimit(clientIp);
+
+    if (!rateCheck.allowed) {
+      console.warn(`[RATE-LIMIT] Blocked IP=${clientIp} retryAfter=${rateCheck.retryAfter}s`);
+      return new Response(
+        JSON.stringify({ error: "Trop de requêtes. Réessayez dans quelques secondes." }),
+        {
+          status: 429,
+          headers: {
+            ...corsHeaders,
+            "Content-Type": "application/json",
+            "Retry-After": String(rateCheck.retryAfter ?? 60),
+          },
+        }
+      );
+    }
+
     const { messages } = await req.json();
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY)
@@ -97,6 +174,8 @@ serve(async (req) => {
         );
       }
     }
+
+    console.info(`[PRODUCT-ASSISTANT] Request from IP=${clientIp}`);
 
     const response = await fetch(
       "https://ai.gateway.lovable.dev/v1/chat/completions",
