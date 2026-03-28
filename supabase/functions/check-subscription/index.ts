@@ -155,7 +155,6 @@ serve(async (req) => {
         subscribed: hasActiveSub,
         plan_name: planName,
         subscription_end: subscriptionEnd,
-        stripe_subscription_id: stripeSubscriptionId,
         cancel_at_period_end: cancelAtPeriodEnd,
       }),
       {
