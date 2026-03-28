@@ -171,6 +171,13 @@ const Auth = () => {
   }, [session, authLoading, navigate]);
   const [activeTab, setActiveTab] = useState<"login" | "signup">("signup");
 
+  useEffect(() => {
+    if (activeTab === "signup") {
+      const timer = setTimeout(renderTurnstile, 100);
+      return () => clearTimeout(timer);
+    }
+  }, [activeTab, renderTurnstile]);
+
   const [loginEmail, setLoginEmail] = useState("");
   const [loginPassword, setLoginPassword] = useState("");
   const [showLoginPassword, setShowLoginPassword] = useState(false);
