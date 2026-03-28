@@ -176,7 +176,7 @@ const Messages = () => {
     conversations.find((conversation) => conversation.repair_id === selectedRepairId) ?? null;
 
   return (
-    <div ref={ref} className="space-y-6 animate-fade-in">
+    <div className="space-y-6 animate-fade-in">
       <div>
         <h1 className="text-2xl font-bold">Messages</h1>
         <p className="text-muted-foreground text-sm">Conversations avec vos clients</p>

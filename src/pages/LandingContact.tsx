@@ -105,7 +105,7 @@ const LandingContact = () => {
 
   if (submitted) {
     return (
-      <div ref={ref}>
+      <div>
         <motion.div
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
@@ -132,7 +132,7 @@ const LandingContact = () => {
   }
 
   return (
-    <div ref={ref}>
+    <div>
       <PageMeta
         title="Contact – BonoitecPilot | Nous contacter"
         description="Contactez l'équipe BonoitecPilot pour toute question, demande de démo ou assistance. Réponse rapide garantie."
