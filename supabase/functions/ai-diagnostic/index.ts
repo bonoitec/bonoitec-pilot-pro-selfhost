@@ -6,37 +6,6 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
-// ── Per-user rate limiter (authenticated endpoint) ───────────────────
-const WINDOW = 60_000; // 1 min
-const MAX_PER_WINDOW = 15; // 15 AI calls per minute per user
-
-interface HitRecord { timestamps: number[] }
-const userHits = new Map<string, HitRecord>();
-
-setInterval(() => {
-  const cutoff = Date.now() - WINDOW * 2;
-  for (const [uid, record] of userHits) {
-    record.timestamps = record.timestamps.filter((t) => t > cutoff);
-    if (record.timestamps.length === 0) userHits.delete(uid);
-  }
-}, 120_000);
-
-function checkUserRateLimit(userId: string): { allowed: boolean; retryAfter?: number } {
-  const now = Date.now();
-  let record = userHits.get(userId);
-  if (!record) {
-    record = { timestamps: [] };
-    userHits.set(userId, record);
-  }
-  record.timestamps = record.timestamps.filter((t) => t > now - WINDOW);
-  if (record.timestamps.length >= MAX_PER_WINDOW) {
-    const retryAfter = Math.ceil((record.timestamps[0] + WINDOW - now) / 1000);
-    return { allowed: false, retryAfter };
-  }
-  record.timestamps.push(now);
-  return { allowed: true };
-}
-
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
@@ -62,16 +31,19 @@ serve(async (req) => {
     }
     const userId = claimsData.claims.sub as string;
 
-    // ── Rate limiting per authenticated user ──────────────────────
-    const rateCheck = checkUserRateLimit(userId);
-    if (!rateCheck.allowed) {
-      console.warn(`[AI-DIAGNOSTIC RATE-LIMIT] Blocked user=${userId} retryAfter=${rateCheck.retryAfter}s`);
+    // ── DB-backed rate limiting per user ───────────────────────────
+    const supabaseAdmin = createClient(supabaseUrl, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
+    const { data: allowed } = await supabaseAdmin.rpc("check_rate_limit", {
+      _key: `ai-diagnostic:${userId}`,
+      _window_seconds: 60,
+      _max_requests: 15,
+    });
+
+    if (allowed === false) {
+      console.warn(`[AI-DIAGNOSTIC RATE-LIMIT] Blocked user=${userId}`);
       return new Response(
         JSON.stringify({ error: "Trop de requêtes IA. Réessayez dans quelques secondes." }),
-        {
-          status: 429,
-          headers: { ...corsHeaders, "Content-Type": "application/json", "Retry-After": String(rateCheck.retryAfter ?? 60) },
-        }
+        { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json", "Retry-After": "60" } }
       );
     }
 
@@ -160,21 +132,18 @@ Réponds en français, de manière claire et concise. Utilise le format markdown
     if (!response.ok) {
       if (response.status === 429) {
         return new Response(JSON.stringify({ error: "Trop de requêtes. Réessayez dans quelques secondes." }), {
-          status: 429,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
       if (response.status === 402) {
         return new Response(JSON.stringify({ error: "Crédits IA épuisés. Ajoutez des crédits dans les paramètres." }), {
-          status: 402,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
       const t = await response.text();
       console.error("AI gateway error:", response.status, t);
       return new Response(JSON.stringify({ error: "Erreur du service IA" }), {
-        status: 500,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
@@ -191,8 +160,7 @@ Réponds en français, de manière claire et concise. Utilise le format markdown
   } catch (e) {
     console.error("ai-diagnostic error:", e);
     return new Response(JSON.stringify({ error: e instanceof Error ? e.message : "Erreur inconnue" }), {
-      status: 500,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
+      status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   }
 });
