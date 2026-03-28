@@ -297,8 +297,38 @@ const Auth = () => {
       return;
     }
 
+    // Turnstile CAPTCHA verification
+    if (!turnstileToken) {
+      toast.error("Veuillez compléter la vérification anti-bot.");
+      return;
+    }
+
     recordSignupAttempt();
     setLoading(true);
+
+    // Server-side Turnstile verification
+    try {
+      const { data: verifyData, error: verifyError } = await supabase.functions.invoke("verify-turnstile", {
+        body: { token: turnstileToken },
+      });
+      if (verifyError || !verifyData?.success) {
+        setLoading(false);
+        toast.error("La vérification anti-bot a échoué.", {
+          description: "Veuillez réessayer.",
+        });
+        // Reset the widget
+        if (turnstileWidgetId.current && window.turnstile) {
+          window.turnstile.reset(turnstileWidgetId.current);
+        }
+        setTurnstileToken(null);
+        return;
+      }
+    } catch {
+      setLoading(false);
+      toast.error("Erreur lors de la vérification. Veuillez réessayer.");
+      return;
+    }
+
     const { data: signupData, error } = await supabase.auth.signUp({
       email: signupEmail,
       password: signupPassword,
