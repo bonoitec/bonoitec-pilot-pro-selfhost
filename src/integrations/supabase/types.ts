@@ -836,6 +836,24 @@ export type Database = {
           },
         ]
       }
+      rate_limit_hits: {
+        Row: {
+          created_at: string
+          id: string
+          key: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          key: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          key?: string
+        }
+        Relationships: []
+      }
       repair_messages: {
         Row: {
           channel: string
@@ -1245,6 +1263,11 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      check_rate_limit: {
+        Args: { _key: string; _max_requests?: number; _window_seconds?: number }
+        Returns: boolean
+      }
+      cleanup_rate_limit_hits: { Args: never; Returns: undefined }
       create_deposit_repair: {
         Args: {
           _client_name: string
