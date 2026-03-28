@@ -177,11 +177,15 @@ const Auth = () => {
   const [activeTab, setActiveTab] = useState<"login" | "signup">("signup");
 
   useEffect(() => {
-    if (activeTab === "signup") {
-      const timer = setTimeout(renderTurnstile, 100);
-      return () => clearTimeout(timer);
-    }
-  }, [activeTab, renderTurnstile]);
+    const timer = setTimeout(() => {
+      if (activeTab === "signup") {
+        renderTurnstileWidget(turnstileRef, turnstileWidgetId, setTurnstileToken);
+      } else {
+        renderTurnstileWidget(loginTurnstileRef, loginTurnstileWidgetId, setLoginTurnstileToken);
+      }
+    }, 100);
+    return () => clearTimeout(timer);
+  }, [activeTab, renderTurnstileWidget]);
 
   const [loginEmail, setLoginEmail] = useState("");
   const [loginPassword, setLoginPassword] = useState("");
