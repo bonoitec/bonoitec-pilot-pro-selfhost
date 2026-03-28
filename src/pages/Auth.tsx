@@ -22,6 +22,16 @@ import heroDashboard from "@/assets/hero-dashboard.png";
 
 const TURNSTILE_SITE_KEY = "0x4AAAAAACxKnuYwjuSJueXn";
 
+declare global {
+  interface Window {
+    turnstile?: {
+      render: (element: HTMLElement, options: Record<string, unknown>) => string;
+      remove: (widgetId: string) => void;
+      reset: (widgetId: string) => void;
+    };
+  }
+}
+
 const Auth = () => {
   const navigate = useNavigate();
   const { session, loading: authLoading } = useAuth();
