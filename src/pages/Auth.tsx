@@ -39,24 +39,30 @@ const Auth = () => {
   const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
   const turnstileRef = useRef<HTMLDivElement>(null);
   const turnstileWidgetId = useRef<string | null>(null);
+  const [loginTurnstileToken, setLoginTurnstileToken] = useState<string | null>(null);
+  const loginTurnstileRef = useRef<HTMLDivElement>(null);
+  const loginTurnstileWidgetId = useRef<string | null>(null);
 
-  // Load Turnstile script and render widget
-  const renderTurnstile = useCallback(() => {
-    if (!turnstileRef.current) return;
-    // Clean up previous widget
-    if (turnstileWidgetId.current !== null && window.turnstile) {
-      try { window.turnstile.remove(turnstileWidgetId.current); } catch {}
-      turnstileWidgetId.current = null;
+  // Generic Turnstile renderer
+  const renderTurnstileWidget = useCallback((
+    containerRef: React.RefObject<HTMLDivElement>,
+    widgetIdRef: React.MutableRefObject<string | null>,
+    setToken: (token: string | null) => void,
+  ) => {
+    if (!containerRef.current) return;
+    if (widgetIdRef.current !== null && window.turnstile) {
+      try { window.turnstile.remove(widgetIdRef.current); } catch {}
+      widgetIdRef.current = null;
     }
-    setTurnstileToken(null);
+    setToken(null);
 
     const render = () => {
-      if (!turnstileRef.current || !window.turnstile) return;
-      turnstileWidgetId.current = window.turnstile.render(turnstileRef.current, {
+      if (!containerRef.current || !window.turnstile) return;
+      widgetIdRef.current = window.turnstile.render(containerRef.current, {
         sitekey: TURNSTILE_SITE_KEY,
-        callback: (token: string) => setTurnstileToken(token),
-        "expired-callback": () => setTurnstileToken(null),
-        "error-callback": () => setTurnstileToken(null),
+        callback: (token: string) => setToken(token),
+        "expired-callback": () => setToken(null),
+        "error-callback": () => setToken(null),
         theme: "auto",
         size: "flexible",
       });
@@ -65,7 +71,6 @@ const Auth = () => {
     if (window.turnstile) {
       render();
     } else {
-      // Load the script once
       if (!document.getElementById("cf-turnstile-script")) {
         const script = document.createElement("script");
         script.id = "cf-turnstile-script";
