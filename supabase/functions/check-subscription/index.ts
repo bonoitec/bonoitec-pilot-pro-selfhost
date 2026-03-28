@@ -46,6 +46,21 @@ serve(async (req) => {
     if (!userEmail) throw new Error("User email not available in token");
     logStep("User authenticated", { email: userEmail });
 
+    // ── DB-backed rate limiting: 15 req/min per user ──────────────
+    const { data: allowed } = await supabaseClient.rpc("check_rate_limit", {
+      _key: `check-subscription:${userId}`,
+      _window_seconds: 60,
+      _max_requests: 15,
+    });
+
+    if (allowed === false) {
+      console.warn(`[RATE-LIMIT] Blocked userId=${userId} on check-subscription`);
+      return new Response(
+        JSON.stringify({ error: "Trop de requêtes. Réessayez dans quelques secondes." }),
+        { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json", "Retry-After": "60" } }
+      );
+    }
+
     const stripe = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });
     const customers = await stripe.customers.list({ email: userEmail, limit: 1 });
 
