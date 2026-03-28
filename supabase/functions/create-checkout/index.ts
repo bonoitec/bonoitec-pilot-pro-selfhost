@@ -14,36 +14,6 @@ const PLANS: Record<string, string> = {
   annual: "price_1T9nslHmh4WVTxBvmPNLhhz2",
 };
 
-// ── Rate limiting by user ID: 5 req/min ──────────────────────────────
-const WINDOW_MS = 60_000;
-const MAX_REQUESTS = 5;
-const userHits = new Map<string, number[]>();
-
-setInterval(() => {
-  const cutoff = Date.now() - WINDOW_MS;
-  for (const [uid, ts] of userHits) {
-    const filtered = ts.filter((t) => t > cutoff);
-    if (filtered.length === 0) userHits.delete(uid);
-    else userHits.set(uid, filtered);
-  }
-}, 120_000);
-
-function checkUserRateLimit(userId: string): { allowed: boolean; retryAfter?: number } {
-  const now = Date.now();
-  let timestamps = userHits.get(userId) ?? [];
-  timestamps = timestamps.filter((t) => t > now - WINDOW_MS);
-
-  if (timestamps.length >= MAX_REQUESTS) {
-    const retryAfter = Math.ceil((timestamps[0] + WINDOW_MS - now) / 1000);
-    userHits.set(userId, timestamps);
-    return { allowed: false, retryAfter };
-  }
-
-  timestamps.push(now);
-  userHits.set(userId, timestamps);
-  return { allowed: true };
-}
-
 const logStep = (step: string, details?: unknown) => {
   console.log(`[CREATE-CHECKOUT] ${step}${details ? ` - ${JSON.stringify(details)}` : ""}`);
 };
@@ -75,16 +45,22 @@ serve(async (req) => {
     if (!userEmail) throw new Error("User email not available in token");
     logStep("User authenticated", { email: userEmail });
 
-    // ── Rate limit check ───────────────────────────────────────────
-    const rateCheck = checkUserRateLimit(userId);
-    if (!rateCheck.allowed) {
+    // ── DB-backed rate limiting per user: 5 req/min ────────────────
+    const supabaseAdmin = createClient(
+      Deno.env.get("SUPABASE_URL")!,
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
+    );
+    const { data: allowed } = await supabaseAdmin.rpc("check_rate_limit", {
+      _key: `create-checkout:${userId}`,
+      _window_seconds: 60,
+      _max_requests: 5,
+    });
+
+    if (allowed === false) {
       console.warn(`[RATE-LIMIT] Blocked userId=${userId} on create-checkout`);
       return new Response(
         JSON.stringify({ error: "Trop de requêtes. Réessayez dans quelques secondes." }),
-        {
-          status: 429,
-          headers: { ...corsHeaders, "Content-Type": "application/json", "Retry-After": String(rateCheck.retryAfter ?? 60) },
-        }
+        { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json", "Retry-After": "60" } }
       );
     }
 
@@ -96,7 +72,6 @@ serve(async (req) => {
 
     const stripe = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });
 
-    // Find or create Stripe customer
     const customers = await stripe.customers.list({ email: userEmail, limit: 1 });
     let customerId: string | undefined;
     if (customers.data.length > 0) {

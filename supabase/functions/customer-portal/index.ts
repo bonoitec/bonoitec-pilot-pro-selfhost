@@ -8,36 +8,6 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
-// ── Rate limiting by user ID: 5 req/min ──────────────────────────────
-const WINDOW_MS = 60_000;
-const MAX_REQUESTS = 5;
-const userHits = new Map<string, number[]>();
-
-setInterval(() => {
-  const cutoff = Date.now() - WINDOW_MS;
-  for (const [uid, ts] of userHits) {
-    const filtered = ts.filter((t) => t > cutoff);
-    if (filtered.length === 0) userHits.delete(uid);
-    else userHits.set(uid, filtered);
-  }
-}, 120_000);
-
-function checkUserRateLimit(userId: string): { allowed: boolean; retryAfter?: number } {
-  const now = Date.now();
-  let timestamps = userHits.get(userId) ?? [];
-  timestamps = timestamps.filter((t) => t > now - WINDOW_MS);
-
-  if (timestamps.length >= MAX_REQUESTS) {
-    const retryAfter = Math.ceil((timestamps[0] + WINDOW_MS - now) / 1000);
-    userHits.set(userId, timestamps);
-    return { allowed: false, retryAfter };
-  }
-
-  timestamps.push(now);
-  userHits.set(userId, timestamps);
-  return { allowed: true };
-}
-
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -47,14 +17,15 @@ serve(async (req) => {
     const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
     if (!stripeKey) throw new Error("STRIPE_SECRET_KEY is not set");
 
+    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+    const anonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
+
     const authHeader = req.headers.get("Authorization");
     if (!authHeader?.startsWith("Bearer ")) throw new Error("No authorization header provided");
 
-    const authClient = createClient(
-      Deno.env.get("SUPABASE_URL")!,
-      Deno.env.get("SUPABASE_ANON_KEY")!,
-      { global: { headers: { Authorization: authHeader } } },
-    );
+    const authClient = createClient(supabaseUrl, anonKey, {
+      global: { headers: { Authorization: authHeader } },
+    });
     const token = authHeader.replace("Bearer ", "");
     const { data: claimsData, error: claimsError } = await authClient.auth.getClaims(token);
     if (claimsError || !claimsData?.claims) throw new Error("Invalid authentication token");
@@ -63,16 +34,19 @@ serve(async (req) => {
     const userId = claimsData.claims.sub as string;
     if (!userEmail) throw new Error("User email not available");
 
-    // ── Rate limit check ───────────────────────────────────────────
-    const rateCheck = checkUserRateLimit(userId);
-    if (!rateCheck.allowed) {
+    // ── DB-backed rate limiting per user: 5 req/min ────────────────
+    const supabaseAdmin = createClient(supabaseUrl, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
+    const { data: allowed } = await supabaseAdmin.rpc("check_rate_limit", {
+      _key: `customer-portal:${userId}`,
+      _window_seconds: 60,
+      _max_requests: 5,
+    });
+
+    if (allowed === false) {
       console.warn(`[RATE-LIMIT] Blocked userId=${userId} on customer-portal`);
       return new Response(
         JSON.stringify({ error: "Trop de requêtes. Réessayez dans quelques secondes." }),
-        {
-          status: 429,
-          headers: { ...corsHeaders, "Content-Type": "application/json", "Retry-After": String(rateCheck.retryAfter ?? 60) },
-        }
+        { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json", "Retry-After": "60" } }
       );
     }
 
