@@ -26,6 +26,54 @@ const Auth = () => {
   const navigate = useNavigate();
   const { session, loading: authLoading } = useAuth();
   const [loading, setLoading] = useState(false);
+  const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
+  const turnstileRef = useRef<HTMLDivElement>(null);
+  const turnstileWidgetId = useRef<string | null>(null);
+
+  // Load Turnstile script and render widget
+  const renderTurnstile = useCallback(() => {
+    if (!turnstileRef.current) return;
+    // Clean up previous widget
+    if (turnstileWidgetId.current !== null && window.turnstile) {
+      try { window.turnstile.remove(turnstileWidgetId.current); } catch {}
+      turnstileWidgetId.current = null;
+    }
+    setTurnstileToken(null);
+
+    const render = () => {
+      if (!turnstileRef.current || !window.turnstile) return;
+      turnstileWidgetId.current = window.turnstile.render(turnstileRef.current, {
+        sitekey: TURNSTILE_SITE_KEY,
+        callback: (token: string) => setTurnstileToken(token),
+        "expired-callback": () => setTurnstileToken(null),
+        "error-callback": () => setTurnstileToken(null),
+        theme: "auto",
+        size: "flexible",
+      });
+    };
+
+    if (window.turnstile) {
+      render();
+    } else {
+      // Load the script once
+      if (!document.getElementById("cf-turnstile-script")) {
+        const script = document.createElement("script");
+        script.id = "cf-turnstile-script";
+        script.src = "https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit";
+        script.async = true;
+        script.onload = () => render();
+        document.head.appendChild(script);
+      }
+    }
+  }, []);
+
+  useEffect(() => {
+    if (activeTab === "signup") {
+      // Small delay to ensure DOM is ready
+      const timer = setTimeout(renderTurnstile, 100);
+      return () => clearTimeout(timer);
+    }
+  }, [activeTab, renderTurnstile]);
 
   // Redirect to dashboard if already authenticated
   // Forward-declare email helpers for use in useEffect
