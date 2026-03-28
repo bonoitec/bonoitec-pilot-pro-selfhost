@@ -14,6 +14,36 @@ const PLANS: Record<string, string> = {
   annual: "price_1T9nslHmh4WVTxBvmPNLhhz2",
 };
 
+// ── Rate limiting by user ID: 5 req/min ──────────────────────────────
+const WINDOW_MS = 60_000;
+const MAX_REQUESTS = 5;
+const userHits = new Map<string, number[]>();
+
+setInterval(() => {
+  const cutoff = Date.now() - WINDOW_MS;
+  for (const [uid, ts] of userHits) {
+    const filtered = ts.filter((t) => t > cutoff);
+    if (filtered.length === 0) userHits.delete(uid);
+    else userHits.set(uid, filtered);
+  }
+}, 120_000);
+
+function checkUserRateLimit(userId: string): { allowed: boolean; retryAfter?: number } {
+  const now = Date.now();
+  let timestamps = userHits.get(userId) ?? [];
+  timestamps = timestamps.filter((t) => t > now - WINDOW_MS);
+
+  if (timestamps.length >= MAX_REQUESTS) {
+    const retryAfter = Math.ceil((timestamps[0] + WINDOW_MS - now) / 1000);
+    userHits.set(userId, timestamps);
+    return { allowed: false, retryAfter };
+  }
+
+  timestamps.push(now);
+  userHits.set(userId, timestamps);
+  return { allowed: true };
+}
+
 const logStep = (step: string, details?: unknown) => {
   console.log(`[CREATE-CHECKOUT] ${step}${details ? ` - ${JSON.stringify(details)}` : ""}`);
 };
@@ -29,6 +59,9 @@ serve(async (req) => {
     const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
     if (!stripeKey) throw new Error("STRIPE_SECRET_KEY is not set");
 
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader?.startsWith("Bearer ")) throw new Error("No authorization header provided");
+
     const authClient = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
       Deno.env.get("SUPABASE_ANON_KEY") ?? "",
@@ -41,6 +74,19 @@ serve(async (req) => {
     const userId = claimsData.claims.sub as string;
     if (!userEmail) throw new Error("User email not available in token");
     logStep("User authenticated", { email: userEmail });
+
+    // ── Rate limit check ───────────────────────────────────────────
+    const rateCheck = checkUserRateLimit(userId);
+    if (!rateCheck.allowed) {
+      console.warn(`[RATE-LIMIT] Blocked userId=${userId} on create-checkout`);
+      return new Response(
+        JSON.stringify({ error: "Trop de requêtes. Réessayez dans quelques secondes." }),
+        {
+          status: 429,
+          headers: { ...corsHeaders, "Content-Type": "application/json", "Retry-After": String(rateCheck.retryAfter ?? 60) },
+        }
+      );
+    }
 
     const body = await req.json();
     const { plan } = body;
