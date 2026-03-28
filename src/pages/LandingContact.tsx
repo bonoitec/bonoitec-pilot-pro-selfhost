@@ -1,4 +1,4 @@
-import { forwardRef, useState, useRef } from "react";
+import { useState, useRef } from "react";
 import PageMeta from "@/components/PageMeta";
 import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -20,7 +20,7 @@ const contactSchema = z.object({
 
 type ContactForm = z.infer<typeof contactSchema>;
 
-const LandingContact = forwardRef<HTMLDivElement>((_, ref) => {
+const LandingContact = () => {
   const [form, setForm] = useState<ContactForm>({
     firstName: "",
     lastName: "",
@@ -105,7 +105,7 @@ const LandingContact = forwardRef<HTMLDivElement>((_, ref) => {
 
   if (submitted) {
     return (
-      <div ref={ref}>
+      <div>
         <motion.div
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
@@ -132,7 +132,7 @@ const LandingContact = forwardRef<HTMLDivElement>((_, ref) => {
   }
 
   return (
-    <div ref={ref}>
+    <div>
       <PageMeta
         title="Contact – BonoitecPilot | Nous contacter"
         description="Contactez l'équipe BonoitecPilot pour toute question, demande de démo ou assistance. Réponse rapide garantie."
@@ -336,8 +336,6 @@ const LandingContact = forwardRef<HTMLDivElement>((_, ref) => {
       </motion.div>
     </div>
   );
-});
-
-LandingContact.displayName = "LandingContact";
+};
 
 export default LandingContact;

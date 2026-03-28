@@ -1,5 +1,5 @@
 import { motion, useInView, AnimatePresence } from "framer-motion";
-import { forwardRef, useRef, useState, useEffect, useCallback } from "react";
+import { useRef, useState, useEffect, useCallback } from "react";
 import { Link } from "react-router-dom";
 import { ArrowRight, ChevronLeft, ChevronRight } from "lucide-react";
 import blogOrganiser from "@/assets/blog-organiser-atelier.jpg";
@@ -65,7 +65,7 @@ function getVisibleArticles(startIndex: number) {
 
 const AUTOPLAY_INTERVAL = 5000;
 
-const BlogSection = forwardRef<HTMLElement, { expanded?: boolean }>(({ expanded = false }, forwardedRef) => {
+const BlogSection = ({ expanded = false }: { expanded?: boolean }) => {
   const ref = useRef(null);
   const isInView = useInView(ref, { once: true, margin: "-80px" });
   const [startIndex, setStartIndex] = useState(0);
@@ -263,8 +263,6 @@ const BlogSection = forwardRef<HTMLElement, { expanded?: boolean }>(({ expanded 
       </div>
     </section>
   );
-});
-
-BlogSection.displayName = "BlogSection";
+};
 
 export default BlogSection;
