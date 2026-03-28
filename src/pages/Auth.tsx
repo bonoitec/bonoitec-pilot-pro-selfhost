@@ -267,7 +267,35 @@ const Auth = () => {
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrors({});
+
+    // Turnstile CAPTCHA verification
+    if (!loginTurnstileToken) {
+      toast.error("Veuillez compléter la vérification anti-bot.");
+      return;
+    }
+
     setLoading(true);
+
+    // Server-side Turnstile verification
+    try {
+      const { data: verifyData, error: verifyError } = await supabase.functions.invoke("verify-turnstile", {
+        body: { token: loginTurnstileToken },
+      });
+      if (verifyError || !verifyData?.success) {
+        setLoading(false);
+        toast.error("La vérification anti-bot a échoué.", { description: "Veuillez réessayer." });
+        if (loginTurnstileWidgetId.current && window.turnstile) {
+          window.turnstile.reset(loginTurnstileWidgetId.current);
+        }
+        setLoginTurnstileToken(null);
+        return;
+      }
+    } catch {
+      setLoading(false);
+      toast.error("Erreur lors de la vérification. Veuillez réessayer.");
+      return;
+    }
+
     const { data, error } = await supabase.auth.signInWithPassword({ email: loginEmail, password: loginPassword });
     setLoading(false);
     if (error) {
@@ -629,7 +657,10 @@ const Auth = () => {
                   <label htmlFor="remember" className="text-[11px] text-muted-foreground cursor-pointer select-none">Se souvenir de moi</label>
                 </div>
 
-                <Button type="submit" variant="premium" className="w-full h-[42px] text-sm font-semibold mt-1 rounded-xl" disabled={loading}>
+                {/* Cloudflare Turnstile CAPTCHA */}
+                <div ref={loginTurnstileRef} className="flex justify-center" />
+
+                <Button type="submit" variant="premium" className="w-full h-[42px] text-sm font-semibold mt-1 rounded-xl" disabled={loading || !loginTurnstileToken}>
                   {loading && <Loader2 className="h-4 w-4 animate-spin" />}
                   Se connecter
                 </Button>
