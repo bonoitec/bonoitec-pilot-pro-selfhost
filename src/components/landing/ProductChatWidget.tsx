@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useCallback, forwardRef } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { MessageSquare, X, Send, Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -13,7 +13,7 @@ const SUGGESTIONS = [
   "Comment contacter le support ?",
 ];
 
-export const ProductChatWidget = forwardRef<HTMLDivElement>(function ProductChatWidget(_props, _ref) {
+export const ProductChatWidget = function ProductChatWidget() {
   const [open, setOpen] = useState(false);
   const [messages, setMessages] = useState<Msg[]>([]);
   const [input, setInput] = useState("");
@@ -275,4 +275,4 @@ export const ProductChatWidget = forwardRef<HTMLDivElement>(function ProductChat
       </AnimatePresence>
     </>
   );
-});
+};
