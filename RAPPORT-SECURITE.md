@@ -7,11 +7,12 @@
 
 ## En bref
 
-Votre site est **sécurisé**. Nous avons tout vérifié, tout réparé, tout testé.
+Votre site est **sécurisé**. Nous avons tout vérifié, tout réparé, tout testé, puis **revérifié en attaquant chaque correctif un par un**.
 
-- **27 problèmes trouvés**
-- **27 problèmes réparés**
-- **0 problème restant**
+- **28 problèmes trouvés** (27 au premier tour + 1 trouvé pendant la revérification)
+- **28 problèmes réparés**
+- **44 tests d'attaque** lancés contre le site en direct
+- **44 tests réussis, 0 échec**
 
 ---
 
