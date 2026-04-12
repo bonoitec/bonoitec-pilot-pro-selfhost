@@ -20,10 +20,9 @@ serve(async (req) => {
   }
 
   try {
-    const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
-    if (!stripeKey) throw new Error("STRIPE_SECRET_KEY is not set");
-
-    // ── Origin validation (open-redirect protection) ──────────────
+    // ── Origin validation FIRST (open-redirect protection) ──────────────
+    // Must run before anything else so unknown origins are rejected even
+    // if downstream dependencies (Stripe key, etc.) are misconfigured.
     const origin = validateOrigin(req);
     if (!origin) {
       return new Response(
@@ -31,6 +30,9 @@ serve(async (req) => {
         { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } },
       );
     }
+
+    const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
+    if (!stripeKey) throw new Error("STRIPE_SECRET_KEY is not set");
 
     // ── Authentication ────────────────────────────────────────────
     const token = extractBearerToken(req.headers.get("Authorization"));
