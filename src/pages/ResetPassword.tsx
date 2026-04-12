@@ -25,10 +25,23 @@ const ResetPassword = () => {
       }
     });
 
-    // Check hash for recovery token
+    // Check hash for legacy implicit flow (#access_token=...&type=recovery)
     const hash = window.location.hash;
-    if (hash.includes("type=recovery")) {
+    if (hash.includes("type=recovery") || hash.includes("access_token")) {
       setIsRecovery(true);
+    }
+
+    // Check query string for PKCE flow (?code=...) — exchange code for session
+    const params = new URLSearchParams(window.location.search);
+    const code = params.get("code");
+    if (code) {
+      supabase.auth.exchangeCodeForSession(code).then(({ error }) => {
+        if (!error) {
+          setIsRecovery(true);
+          // Clean the URL so refresh doesn't re-trigger exchange
+          window.history.replaceState({}, "", window.location.pathname);
+        }
+      });
     }
 
     return () => subscription.unsubscribe();
