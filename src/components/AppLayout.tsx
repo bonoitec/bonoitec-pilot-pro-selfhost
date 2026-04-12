@@ -12,7 +12,7 @@ import { TrialExpiredWall } from "@/components/TrialExpiredWall";
 import { useTrialStatus } from "@/hooks/useTrialStatus";
 import { useSubscription } from "@/hooks/useSubscription";
 import { useEffect } from "react";
-import { isSuperAdmin } from "@/lib/superAdmin";
+import { useIsSuperAdmin } from "@/lib/superAdmin";
 import { toast } from "sonner";
 import {
   DropdownMenu,
@@ -27,6 +27,7 @@ export function AppLayout() {
   const [searchParams, setSearchParams] = useSearchParams();
   const { isExpired, isLoading: trialLoading } = useTrialStatus();
   const { checkSubscription, subscribed, isLoading: subLoading } = useSubscription();
+  const { isSuperAdmin, isLoading: saLoading } = useIsSuperAdmin();
 
   // Handle checkout success at layout level (before TrialExpiredWall blocks Outlet)
   useEffect(() => {
@@ -46,9 +47,9 @@ export function AppLayout() {
     ? user.user_metadata.full_name.split(" ").map((n: string) => n[0]).join("").toUpperCase().slice(0, 2)
     : user?.email?.slice(0, 2).toUpperCase() ?? "?";
 
-  // Show loader while trial/subscription status is being determined
+  // Show loader while trial/subscription/super-admin status is being determined
   // This prevents expired users from briefly seeing dashboard content
-  if (trialLoading || subLoading) {
+  if (trialLoading || subLoading || saLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -57,7 +58,7 @@ export function AppLayout() {
   }
 
   // Block access if trial expired — super admin bypasses all restrictions
-  if (isExpired && !subscribed && !isSuperAdmin(user?.email)) {
+  if (isExpired && !subscribed && !isSuperAdmin) {
     return <TrialExpiredWall />;
   }
 

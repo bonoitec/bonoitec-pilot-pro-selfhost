@@ -1,3 +1,10 @@
+/**
+ * SECURITY NOTE: the signature captured here is saved as a PNG data URL to
+ * repair-photos storage for legal/evidentiary purposes (proof the customer
+ * acknowledged the intake terms). It is NOT an authentication credential and
+ * is not used for identity verification. Org isolation on the storage bucket
+ * path prevents cross-tenant reads.
+ */
 import { useRef, useEffect, useState, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Eraser, Check } from "lucide-react";
@@ -93,7 +100,13 @@ export function SignaturePad({ onSave, onClear, width = 500, height = 200, saved
     onSave(dataUrl);
   };
 
-  if (savedSignature) {
+  // L3: only render <img> if savedSignature is a valid PNG data URL or an https URL.
+  // Blocks javascript:, data: application/xml, and other potentially executable sources.
+  const isRenderableSignature =
+    typeof savedSignature === "string" &&
+    (savedSignature.startsWith("data:image/png;base64,") || savedSignature.startsWith("https://"));
+
+  if (savedSignature && isRenderableSignature) {
     return (
       <div className="space-y-2">
         <div className="border border-border rounded-lg p-2 bg-card">

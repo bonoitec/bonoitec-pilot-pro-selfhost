@@ -34,3 +34,5 @@ supabase/.temp/
 .vercel
 # DNS update script (contains API key)
 .dns_update.py
+pentest-results.md
+.pentest_*.py

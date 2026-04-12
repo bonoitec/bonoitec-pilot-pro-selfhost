@@ -1,14 +1,12 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import Stripe from "https://esm.sh/stripe@18.5.0";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.99.0";
-
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
-};
+import { buildCorsHeaders, validateOrigin } from "../_shared/cors.ts";
+import { extractBearerToken } from "../_shared/limits.ts";
 
 serve(async (req) => {
+  const corsHeaders = buildCorsHeaders(req);
+
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
@@ -17,22 +15,46 @@ serve(async (req) => {
     const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
     if (!stripeKey) throw new Error("STRIPE_SECRET_KEY is not set");
 
+    // ── Origin validation (open-redirect protection) ──────────────
+    const origin = validateOrigin(req);
+    if (!origin) {
+      return new Response(
+        JSON.stringify({ error: "Invalid origin" }),
+        { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      );
+    }
+
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const anonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
 
-    const authHeader = req.headers.get("Authorization");
-    if (!authHeader?.startsWith("Bearer ")) throw new Error("No authorization header provided");
+    // ── Authentication ────────────────────────────────────────────
+    const token = extractBearerToken(req.headers.get("Authorization"));
+    if (!token) {
+      return new Response(
+        JSON.stringify({ error: "No authorization header provided" }),
+        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      );
+    }
 
     const authClient = createClient(supabaseUrl, anonKey, {
-      global: { headers: { Authorization: authHeader } },
+      global: { headers: { Authorization: `Bearer ${token}` } },
     });
-    const token = authHeader.replace("Bearer ", "");
     const { data: claimsData, error: claimsError } = await authClient.auth.getClaims(token);
-    if (claimsError || !claimsData?.claims) throw new Error("Invalid authentication token");
+    if (claimsError || !claimsData?.claims) {
+      return new Response(
+        JSON.stringify({ error: "Invalid authentication token" }),
+        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      );
+    }
 
     const userEmail = claimsData.claims.email as string;
     const userId = claimsData.claims.sub as string;
-    if (!userEmail) throw new Error("User email not available");
+    if (!userEmail) {
+      return new Response(
+        JSON.stringify({ error: "User email not available" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      );
+    }
 
     // ── DB-backed rate limiting per user: 5 req/min ────────────────
     const supabaseAdmin = createClient(supabaseUrl, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
@@ -42,19 +64,23 @@ serve(async (req) => {
       _max_requests: 5,
     });
 
-    if (allowed === false) {
+    if (allowed !== true) {
       console.warn(`[RATE-LIMIT] Blocked userId=${userId} on customer-portal`);
       return new Response(
         JSON.stringify({ error: "Trop de requêtes. Réessayez dans quelques secondes." }),
-        { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json", "Retry-After": "60" } }
+        { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json", "Retry-After": "60" } },
       );
     }
 
     const stripe = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });
     const customers = await stripe.customers.list({ email: userEmail, limit: 1 });
-    if (customers.data.length === 0) throw new Error("No Stripe customer found");
+    if (customers.data.length === 0) {
+      return new Response(
+        JSON.stringify({ error: "No Stripe customer found" }),
+        { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      );
+    }
 
-    const origin = req.headers.get("origin") || "https://bonoitec-pilot-pro.lovable.app";
     const portalSession = await stripe.billingPortal.sessions.create({
       customer: customers.data[0].id,
       return_url: `${origin}/dashboard`,
@@ -65,10 +91,12 @@ serve(async (req) => {
       status: 200,
     });
   } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : String(error);
-    return new Response(JSON.stringify({ error: errorMessage }), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-      status: 500,
-    });
+    if (error instanceof Response) return error;
+    const errorId = crypto.randomUUID();
+    console.error(`[CUSTOMER-PORTAL][${errorId}]`, error instanceof Error ? error.message : error);
+    return new Response(
+      JSON.stringify({ error: "Une erreur est survenue", id: errorId }),
+      { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 500 },
+    );
   }
 });

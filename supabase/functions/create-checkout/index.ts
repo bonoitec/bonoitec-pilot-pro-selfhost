@@ -1,12 +1,8 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import Stripe from "https://esm.sh/stripe@18.5.0";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.99.0";
-
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
-};
+import { buildCorsHeaders, validateOrigin } from "../_shared/cors.ts";
+import { readJsonWithLimit, extractBearerToken } from "../_shared/limits.ts";
 
 const PLANS: Record<string, string> = {
   monthly: "price_1T9nqPHmh4WVTxBvFDvkWtdP",
@@ -14,36 +10,58 @@ const PLANS: Record<string, string> = {
   annual: "price_1T9nslHmh4WVTxBvmPNLhhz2",
 };
 
-const logStep = (step: string, details?: unknown) => {
-  console.log(`[CREATE-CHECKOUT] ${step}${details ? ` - ${JSON.stringify(details)}` : ""}`);
-};
+const maskEmail = (e: string) => e.replace(/(.{2})(.*)(@.*)/, "$1***$3");
 
 serve(async (req) => {
+  const corsHeaders = buildCorsHeaders(req);
+
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    logStep("Function started");
-
     const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
     if (!stripeKey) throw new Error("STRIPE_SECRET_KEY is not set");
 
-    const authHeader = req.headers.get("Authorization");
-    if (!authHeader?.startsWith("Bearer ")) throw new Error("No authorization header provided");
+    // ── Origin validation (open-redirect protection) ──────────────
+    const origin = validateOrigin(req);
+    if (!origin) {
+      return new Response(
+        JSON.stringify({ error: "Invalid origin" }),
+        { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      );
+    }
+
+    // ── Authentication ────────────────────────────────────────────
+    const token = extractBearerToken(req.headers.get("Authorization"));
+    if (!token) {
+      return new Response(
+        JSON.stringify({ error: "No authorization header provided" }),
+        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      );
+    }
 
     const authClient = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
       Deno.env.get("SUPABASE_ANON_KEY") ?? "",
-      { global: { headers: { Authorization: authHeader } } }
+      { global: { headers: { Authorization: `Bearer ${token}` } } },
     );
-    const token = authHeader.replace("Bearer ", "");
     const { data: claimsData, error: claimsError } = await authClient.auth.getClaims(token);
-    if (claimsError || !claimsData?.claims) throw new Error("Invalid authentication token");
+    if (claimsError || !claimsData?.claims) {
+      return new Response(
+        JSON.stringify({ error: "Invalid authentication token" }),
+        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      );
+    }
     const userEmail = claimsData.claims.email as string;
     const userId = claimsData.claims.sub as string;
-    if (!userEmail) throw new Error("User email not available in token");
-    logStep("User authenticated", { email: userEmail });
+    if (!userEmail) {
+      return new Response(
+        JSON.stringify({ error: "User email not available" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      );
+    }
+    console.log(`[CREATE-CHECKOUT] user=${maskEmail(userEmail)}`);
 
     // ── DB-backed rate limiting per user: 5 req/min ────────────────
     const supabaseAdmin = createClient(
@@ -55,31 +73,47 @@ serve(async (req) => {
       _window_seconds: 60,
       _max_requests: 5,
     });
-
-    if (allowed === false) {
+    // fail-closed: any value other than explicit `true` is treated as blocked
+    if (allowed !== true) {
       console.warn(`[RATE-LIMIT] Blocked userId=${userId} on create-checkout`);
       return new Response(
         JSON.stringify({ error: "Trop de requêtes. Réessayez dans quelques secondes." }),
-        { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json", "Retry-After": "60" } }
+        { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json", "Retry-After": "60" } },
       );
     }
 
-    const body = await req.json();
-    const { plan } = body;
-    const priceId = PLANS[plan || "monthly"];
-    if (!priceId) throw new Error(`Invalid plan: ${plan}`);
-    logStep("Plan selected", { plan, priceId });
+    const body = await readJsonWithLimit<{ plan?: string }>(req, 10_000);
+    const plan = body.plan || "monthly";
+    const priceId = PLANS[plan];
+    if (!priceId) {
+      return new Response(
+        JSON.stringify({ error: "Invalid plan" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      );
+    }
 
     const stripe = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });
 
-    const customers = await stripe.customers.list({ email: userEmail, limit: 1 });
-    let customerId: string | undefined;
-    if (customers.data.length > 0) {
-      customerId = customers.data[0].id;
-      logStep("Existing customer found", { customerId });
+    // ── H7: verify the price still exists and is active in Stripe ──
+    try {
+      const stripePrice = await stripe.prices.retrieve(priceId);
+      if (!stripePrice.active) {
+        console.error(`[CREATE-CHECKOUT] price ${priceId} is inactive`);
+        return new Response(
+          JSON.stringify({ error: "Plan unavailable" }),
+          { status: 503, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+        );
+      }
+    } catch (e) {
+      console.error(`[CREATE-CHECKOUT] price retrieve failed: ${e instanceof Error ? e.message : e}`);
+      return new Response(
+        JSON.stringify({ error: "Plan unavailable" }),
+        { status: 503, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      );
     }
 
-    const origin = req.headers.get("origin") || "https://bonoitec-pilot-pro.lovable.app";
+    const customers = await stripe.customers.list({ email: userEmail, limit: 1 });
+    const customerId = customers.data.length > 0 ? customers.data[0].id : undefined;
 
     const session = await stripe.checkout.sessions.create({
       customer: customerId,
@@ -88,21 +122,20 @@ serve(async (req) => {
       mode: "subscription",
       success_url: `${origin}/dashboard?checkout=success`,
       cancel_url: `${origin}/tarifs?checkout=cancel`,
-      metadata: { user_id: userId, plan: plan || "monthly" },
+      metadata: { user_id: userId, plan },
     });
-
-    logStep("Checkout session created", { sessionId: session.id });
 
     return new Response(JSON.stringify({ url: session.url }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 200,
     });
   } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : String(error);
-    logStep("ERROR", { message: errorMessage });
-    return new Response(JSON.stringify({ error: errorMessage }), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-      status: 500,
-    });
+    if (error instanceof Response) return error; // from readJsonWithLimit
+    const errorId = crypto.randomUUID();
+    console.error(`[CREATE-CHECKOUT][${errorId}]`, error instanceof Error ? error.message : error);
+    return new Response(
+      JSON.stringify({ error: "Une erreur est survenue", id: errorId }),
+      { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 500 },
+    );
   }
 });

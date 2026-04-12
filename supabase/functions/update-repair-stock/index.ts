@@ -1,10 +1,6 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
-};
+import { buildCorsHeaders } from "../_shared/cors.ts";
+import { readJsonWithLimit, extractBearerToken } from "../_shared/limits.ts";
 
 interface PartUsed {
   inventory_id?: string;
@@ -14,15 +10,29 @@ interface PartUsed {
   quantity?: number;
 }
 
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+// M2: validate a part object before trusting it
+function validatePart(p: unknown): p is PartUsed {
+  if (!p || typeof p !== "object") return false;
+  const o = p as Record<string, unknown>;
+  if (o.inventory_id !== undefined && o.inventory_id !== null && typeof o.inventory_id !== "string") return false;
+  if (o.quantity !== undefined && (typeof o.quantity !== "number" || o.quantity < 0 || !Number.isFinite(o.quantity))) return false;
+  if (o.buy_price !== undefined && (typeof o.buy_price !== "number" || !Number.isFinite(o.buy_price))) return false;
+  if (o.sell_price !== undefined && (typeof o.sell_price !== "number" || !Number.isFinite(o.sell_price))) return false;
+  return true;
+}
+
 Deno.serve(async (req) => {
+  const corsHeaders = buildCorsHeaders(req);
+
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    // Validate JWT
-    const authHeader = req.headers.get("Authorization");
-    if (!authHeader) {
+    const token = extractBearerToken(req.headers.get("Authorization"));
+    if (!token) {
       return new Response(JSON.stringify({ error: "Non autorisé" }), {
         status: 401,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -32,12 +42,10 @@ Deno.serve(async (req) => {
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
-    // User client to verify auth & org membership
     const userClient = createClient(supabaseUrl, Deno.env.get("SUPABASE_ANON_KEY")!, {
-      global: { headers: { Authorization: authHeader } },
+      global: { headers: { Authorization: `Bearer ${token}` } },
     });
 
-    const token = authHeader.replace("Bearer ", "");
     const { data: claimsData, error: claimsError } = await userClient.auth.getClaims(token);
     if (claimsError || !claimsData?.claims) {
       return new Response(JSON.stringify({ error: "Non autorisé" }), {
@@ -45,10 +53,10 @@ Deno.serve(async (req) => {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
-    const user = { id: claimsData.claims.sub as string };
+    const userId = claimsData.claims.sub as string;
 
     // Get user's org
-    const { data: profile } = await userClient.from("profiles").select("organization_id").eq("user_id", user.id).single();
+    const { data: profile } = await userClient.from("profiles").select("organization_id").eq("user_id", userId).single();
     if (!profile) {
       return new Response(JSON.stringify({ error: "Profil introuvable" }), {
         status: 403,
@@ -58,12 +66,40 @@ Deno.serve(async (req) => {
 
     const orgId = profile.organization_id;
 
-    const { repair_id, updates: rawUpdates, old_parts, new_parts } = await req.json() as {
-      repair_id: string;
-      updates: Record<string, unknown>;
-      old_parts: PartUsed[];
-      new_parts: PartUsed[];
-    };
+    // H5: size-limited body parse
+    const body = await readJsonWithLimit<{
+      repair_id?: string;
+      updates?: Record<string, unknown>;
+      old_parts?: PartUsed[];
+      new_parts?: PartUsed[];
+    }>(req, 2_000_000);
+    const { repair_id, updates: rawUpdates, old_parts, new_parts } = body;
+
+    // M1: validate repair_id as UUID
+    if (!repair_id || typeof repair_id !== "string" || !UUID_RE.test(repair_id)) {
+      return new Response(JSON.stringify({ error: "repair_id invalide" }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // M2: validate parts arrays
+    if (old_parts !== undefined) {
+      if (!Array.isArray(old_parts) || !old_parts.every(validatePart)) {
+        return new Response(JSON.stringify({ error: "old_parts invalide" }), {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+    }
+    if (new_parts !== undefined) {
+      if (!Array.isArray(new_parts) || !new_parts.every(validatePart)) {
+        return new Response(JSON.stringify({ error: "new_parts invalide" }), {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+    }
 
     // Allowlist: only these fields can be updated via this endpoint
     const ALLOWED_FIELDS = new Set([
@@ -85,13 +121,6 @@ Deno.serve(async (req) => {
 
     if (Object.keys(updates).length === 0 && (!old_parts?.length && !new_parts?.length)) {
       return new Response(JSON.stringify({ error: "Aucun champ valide à mettre à jour" }), {
-        status: 400,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-
-    if (!repair_id) {
-      return new Response(JSON.stringify({ error: "repair_id requis" }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
@@ -121,7 +150,12 @@ Deno.serve(async (req) => {
       .eq("id", repair_id);
 
     if (updateError) {
-      throw new Error(`Erreur mise à jour réparation: ${updateError.message}`);
+      const errorId = crypto.randomUUID();
+      console.error(`[UPDATE-REPAIR-STOCK][${errorId}] update error:`, updateError.message);
+      return new Response(
+        JSON.stringify({ error: "Erreur mise à jour réparation", id: errorId }),
+        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      );
     }
 
     // 2. Compute stock deltas and apply atomically
@@ -141,6 +175,7 @@ Deno.serve(async (req) => {
 
     const allIds = new Set([...oldQtyMap.keys(), ...newQtyMap.keys()]);
     const stockUpdates: { id: string; delta: number }[] = [];
+    const clampWarnings: string[] = [];
 
     for (const id of allIds) {
       const oldQty = oldQtyMap.get(id) || 0;
@@ -155,14 +190,21 @@ Deno.serve(async (req) => {
     for (const { id, delta } of stockUpdates) {
       const { data: inv } = await adminClient
         .from("inventory")
-        .select("quantity")
+        .select("quantity, name")
         .eq("id", id)
         .eq("organization_id", orgId)
         .single();
 
       if (!inv) continue;
 
-      const updatedQty = Math.max(0, inv.quantity - delta);
+      const desiredQty = inv.quantity - delta;
+      const updatedQty = Math.max(0, desiredQty);
+      // M3: warn if we had to clamp to 0 (meaning stock would have gone negative)
+      if (desiredQty < 0) {
+        console.warn(`[UPDATE-REPAIR-STOCK] Clamped stock for ${id} (${inv.name}): desired=${desiredQty}, set=0`);
+        clampWarnings.push(`${inv.name || id}: stock insuffisant, mis à 0`);
+      }
+
       const { error: stockError } = await adminClient
         .from("inventory")
         .update({ quantity: updatedQty })
@@ -170,19 +212,25 @@ Deno.serve(async (req) => {
         .eq("organization_id", orgId);
 
       if (stockError) {
-        console.error(`Stock update failed for ${id}:`, stockError.message);
+        console.error(`[UPDATE-REPAIR-STOCK] Stock update failed for ${id}:`, stockError.message);
       }
     }
 
     return new Response(
-      JSON.stringify({ success: true, stock_updates: stockUpdates.length }),
-      { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      JSON.stringify({
+        success: true,
+        stock_updates: stockUpdates.length,
+        warnings: clampWarnings.length > 0 ? clampWarnings : undefined,
+      }),
+      { headers: { ...corsHeaders, "Content-Type": "application/json" } },
     );
   } catch (err) {
-    console.error("update-repair-stock error:", err);
+    if (err instanceof Response) return err;
+    const errorId = crypto.randomUUID();
+    console.error(`[UPDATE-REPAIR-STOCK][${errorId}]`, err instanceof Error ? err.message : err);
     return new Response(
-      JSON.stringify({ error: err instanceof Error ? err.message : "Erreur serveur" }),
-      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      JSON.stringify({ error: "Une erreur est survenue", id: errorId }),
+      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } },
     );
   }
 });

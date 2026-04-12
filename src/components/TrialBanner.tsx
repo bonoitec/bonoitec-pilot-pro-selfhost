@@ -7,7 +7,7 @@ import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
-import { isSuperAdmin } from "@/lib/superAdmin";
+import { useIsSuperAdmin } from "@/lib/superAdmin";
 
 const plans = [
   {
@@ -41,12 +41,13 @@ export function TrialBanner() {
   const { isTrialActive, isSubscribed, daysRemaining, trialEndDate, isLoading } = useTrialStatus();
   const { startCheckout, cancelAtPeriodEnd, subscriptionEnd, planName, openCustomerPortal } = useSubscription();
   const { user } = useAuth();
+  const { isSuperAdmin } = useIsSuperAdmin();
   const [open, setOpen] = useState(false);
   const [selected, setSelected] = useState<"monthly" | "quarterly" | "annual">("annual");
   const [loading, setLoading] = useState(false);
 
   if (isLoading) return null;
-  if (isSuperAdmin(user?.email)) return null;
+  if (isSuperAdmin) return null;
 
   const planKey = (planName ?? "").replace("_cancelling", "");
   const planLabel =

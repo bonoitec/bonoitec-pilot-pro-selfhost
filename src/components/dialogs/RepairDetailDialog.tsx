@@ -243,7 +243,8 @@ export function RepairDetailDialog({ open, onOpenChange, repair }: Props) {
   const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file || !repair) return;
-    const path = `repairs/${repair.id}/${Date.now()}-${file.name}`;
+    // Path must be `repairs/{org_id}/{repair_id}/{filename}` to satisfy org-isolated RLS
+    const path = `repairs/${repair.organization_id}/${repair.id}/${Date.now()}-${file.name}`;
     try {
       const storedPath = await uploadFile(path, file);
       const currentPhotos = (repair.photos as string[]) || [];

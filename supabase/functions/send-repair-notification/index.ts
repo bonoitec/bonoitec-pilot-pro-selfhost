@@ -1,12 +1,17 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.99.0";
+import { buildCorsHeaders } from "../_shared/cors.ts";
+import { readJsonWithLimit, extractBearerToken } from "../_shared/limits.ts";
 
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
-};
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const ALLOWED_STATUSES = new Set([
+  "nouveau", "diagnostic", "en_cours", "en_attente_piece",
+  "termine", "pret_a_recuperer", "devis_en_attente", "devis_valide",
+  "pret_reparation", "reparation_en_cours",
+]);
 
 Deno.serve(async (req) => {
+  const corsHeaders = buildCorsHeaders(req);
+
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
@@ -17,24 +22,22 @@ Deno.serve(async (req) => {
     const anonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
 
     // ── Authentication check ──────────────────────────────────────
-    const authHeader = req.headers.get("Authorization");
-    if (!authHeader?.startsWith("Bearer ")) {
+    const token = extractBearerToken(req.headers.get("Authorization"));
+    if (!token) {
       return new Response(
         JSON.stringify({ error: "Unauthorized" }),
-        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } },
       );
     }
 
     const authClient = createClient(supabaseUrl, anonKey, {
-      global: { headers: { Authorization: authHeader } },
+      global: { headers: { Authorization: `Bearer ${token}` } },
     });
-    const { data: claimsData, error: claimsError } = await authClient.auth.getClaims(
-      authHeader.replace("Bearer ", "")
-    );
+    const { data: claimsData, error: claimsError } = await authClient.auth.getClaims(token);
     if (claimsError || !claimsData?.claims) {
       return new Response(
         JSON.stringify({ error: "Invalid token" }),
-        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } },
       );
     }
 
@@ -52,16 +55,41 @@ Deno.serve(async (req) => {
     if (!profile) {
       return new Response(
         JSON.stringify({ error: "Forbidden: no profile found" }),
-        { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } },
       );
     }
 
-    const { repair_id, new_status, message, channel } = await req.json();
+    const body = await readJsonWithLimit<{
+      repair_id?: string;
+      new_status?: string;
+      message?: string;
+      channel?: string;
+    }>(req, 100_000);
+    const { repair_id, new_status, message, channel } = body;
 
-    if (!repair_id || !new_status) {
+    // M1: validate inputs BEFORE any DB query
+    if (!repair_id || typeof repair_id !== "string" || !UUID_RE.test(repair_id)) {
       return new Response(
-        JSON.stringify({ error: "repair_id and new_status are required" }),
-        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        JSON.stringify({ error: "repair_id invalide" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      );
+    }
+    if (!new_status || typeof new_status !== "string" || !ALLOWED_STATUSES.has(new_status)) {
+      return new Response(
+        JSON.stringify({ error: "new_status invalide" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      );
+    }
+    if (message !== undefined && (typeof message !== "string" || message.length > 5000)) {
+      return new Response(
+        JSON.stringify({ error: "message invalide" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      );
+    }
+    if (channel !== undefined && channel !== "email" && channel !== "sms") {
+      return new Response(
+        JSON.stringify({ error: "channel invalide" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } },
       );
     }
 
@@ -75,7 +103,7 @@ Deno.serve(async (req) => {
     if (repairError || !repair) {
       return new Response(
         JSON.stringify({ error: "Repair not found" }),
-        { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } },
       );
     }
 
@@ -83,7 +111,7 @@ Deno.serve(async (req) => {
     if (repair.organization_id !== profile.organization_id) {
       return new Response(
         JSON.stringify({ error: "Forbidden: organization mismatch" }),
-        { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } },
       );
     }
 
@@ -91,7 +119,7 @@ Deno.serve(async (req) => {
     if (!client) {
       return new Response(
         JSON.stringify({ error: "No client associated" }),
-        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } },
       );
     }
 
@@ -121,14 +149,15 @@ Deno.serve(async (req) => {
 
     return new Response(
       JSON.stringify({ success: true, channel: notificationChannel }),
-      { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } },
     );
   } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : "Unknown error";
-    console.error("Notification error:", errorMessage);
+    if (error instanceof Response) return error;
+    const errorId = crypto.randomUUID();
+    console.error(`[SEND-REPAIR-NOTIFICATION][${errorId}]`, error instanceof Error ? error.message : error);
     return new Response(
-      JSON.stringify({ error: "Internal server error" }),
-      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      JSON.stringify({ error: "Une erreur est survenue", id: errorId }),
+      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } },
     );
   }
 });

@@ -58,6 +58,10 @@ const ChartContainer = React.forwardRef<
 });
 ChartContainer.displayName = "Chart";
 
+// L2: defensive guard — only allow CSS-safe characters in color values to prevent
+// any chance of injection if the config ever takes user input (currently it doesn't).
+const CSS_VALUE_RE = /^[#a-zA-Z0-9.,()% \-/]+$/;
+
 const ChartStyle = ({ id, config }: { id: string; config: ChartConfig }) => {
   const colorConfig = Object.entries(config).filter(([_, config]) => config.theme || config.color);
 
@@ -75,7 +79,9 @@ ${prefix} [data-chart=${id}] {
 ${colorConfig
   .map(([key, itemConfig]) => {
     const color = itemConfig.theme?.[theme as keyof typeof itemConfig.theme] || itemConfig.color;
-    return color ? `  --color-${key}: ${color};` : null;
+    // Reject anything that isn't a plain CSS color/function value
+    if (!color || typeof color !== "string" || !CSS_VALUE_RE.test(color)) return null;
+    return `  --color-${key}: ${color};`;
   })
   .join("\n")}
 }

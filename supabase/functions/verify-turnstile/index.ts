@@ -1,30 +1,37 @@
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
-};
+import { buildCorsHeaders } from "../_shared/cors.ts";
+import { readJsonWithLimit } from "../_shared/limits.ts";
 
 Deno.serve(async (req) => {
+  const corsHeaders = buildCorsHeaders(req);
+
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    const { token } = await req.json();
+    const body = await readJsonWithLimit<{ token?: string }>(req, 100_000);
+    const { token } = body;
 
-    if (!token || typeof token !== "string") {
+    // M4: length check BEFORE forwarding to Cloudflare
+    if (
+      !token ||
+      typeof token !== "string" ||
+      token.length === 0 ||
+      token.length > 4096
+    ) {
       return new Response(
-        JSON.stringify({ success: false, error: "Token manquant" }),
-        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        JSON.stringify({ success: false, error: "Token invalide" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } },
       );
     }
 
     const secretKey = Deno.env.get("TURNSTILE_SECRET_KEY");
     if (!secretKey) {
-      console.error("TURNSTILE_SECRET_KEY not configured");
+      const errorId = crypto.randomUUID();
+      console.error(`[VERIFY-TURNSTILE][${errorId}] TURNSTILE_SECRET_KEY not configured`);
       return new Response(
-        JSON.stringify({ success: false, error: "Configuration serveur manquante" }),
-        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        JSON.stringify({ success: false, error: "Configuration serveur manquante", id: errorId }),
+        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } },
       );
     }
 
@@ -37,7 +44,7 @@ Deno.serve(async (req) => {
           secret: secretKey,
           response: token,
         }),
-      }
+      },
     );
 
     const result = await verifyResponse.json();
@@ -47,13 +54,15 @@ Deno.serve(async (req) => {
       {
         status: result.success ? 200 : 403,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
-      }
+      },
     );
   } catch (error) {
-    console.error("Turnstile verification error:", error);
+    if (error instanceof Response) return error;
+    const errorId = crypto.randomUUID();
+    console.error(`[VERIFY-TURNSTILE][${errorId}]`, error instanceof Error ? error.message : error);
     return new Response(
-      JSON.stringify({ success: false, error: "Erreur de vérification" }),
-      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      JSON.stringify({ success: false, error: "Erreur de vérification", id: errorId }),
+      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } },
     );
   }
 });

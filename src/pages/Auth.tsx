@@ -224,7 +224,10 @@ const Auth = () => {
     return false;
   };
 
-  // ── Anti-bot: client-side rate limiting ──
+  // ── UX rate limiting (NOT security) ──
+  // This is a soft cap on rapid signup retries. It's stored in localStorage and
+  // can be bypassed by clearing browser data. Real rate limiting is enforced
+  // server-side via Supabase Auth built-ins and Cloudflare Turnstile.
   const RATE_LIMIT_KEY = "signup_attempts";
   const RATE_LIMIT_MAX = 3;
   const RATE_LIMIT_WINDOW_MS = 10 * 60 * 1000; // 10 minutes

@@ -1,13 +1,10 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.99.0";
-
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
-};
+import { buildCorsHeaders } from "../_shared/cors.ts";
+import { readJsonWithLimit, extractBearerToken } from "../_shared/limits.ts";
 
 const FROM_EMAIL = "BonoitecPilot <noreply@bonoitecpilot.fr>";
 const REPLY_TO = "contact@app.bonoitecpilot.fr";
+const APP_URL = Deno.env.get("APP_URL") ?? "https://bonoitecpilot.fr";
 
 const BRAND = {
   primary: "#4338ca",
@@ -19,13 +16,47 @@ const BRAND = {
   border: "#e2e8f0",
 };
 
+// ── Security helpers ────────────────────────────────────────────────────
+
+// HTML escape — applied to ALL user/org-controlled values inside templates.
+function esc(s: unknown): string {
+  if (s === null || s === undefined) return "";
+  return String(s)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
+// URL validator: only allow http/https URLs in href attributes (no javascript:, data:, etc.)
+function safeUrl(u: unknown): string {
+  if (!u || typeof u !== "string") return "";
+  const trimmed = u.trim();
+  if (!/^https?:\/\//i.test(trimmed)) return "";
+  return esc(trimmed);
+}
+
+// Email validator — RFC-ish + reject CR/LF (header injection guard)
+const EMAIL_RE = /^[^\s@<>"'\\]+@[^\s@<>"'\\]+\.[^\s@<>"'\\]+$/;
+function isValidEmail(s: unknown): s is string {
+  if (typeof s !== "string") return false;
+  if (s.length === 0 || s.length > 254) return false;
+  if (/[\r\n\t]/.test(s)) return false;
+  return EMAIL_RE.test(s);
+}
+
+const maskEmail = (e: string) => e.replace(/(.{2})(.*)(@.*)/, "$1***$3");
+
 function emailLayout(content: string, preheader = "", orgContact?: { phone?: string; email?: string }): string {
+  const escapedEmail = orgContact?.email ? esc(orgContact.email) : "";
+  const escapedPhone = orgContact?.phone ? esc(orgContact.phone) : "";
   const footerLines: string[] = [];
-  if (orgContact?.email) {
-    footerLines.push(`<a href="mailto:${orgContact.email}" style="color:${BRAND.primary};text-decoration:none;">${orgContact.email}</a>`);
+  if (escapedEmail) {
+    footerLines.push(`<a href="mailto:${escapedEmail}" style="color:${BRAND.primary};text-decoration:none;">${escapedEmail}</a>`);
   }
-  if (orgContact?.phone) {
-    footerLines.push(orgContact.phone);
+  if (escapedPhone) {
+    footerLines.push(escapedPhone);
   }
   const contactLine = footerLines.length > 0
     ? footerLines.join(" &middot; ")
@@ -52,7 +83,7 @@ function emailLayout(content: string, preheader = "", orgContact?: { phone?: str
   <![endif]-->
 </head>
 <body style="margin:0;padding:0;background-color:${BRAND.background};font-family:'Segoe UI',Tahoma,Geneva,Verdana,Arial,sans-serif;-webkit-text-size-adjust:100%;-ms-text-size-adjust:100%;">
-  ${preheader ? `<div style="display:none;font-size:1px;color:${BRAND.background};line-height:1px;max-height:0;max-width:0;opacity:0;overflow:hidden;">${preheader}&#847; &#847; &#847;</div>` : ""}
+  ${preheader ? `<div style="display:none;font-size:1px;color:${BRAND.background};line-height:1px;max-height:0;max-width:0;opacity:0;overflow:hidden;">${esc(preheader)}&#847; &#847; &#847;</div>` : ""}
   <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background-color:${BRAND.background};padding:32px 0;">
     <tr>
       <td align="center">
@@ -100,16 +131,16 @@ const DIVIDER_STYLE = `border:none;border-top:1px solid ${BRAND.border};margin:2
 
 const templates: Record<string, (data: Record<string, string>, orgContact?: { phone?: string; email?: string }) => { subject: string; html: string }> = {
   quote_ready: (d, oc) => ({
-    subject: `Votre devis ${d.reference} est disponible`,
+    subject: `Votre devis ${esc(d.reference)} est disponible`,
     html: emailLayout(`
       <div style="${BODY_STYLE}">
         <h2 style="${H2_STYLE}">&#128203; Votre devis est pr&ecirc;t</h2>
-        <p style="${P_STYLE}">Bonjour ${d.clientName || ""},</p>
+        <p style="${P_STYLE}">Bonjour ${esc(d.clientName) || ""},</p>
         <p style="${P_STYLE}">Nous avons pr&eacute;par&eacute; un devis pour la r&eacute;paration de votre appareil. Retrouvez les d&eacute;tails ci-dessous :</p>
         <div style="${INFO_BOX_STYLE}">
-          <p style="${INFO_P_STYLE}"><strong style="color:${BRAND.primary};">R&eacute;f&eacute;rence :</strong> ${d.reference}</p>
-          <p style="${INFO_P_STYLE}"><strong style="color:${BRAND.primary};">Appareil :</strong> ${d.device || "&mdash;"}</p>
-          <p style="${INFO_P_STYLE}"><strong style="color:${BRAND.primary};">Montant TTC :</strong> ${d.totalTTC || "&mdash;"} &euro;</p>
+          <p style="${INFO_P_STYLE}"><strong style="color:${BRAND.primary};">R&eacute;f&eacute;rence :</strong> ${esc(d.reference)}</p>
+          <p style="${INFO_P_STYLE}"><strong style="color:${BRAND.primary};">Appareil :</strong> ${esc(d.device) || "&mdash;"}</p>
+          <p style="${INFO_P_STYLE}"><strong style="color:${BRAND.primary};">Montant TTC :</strong> ${esc(d.totalTTC) || "&mdash;"} &euro;</p>
         </div>
         <p style="${P_STYLE}">Ce devis est valable 14 jours. N'h&eacute;sitez pas &agrave; nous contacter pour toute question.</p>
         <p style="${P_STYLE}">Cordialement,<br /><strong>L'&eacute;quipe BonoitecPilot</strong></p>
@@ -118,36 +149,36 @@ const templates: Record<string, (data: Record<string, string>, orgContact?: { ph
   }),
 
   repair_completed: (d, oc) => ({
-    subject: `Réparation ${d.reference} terminée — Appareil prêt`,
+    subject: `Réparation ${esc(d.reference)} terminée — Appareil prêt`,
     html: emailLayout(`
       <div style="${BODY_STYLE}">
         <h2 style="${H2_STYLE}">&#9989; R&eacute;paration termin&eacute;e !</h2>
-        <p style="${P_STYLE}">Bonjour ${d.clientName || ""},</p>
+        <p style="${P_STYLE}">Bonjour ${esc(d.clientName) || ""},</p>
         <p style="${P_STYLE}">Bonne nouvelle ! La r&eacute;paration de votre appareil est termin&eacute;e et il est pr&ecirc;t &agrave; &ecirc;tre r&eacute;cup&eacute;r&eacute;.</p>
         <div style="${INFO_BOX_STYLE}">
-          <p style="${INFO_P_STYLE}"><strong style="color:${BRAND.primary};">R&eacute;f&eacute;rence :</strong> ${d.reference}</p>
-          <p style="${INFO_P_STYLE}"><strong style="color:${BRAND.primary};">Appareil :</strong> ${d.device || "&mdash;"}</p>
+          <p style="${INFO_P_STYLE}"><strong style="color:${BRAND.primary};">R&eacute;f&eacute;rence :</strong> ${esc(d.reference)}</p>
+          <p style="${INFO_P_STYLE}"><strong style="color:${BRAND.primary};">Appareil :</strong> ${esc(d.device) || "&mdash;"}</p>
           <p style="${INFO_P_STYLE}"><strong style="color:${BRAND.primary};">Statut :</strong> &#9989; Termin&eacute;e</p>
         </div>
         <p style="${P_STYLE}">Vous pouvez venir le r&eacute;cup&eacute;rer &agrave; notre atelier aux horaires d'ouverture.</p>
-        ${d.trackingUrl ? `<a href="${d.trackingUrl}" style="${BTN_STYLE}">Suivre ma r&eacute;paration</a>` : ""}
+        ${safeUrl(d.trackingUrl) ? `<a href="${safeUrl(d.trackingUrl)}" style="${BTN_STYLE}">Suivre ma r&eacute;paration</a>` : ""}
         <p style="${P_STYLE}">Merci de votre confiance !<br /><strong>L'&eacute;quipe BonoitecPilot</strong></p>
       </div>
     `, `Votre réparation ${d.reference} est terminée`, oc),
   }),
 
   invoice_sent: (d, oc) => ({
-    subject: `Facture ${d.reference} — BonoitecPilot`,
+    subject: `Facture ${esc(d.reference)} — BonoitecPilot`,
     html: emailLayout(`
       <div style="${BODY_STYLE}">
         <h2 style="${H2_STYLE}">&#129534; Votre facture</h2>
-        <p style="${P_STYLE}">Bonjour ${d.clientName || ""},</p>
+        <p style="${P_STYLE}">Bonjour ${esc(d.clientName) || ""},</p>
         <p style="${P_STYLE}">Veuillez trouver ci-dessous les informations relatives &agrave; votre facture :</p>
         <div style="${INFO_BOX_STYLE}">
-          <p style="${INFO_P_STYLE}"><strong style="color:${BRAND.primary};">N&deg; Facture :</strong> ${d.reference}</p>
-          <p style="${INFO_P_STYLE}"><strong style="color:${BRAND.primary};">Montant HT :</strong> ${d.totalHT || "&mdash;"} &euro;</p>
-          <p style="${INFO_P_STYLE}"><strong style="color:${BRAND.primary};">Montant TTC :</strong> ${d.totalTTC || "&mdash;"} &euro;</p>
-          ${d.paymentMethod ? `<p style="${INFO_P_STYLE}"><strong style="color:${BRAND.primary};">Paiement :</strong> ${d.paymentMethod}</p>` : ""}
+          <p style="${INFO_P_STYLE}"><strong style="color:${BRAND.primary};">N&deg; Facture :</strong> ${esc(d.reference)}</p>
+          <p style="${INFO_P_STYLE}"><strong style="color:${BRAND.primary};">Montant HT :</strong> ${esc(d.totalHT) || "&mdash;"} &euro;</p>
+          <p style="${INFO_P_STYLE}"><strong style="color:${BRAND.primary};">Montant TTC :</strong> ${esc(d.totalTTC) || "&mdash;"} &euro;</p>
+          ${d.paymentMethod ? `<p style="${INFO_P_STYLE}"><strong style="color:${BRAND.primary};">Paiement :</strong> ${esc(d.paymentMethod)}</p>` : ""}
         </div>
         <p style="${P_STYLE}">Pour toute question concernant cette facture, n'h&eacute;sitez pas &agrave; nous contacter.</p>
         <p style="${P_STYLE}">Cordialement,<br /><strong>L'&eacute;quipe BonoitecPilot</strong></p>
@@ -156,23 +187,23 @@ const templates: Record<string, (data: Record<string, string>, orgContact?: { ph
   }),
 
   status_update: (d, oc) => ({
-    subject: `Mise à jour — ${d.statusLabel || "Votre réparation"} (${d.reference})`,
+    subject: `Mise à jour — ${esc(d.statusLabel) || "Votre réparation"} (${esc(d.reference)})`,
     html: emailLayout(`
       <div style="${BODY_STYLE}">
-        <h2 style="${H2_STYLE}">&#128276; ${d.statusLabel || "Mise &agrave; jour de r&eacute;paration"}</h2>
-        <p style="${P_STYLE}">Bonjour ${d.clientName || ""},</p>
-        <p style="${P_STYLE}">${d.message || "Le statut de votre r&eacute;paration a &eacute;t&eacute; mis &agrave; jour."}</p>
+        <h2 style="${H2_STYLE}">&#128276; ${esc(d.statusLabel) || "Mise &agrave; jour de r&eacute;paration"}</h2>
+        <p style="${P_STYLE}">Bonjour ${esc(d.clientName) || ""},</p>
+        <p style="${P_STYLE}">${esc(d.message) || "Le statut de votre r&eacute;paration a &eacute;t&eacute; mis &agrave; jour."}</p>
         <div style="${INFO_BOX_STYLE}">
-          <p style="${INFO_P_STYLE}"><strong style="color:${BRAND.primary};">R&eacute;f&eacute;rence :</strong> ${d.reference}</p>
-          <p style="${INFO_P_STYLE}"><strong style="color:${BRAND.primary};">Appareil :</strong> ${d.device || "&mdash;"}</p>
-          <p style="${INFO_P_STYLE}"><strong style="color:${BRAND.primary};">Nouveau statut :</strong> ${d.statusLabel || d.status || "&mdash;"}</p>
+          <p style="${INFO_P_STYLE}"><strong style="color:${BRAND.primary};">R&eacute;f&eacute;rence :</strong> ${esc(d.reference)}</p>
+          <p style="${INFO_P_STYLE}"><strong style="color:${BRAND.primary};">Appareil :</strong> ${esc(d.device) || "&mdash;"}</p>
+          <p style="${INFO_P_STYLE}"><strong style="color:${BRAND.primary};">Nouveau statut :</strong> ${esc(d.statusLabel) || esc(d.status) || "&mdash;"}</p>
         </div>
-        ${d.trackingUrl ? `<a href="${d.trackingUrl}" style="${BTN_STYLE}">Suivre ma r&eacute;paration</a>` : ""}
-        ${d.googleReviewUrl ? `
+        ${safeUrl(d.trackingUrl) ? `<a href="${safeUrl(d.trackingUrl)}" style="${BTN_STYLE}">Suivre ma r&eacute;paration</a>` : ""}
+        ${safeUrl(d.googleReviewUrl) ? `
         <hr style="${DIVIDER_STYLE}" />
         <p style="${P_STYLE}text-align:center;">&#11088; <strong>Votre avis compte beaucoup pour nous</strong></p>
         <p style="${P_STYLE}text-align:center;">Si vous &ecirc;tes satisfait de notre service, n'h&eacute;sitez pas &agrave; nous laisser un petit avis :</p>
-        <p style="text-align:center;"><a href="${d.googleReviewUrl}" style="${BTN_STYLE}">Laisser un avis</a></p>
+        <p style="text-align:center;"><a href="${safeUrl(d.googleReviewUrl)}" style="${BTN_STYLE}">Laisser un avis</a></p>
         ` : ""}
         <p style="${P_STYLE}">Cordialement,<br /><strong>L'&eacute;quipe BonoitecPilot</strong></p>
       </div>
@@ -180,13 +211,13 @@ const templates: Record<string, (data: Record<string, string>, orgContact?: { ph
   }),
 
   client_notification: (d, oc) => ({
-    subject: d.subject || "Notification — BonoitecPilot",
+    subject: esc(d.subject) || "Notification — BonoitecPilot",
     html: emailLayout(`
       <div style="${BODY_STYLE}">
-        <h2 style="${H2_STYLE}">&#128236; ${d.subject || "Message"}</h2>
-        <p style="${P_STYLE}">Bonjour ${d.clientName || ""},</p>
-        <p style="${P_STYLE}">${d.message || ""}</p>
-        ${d.trackingUrl ? `<a href="${d.trackingUrl}" style="${BTN_STYLE}">Acc&eacute;der &agrave; mon espace</a>` : ""}
+        <h2 style="${H2_STYLE}">&#128236; ${esc(d.subject) || "Message"}</h2>
+        <p style="${P_STYLE}">Bonjour ${esc(d.clientName) || ""},</p>
+        <p style="${P_STYLE}">${esc(d.message) || ""}</p>
+        ${safeUrl(d.trackingUrl) ? `<a href="${safeUrl(d.trackingUrl)}" style="${BTN_STYLE}">Acc&eacute;der &agrave; mon espace</a>` : ""}
         <p style="${P_STYLE}">Cordialement,<br /><strong>L'&eacute;quipe BonoitecPilot</strong></p>
       </div>
     `, "", oc),
@@ -197,7 +228,7 @@ const templates: Record<string, (data: Record<string, string>, orgContact?: { ph
     html: emailLayout(`
       <div style="${BODY_STYLE}">
         <h2 style="${H2_STYLE}">&#127881; Bienvenue sur BonoitecPilot !</h2>
-        <p style="${P_STYLE}">Bonjour ${d.clientName || ""},</p>
+        <p style="${P_STYLE}">Bonjour ${esc(d.clientName) || ""},</p>
         <p style="${P_STYLE}">Votre inscription a bien &eacute;t&eacute; prise en compte. Nous sommes ravis de vous accueillir sur notre plateforme de gestion professionnelle pour ateliers de r&eacute;paration.</p>
         <div style="${INFO_BOX_STYLE}">
           <p style="${INFO_P_STYLE}"><strong style="color:${BRAND.primary};">&#9989; Votre compte est actif</strong></p>
@@ -205,7 +236,7 @@ const templates: Record<string, (data: Record<string, string>, orgContact?: { ph
         </div>
         <p style="${P_STYLE}">Vous pouvez d&egrave;s &agrave; pr&eacute;sent :</p>
         <p style="${P_STYLE}">&bull; Cr&eacute;er vos premiers clients et appareils<br />&bull; Enregistrer des r&eacute;parations<br />&bull; G&eacute;n&eacute;rer des devis et factures<br />&bull; G&eacute;rer votre stock de pi&egrave;ces</p>
-        <a href="https://bonoitec-pilot-pro.lovable.app/dashboard" style="${BTN_STYLE}">Acc&eacute;der &agrave; mon tableau de bord</a>
+        <a href="${esc(APP_URL)}/dashboard" style="${BTN_STYLE}">Acc&eacute;der &agrave; mon tableau de bord</a>
         <hr style="${DIVIDER_STYLE}" />
         <p style="${P_STYLE}">Si vous avez la moindre question, n'h&eacute;sitez pas &agrave; nous contacter. Nous sommes l&agrave; pour vous accompagner.</p>
         <p style="${P_STYLE}">&Agrave; tr&egrave;s vite,<br /><strong>L'&eacute;quipe BonoitecPilot</strong></p>
@@ -214,20 +245,20 @@ const templates: Record<string, (data: Record<string, string>, orgContact?: { ph
   }),
 
   repair_created: (d, oc) => ({
-    subject: `Réparation enregistrée — ${d.reference}`,
+    subject: `Réparation enregistrée — ${esc(d.reference)}`,
     html: emailLayout(`
       <div style="${BODY_STYLE}">
         <h2 style="${H2_STYLE}">&#128241; Votre r&eacute;paration a &eacute;t&eacute; enregistr&eacute;e</h2>
-        <p style="${P_STYLE}">Bonjour ${d.clientName || ""},</p>
+        <p style="${P_STYLE}">Bonjour ${esc(d.clientName) || ""},</p>
         <p style="${P_STYLE}">Nous avons bien enregistr&eacute; votre demande de r&eacute;paration. Voici les d&eacute;tails :</p>
         <div style="${INFO_BOX_STYLE}">
-          <p style="${INFO_P_STYLE}"><strong style="color:${BRAND.primary};">R&eacute;f&eacute;rence :</strong> ${d.reference}</p>
-          <p style="${INFO_P_STYLE}"><strong style="color:${BRAND.primary};">Appareil :</strong> ${d.device || "&mdash;"}</p>
-          <p style="${INFO_P_STYLE}"><strong style="color:${BRAND.primary};">Probl&egrave;me :</strong> ${d.issue || "&mdash;"}</p>
-          ${d.estimatedDelay ? `<p style="${INFO_P_STYLE}"><strong style="color:${BRAND.primary};">&#9201; ${d.estimatedDelay}</strong></p>` : ""}
+          <p style="${INFO_P_STYLE}"><strong style="color:${BRAND.primary};">R&eacute;f&eacute;rence :</strong> ${esc(d.reference)}</p>
+          <p style="${INFO_P_STYLE}"><strong style="color:${BRAND.primary};">Appareil :</strong> ${esc(d.device) || "&mdash;"}</p>
+          <p style="${INFO_P_STYLE}"><strong style="color:${BRAND.primary};">Probl&egrave;me :</strong> ${esc(d.issue) || "&mdash;"}</p>
+          ${d.estimatedDelay ? `<p style="${INFO_P_STYLE}"><strong style="color:${BRAND.primary};">&#9201; ${esc(d.estimatedDelay)}</strong></p>` : ""}
         </div>
         <p style="${P_STYLE}">Vous pouvez suivre l'avancement de votre r&eacute;paration en temps r&eacute;el gr&acirc;ce au lien ci-dessous :</p>
-        ${d.trackingUrl ? `<a href="${d.trackingUrl}" style="${BTN_STYLE}">Suivre ma r&eacute;paration</a>` : ""}
+        ${safeUrl(d.trackingUrl) ? `<a href="${safeUrl(d.trackingUrl)}" style="${BTN_STYLE}">Suivre ma r&eacute;paration</a>` : ""}
         <p style="${P_STYLE}">Nous vous tiendrons inform&eacute;(e) &agrave; chaque &eacute;tape.</p>
         <p style="${P_STYLE}">Cordialement,<br /><strong>L'&eacute;quipe BonoitecPilot</strong></p>
       </div>
@@ -239,10 +270,10 @@ const templates: Record<string, (data: Record<string, string>, orgContact?: { ph
     html: emailLayout(`
       <div style="${BODY_STYLE}">
         <h2 style="${H2_STYLE}">&#128274; Connexion &agrave; votre compte</h2>
-        <p style="${P_STYLE}">Bonjour ${d.clientName || ""},</p>
+        <p style="${P_STYLE}">Bonjour ${esc(d.clientName) || ""},</p>
         <p style="${P_STYLE}">Une connexion &agrave; votre compte BonoitecPilot a &eacute;t&eacute; d&eacute;tect&eacute;e.</p>
         <div style="${INFO_BOX_STYLE}">
-          <p style="${INFO_P_STYLE}"><strong style="color:${BRAND.primary};">&#128197; Date et heure :</strong> ${d.loginTime || new Date().toLocaleString("fr-FR")}</p>
+          <p style="${INFO_P_STYLE}"><strong style="color:${BRAND.primary};">&#128197; Date et heure :</strong> ${esc(d.loginTime) || new Date().toLocaleString("fr-FR")}</p>
         </div>
         <p style="${P_STYLE}"><strong>Si c'&eacute;tait bien vous</strong>, aucune action n'est n&eacute;cessaire. Vous pouvez ignorer cet e-mail.</p>
         <p style="${P_STYLE}"><strong>Si ce n'&eacute;tait pas vous</strong>, nous vous recommandons de :</p>
@@ -261,10 +292,13 @@ async function sendResend(to: string, subject: string, html: string, attachments
   const apiKey = Deno.env.get("RESEND_API_KEY");
   if (!apiKey) throw new Error("RESEND_API_KEY is not configured");
 
+  // Reply-to also needs validation against header injection
+  const safeReplyTo = isValidEmail(replyTo) ? replyTo : REPLY_TO;
+
   const payload: Record<string, unknown> = {
     from: FROM_EMAIL,
     to: [to],
-    reply_to: replyTo || REPLY_TO,
+    reply_to: safeReplyTo,
     subject,
     html,
   };
@@ -294,6 +328,8 @@ async function sendResend(to: string, subject: string, html: string, attachments
 // ─── Handler ─────────────────────────────────────────────────────────
 
 Deno.serve(async (req) => {
+  const corsHeaders = buildCorsHeaders(req);
+
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
@@ -304,38 +340,51 @@ Deno.serve(async (req) => {
     const anonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
 
     // ── Authentication check ──────────────────────────────────────
-    const authHeader = req.headers.get("Authorization");
-    if (!authHeader?.startsWith("Bearer ")) {
+    const token = extractBearerToken(req.headers.get("Authorization"));
+    if (!token) {
       return new Response(
         JSON.stringify({ error: "Unauthorized" }),
-        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } },
       );
     }
 
     const authClient = createClient(supabaseUrl, anonKey, {
-      global: { headers: { Authorization: authHeader } },
+      global: { headers: { Authorization: `Bearer ${token}` } },
     });
-    const { data: claimsData, error: claimsError } = await authClient.auth.getClaims(
-      authHeader.replace("Bearer ", "")
-    );
+    const { data: claimsData, error: claimsError } = await authClient.auth.getClaims(token);
     if (claimsError || !claimsData?.claims) {
       return new Response(
         JSON.stringify({ error: "Invalid token" }),
-        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } },
       );
     }
 
     const userId = claimsData.claims.sub as string;
 
-    // ── Parse request body ────────────────────────────────────────
+    // ── Parse request body (size-limited; allow up to 15MB for attachments) ──
     const supabase = createClient(supabaseUrl, serviceKey);
-
-    const { template, to, data, organization_id, repair_id, attachments } = await req.json();
+    const { template, to, data, organization_id, repair_id, attachments } =
+      await readJsonWithLimit<{
+        template?: string;
+        to?: string;
+        data?: Record<string, string>;
+        organization_id?: string;
+        repair_id?: string;
+        attachments?: Array<{ filename: string; content: string }>;
+      }>(req, 15_000_000);
 
     if (!template || !to) {
       return new Response(
         JSON.stringify({ error: "template and to are required" }),
-        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      );
+    }
+
+    // ── C3: Validate `to` against email format AND header injection ──
+    if (!isValidEmail(to)) {
+      return new Response(
+        JSON.stringify({ error: "Invalid email address" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } },
       );
     }
 
@@ -349,7 +398,7 @@ Deno.serve(async (req) => {
     if (!profile?.organization_id) {
       return new Response(
         JSON.stringify({ error: "Forbidden: no organization context" }),
-        { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } },
       );
     }
 
@@ -359,7 +408,7 @@ Deno.serve(async (req) => {
     if (organization_id && organization_id !== effectiveOrgId) {
       return new Response(
         JSON.stringify({ error: "Forbidden: organization mismatch" }),
-        { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } },
       );
     }
 
@@ -374,7 +423,7 @@ Deno.serve(async (req) => {
       if (!repair || repair.organization_id !== effectiveOrgId) {
         return new Response(
           JSON.stringify({ error: "Forbidden: repair organization mismatch" }),
-          { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } },
         );
       }
     }
@@ -382,8 +431,8 @@ Deno.serve(async (req) => {
     const templateFn = templates[template];
     if (!templateFn) {
       return new Response(
-        JSON.stringify({ error: `Unknown template: ${template}` }),
-        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        JSON.stringify({ error: "Unknown template" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } },
       );
     }
 
@@ -405,11 +454,14 @@ Deno.serve(async (req) => {
     let errorMessage: string | null = null;
 
     try {
-      await sendResend(to, subject, html, attachments, orgContact?.email);
+      // Use orgContact.email as reply-to only if it passes validation
+      const replyTo = orgContact?.email && isValidEmail(orgContact.email) ? orgContact.email : undefined;
+      await sendResend(to, subject, html, attachments, replyTo);
     } catch (sendError) {
       status = "failed";
       errorMessage = sendError instanceof Error ? sendError.message : "Resend error";
-      console.error("Resend error:", errorMessage);
+      const errorId = crypto.randomUUID();
+      console.error(`[SEND-EMAIL][${errorId}] ${maskEmail(to)} ${errorMessage}`);
     }
 
     // Log the email in the authenticated user's organization only
@@ -424,22 +476,24 @@ Deno.serve(async (req) => {
       error_message: errorMessage,
     });
     if (status === "failed") {
+      const errorId = crypto.randomUUID();
       return new Response(
-        JSON.stringify({ error: errorMessage, status: "failed" }),
-        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        JSON.stringify({ error: "Failed to send email", id: errorId, status: "failed" }),
+        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } },
       );
     }
 
     return new Response(
       JSON.stringify({ success: true, status: "sent" }),
-      { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } },
     );
   } catch (error) {
-    const msg = error instanceof Error ? error.message : "Unknown error";
-    console.error("Send email error:", msg);
+    if (error instanceof Response) return error;
+    const errorId = crypto.randomUUID();
+    console.error(`[SEND-EMAIL][${errorId}]`, error instanceof Error ? error.message : error);
     return new Response(
-      JSON.stringify({ error: msg }),
-      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      JSON.stringify({ error: "Une erreur est survenue", id: errorId }),
+      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } },
     );
   }
 });

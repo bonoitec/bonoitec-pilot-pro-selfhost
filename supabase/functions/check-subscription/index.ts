@@ -1,18 +1,14 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import Stripe from "https://esm.sh/stripe@18.5.0";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.99.0";
+import { buildCorsHeaders } from "../_shared/cors.ts";
+import { extractBearerToken } from "../_shared/limits.ts";
 
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
-};
-
-const logStep = (step: string, details?: unknown) => {
-  console.log(`[CHECK-SUBSCRIPTION] ${step}${details ? ` - ${JSON.stringify(details)}` : ""}`);
-};
+const maskEmail = (e: string) => e.replace(/(.{2})(.*)(@.*)/, "$1***$3");
 
 serve(async (req) => {
+  const corsHeaders = buildCorsHeaders(req);
+
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
@@ -26,25 +22,37 @@ serve(async (req) => {
   });
 
   try {
-    logStep("Function started");
-
     const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
     if (!stripeKey) throw new Error("STRIPE_SECRET_KEY is not set");
 
-    const authHeader = req.headers.get("Authorization");
-    if (!authHeader?.startsWith("Bearer ")) throw new Error("No authorization header provided");
+    const token = extractBearerToken(req.headers.get("Authorization"));
+    if (!token) {
+      return new Response(
+        JSON.stringify({ error: "No authorization header provided" }),
+        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      );
+    }
 
     const authClient = createClient(supabaseUrl, anonKey, {
-      global: { headers: { Authorization: authHeader } },
+      global: { headers: { Authorization: `Bearer ${token}` } },
     });
-    const token = authHeader.replace("Bearer ", "");
     const { data: claimsData, error: claimsError } = await authClient.auth.getClaims(token);
-    if (claimsError || !claimsData?.claims) throw new Error("Invalid authentication token");
+    if (claimsError || !claimsData?.claims) {
+      return new Response(
+        JSON.stringify({ error: "Invalid authentication token" }),
+        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      );
+    }
 
     const userId = claimsData.claims.sub as string;
     const userEmail = claimsData.claims.email as string;
-    if (!userEmail) throw new Error("User email not available in token");
-    logStep("User authenticated", { email: userEmail });
+    if (!userEmail) {
+      return new Response(
+        JSON.stringify({ error: "User email not available" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      );
+    }
+    console.log(`[CHECK-SUBSCRIPTION] user=${maskEmail(userEmail)}`);
 
     // ── DB-backed rate limiting: 15 req/min per user ──────────────
     const { data: allowed } = await supabaseClient.rpc("check_rate_limit", {
@@ -53,11 +61,11 @@ serve(async (req) => {
       _max_requests: 15,
     });
 
-    if (allowed === false) {
+    if (allowed !== true) {
       console.warn(`[RATE-LIMIT] Blocked userId=${userId} on check-subscription`);
       return new Response(
         JSON.stringify({ error: "Trop de requêtes. Réessayez dans quelques secondes." }),
-        { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json", "Retry-After": "60" } }
+        { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json", "Retry-After": "60" } },
       );
     }
 
@@ -65,7 +73,6 @@ serve(async (req) => {
     const customers = await stripe.customers.list({ email: userEmail, limit: 1 });
 
     if (customers.data.length === 0) {
-      logStep("No Stripe customer found");
       return new Response(JSON.stringify({ subscribed: false }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
         status: 200,
@@ -73,7 +80,6 @@ serve(async (req) => {
     }
 
     const customerId = customers.data[0].id;
-    logStep("Found Stripe customer", { customerId });
 
     // Check active subscriptions (includes cancelled-but-not-yet-expired)
     const subscriptions = await stripe.subscriptions.list({
@@ -93,7 +99,6 @@ serve(async (req) => {
       stripeSubscriptionId = subscription.id;
       cancelAtPeriodEnd = subscription.cancel_at_period_end === true;
 
-      // Robust date conversion – handle number, string, or object
       const periodEndTs = subscription.current_period_end;
       let parsedEnd: number | null = null;
       if (typeof periodEndTs === "number" && periodEndTs > 0) {
@@ -114,8 +119,6 @@ serve(async (req) => {
       else if (priceId === "price_1T9nslHmh4WVTxBvmPNLhhz2") planName = "annual";
       else planName = "active";
 
-      logStep("Active subscription found", { stripeSubscriptionId, planName, subscriptionEnd, cancelAtPeriodEnd });
-
       // Update organization in DB
       const { data: profile } = await supabaseClient
         .from("profiles")
@@ -133,11 +136,8 @@ serve(async (req) => {
             plan_name: cancelAtPeriodEnd ? `${planName}_cancelling` : planName,
           })
           .eq("id", profile.organization_id);
-        logStep("Organization updated", { orgId: profile.organization_id });
       }
     } else {
-      logStep("No active subscription found");
-
       // Update org to reflect cancelled/expired subscription
       const { data: profile } = await supabaseClient
         .from("profiles")
@@ -160,7 +160,6 @@ serve(async (req) => {
               plan_name: null,
             })
             .eq("id", profile.organization_id);
-          logStep("Organization downgraded to expired", { orgId: profile.organization_id });
         }
       }
     }
@@ -175,14 +174,14 @@ serve(async (req) => {
       {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
         status: 200,
-      }
+      },
     );
   } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : String(error);
-    logStep("ERROR", { message: errorMessage });
-    return new Response(JSON.stringify({ error: errorMessage }), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-      status: 500,
-    });
+    const errorId = crypto.randomUUID();
+    console.error(`[CHECK-SUBSCRIPTION][${errorId}]`, error instanceof Error ? error.message : error);
+    return new Response(
+      JSON.stringify({ error: "Une erreur est survenue", id: errorId }),
+      { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 500 },
+    );
   }
 });

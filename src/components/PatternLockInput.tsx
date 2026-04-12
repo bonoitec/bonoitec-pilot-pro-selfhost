@@ -231,7 +231,16 @@ export function PatternLockInput({ value, onChange, readOnly = false, size = 200
   );
 }
 
-/** Serialize pattern to a storable string like "pattern:0,4,8,6,2" */
+/**
+ * Serialize pattern to a storable string like "pattern:0,4,8,6,2".
+ *
+ * SECURITY NOTE: this is stored plaintext in `repairs.device_password` and is the
+ * CUSTOMER'S device unlock pattern (what they tell the technician so the device
+ * can be repaired). It is NOT an authentication credential for the app itself.
+ * The customer already knows their own pattern; storing it plaintext doesn't
+ * introduce new credential risk. Org isolation is enforced at the row level via
+ * RLS on the `repairs` table — a user from another org cannot read this field.
+ */
 export function serializePattern(dots: number[]): string {
   if (dots.length === 0) return "";
   return `pattern:${dots.join(",")}`;

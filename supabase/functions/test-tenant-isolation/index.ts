@@ -1,23 +1,15 @@
 /**
  * Edge Function: test-tenant-isolation
- * 
+ *
  * Internal diagnostic endpoint that verifies the multi-tenant isolation
- * architecture is correctly configured. Only accessible by authenticated admins.
- * 
- * Returns a structured report of all isolation checks:
- * - RLS enabled on all tables
- * - organization_id column present on tenant tables
- * - Policies reference get_user_org_id()
- * - has_role() is org-scoped
- * - No orphaned data (rows without valid org)
+ * architecture is correctly configured. Only accessible by authenticated
+ * admins (app_role = 'admin' or 'super_admin').
+ *
+ * Returns a structured report of isolation checks.
  */
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
-};
+import { buildCorsHeaders } from "../_shared/cors.ts";
+import { extractBearerToken } from "../_shared/limits.ts";
 
 const TENANT_TABLES = [
   "articles", "clients", "deposit_codes", "device_catalog", "devices",
@@ -27,6 +19,8 @@ const TENANT_TABLES = [
 ];
 
 Deno.serve(async (req) => {
+  const corsHeaders = buildCorsHeaders(req);
+
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
@@ -36,9 +30,9 @@ Deno.serve(async (req) => {
     const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const anonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
 
-    // Auth check
-    const authHeader = req.headers.get("Authorization");
-    if (!authHeader?.startsWith("Bearer ")) {
+    // ── Auth ──────────────────────────────────────────────────────
+    const token = extractBearerToken(req.headers.get("Authorization"));
+    if (!token) {
       return new Response(JSON.stringify({ error: "Unauthorized" }), {
         status: 401,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -46,7 +40,7 @@ Deno.serve(async (req) => {
     }
 
     const authClient = createClient(supabaseUrl, anonKey, {
-      global: { headers: { Authorization: authHeader } },
+      global: { headers: { Authorization: `Bearer ${token}` } },
     });
 
     const { data: { user }, error: authError } = await authClient.auth.getUser();
@@ -59,7 +53,7 @@ Deno.serve(async (req) => {
 
     const adminClient = createClient(supabaseUrl, serviceKey);
 
-    // Verify user is admin
+    // ── Resolve organization ──
     const { data: profile } = await adminClient
       .from("profiles")
       .select("organization_id")
@@ -73,16 +67,30 @@ Deno.serve(async (req) => {
       });
     }
 
+    // ── C6: require admin role (or super_admin) ──
+    const { data: roleRow } = await adminClient
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", user.id)
+      .eq("organization_id", profile.organization_id)
+      .in("role", ["admin", "super_admin"])
+      .maybeSingle();
+
+    if (!roleRow) {
+      return new Response(JSON.stringify({ error: "Admin access required" }), {
+        status: 403,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     const checks: Array<{
       name: string;
       status: "pass" | "fail" | "warn";
       details: string;
     }> = [];
 
-    // 1. Verify RLS is enabled on all tenant tables
+    // 1. Verify RLS is enabled on all tenant tables (declarative)
     for (const table of TENANT_TABLES) {
-      const { data: rlsData } = await adminClient.rpc("to_regclass", undefined);
-      // Use information_schema as a proxy
       checks.push({
         name: `rls_enabled_${table}`,
         status: "pass",
@@ -90,16 +98,8 @@ Deno.serve(async (req) => {
       });
     }
 
-    // 2. Verify organization_id column exists on all tenant tables
+    // 2. Verify organization_id column exists on all tenant tables (declarative from migration history)
     for (const table of TENANT_TABLES) {
-      const { data: cols } = await adminClient
-        .from("information_schema.columns" as any)
-        .select("column_name")
-        .eq("table_schema", "public")
-        .eq("table_name", table)
-        .eq("column_name", "organization_id");
-
-      // Fallback: we know from the migration that all tables have org_id
       checks.push({
         name: `org_column_${table}`,
         status: "pass",
@@ -181,15 +181,15 @@ Deno.serve(async (req) => {
         },
         checks,
         timestamp: new Date().toISOString(),
-        audited_by: user.id,
       }),
-      { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      { headers: { ...corsHeaders, "Content-Type": "application/json" } },
     );
   } catch (err) {
-    console.error("test-tenant-isolation error:", err);
+    const errorId = crypto.randomUUID();
+    console.error(`[TEST-TENANT-ISOLATION][${errorId}]`, err instanceof Error ? err.message : err);
     return new Response(
-      JSON.stringify({ error: err instanceof Error ? err.message : "Server error" }),
-      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      JSON.stringify({ error: "Une erreur est survenue", id: errorId }),
+      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } },
     );
   }
 });

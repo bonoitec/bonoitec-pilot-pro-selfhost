@@ -1,11 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.99.0";
-
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
-};
+import { buildCorsHeaders } from "../_shared/cors.ts";
+import { readJsonWithLimit } from "../_shared/limits.ts";
 
 // ── System prompt ────────────────────────────────────────────────────
 const SYSTEM_PROMPT = `Tu es l'assistant officiel de BonoitecPilot. Tu es un conseiller produit, assistant commercial et support de premier niveau.
@@ -85,6 +81,8 @@ function getClientIp(req: Request): string {
 }
 
 serve(async (req) => {
+  const corsHeaders = buildCorsHeaders(req);
+
   if (req.method === "OPTIONS")
     return new Response(null, { headers: corsHeaders });
 
@@ -104,7 +102,7 @@ serve(async (req) => {
       _max_requests: 10,
     });
 
-    if (allowed === false) {
+    if (allowed !== true) {
       console.warn(`[RATE-LIMIT] Blocked IP=${clientIp} on product-assistant`);
       return new Response(
         JSON.stringify({ error: "Trop de requêtes. Réessayez dans quelques secondes." }),
@@ -115,7 +113,8 @@ serve(async (req) => {
       );
     }
 
-    const { messages } = await req.json();
+    const parsed = await readJsonWithLimit<{ messages?: Array<{ role: string; content: string }> }>(req, 50_000);
+    const { messages } = parsed;
     const OPENROUTER_API_KEY = Deno.env.get("OPENROUTER_API_KEY");
     if (!OPENROUTER_API_KEY)
       throw new Error("OPENROUTER_API_KEY is not configured");
@@ -131,8 +130,6 @@ serve(async (req) => {
         );
       }
     }
-
-    console.info(`[PRODUCT-ASSISTANT] Request from IP=${clientIp}`);
 
     const response = await fetch(
       "https://openrouter.ai/api/v1/chat/completions",
@@ -181,9 +178,11 @@ serve(async (req) => {
       headers: { ...corsHeaders, "Content-Type": "text/event-stream" },
     });
   } catch (e) {
-    console.error("product-assistant error:", e);
+    if (e instanceof Response) return e;
+    const errorId = crypto.randomUUID();
+    console.error(`[PRODUCT-ASSISTANT][${errorId}]`, e instanceof Error ? e.message : e);
     return new Response(
-      JSON.stringify({ error: e instanceof Error ? e.message : "Erreur inconnue" }),
+      JSON.stringify({ error: "Une erreur est survenue", id: errorId }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }

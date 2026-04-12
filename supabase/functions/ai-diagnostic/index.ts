@@ -1,28 +1,26 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.99.0";
-
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
-};
+import { buildCorsHeaders } from "../_shared/cors.ts";
+import { readJsonWithLimit, extractBearerToken } from "../_shared/limits.ts";
 
 serve(async (req) => {
+  const corsHeaders = buildCorsHeaders(req);
+
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
     // ── Authentication ────────────────────────────────────────────
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const anonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
-    const authHeader = req.headers.get("Authorization");
-    if (!authHeader?.startsWith("Bearer ")) {
+    const token = extractBearerToken(req.headers.get("Authorization"));
+    if (!token) {
       return new Response(JSON.stringify({ error: "Unauthorized" }), {
         status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
     const authClient = createClient(supabaseUrl, anonKey, {
-      global: { headers: { Authorization: authHeader } },
+      global: { headers: { Authorization: `Bearer ${token}` } },
     });
-    const token = authHeader.replace("Bearer ", "");
     const { data: claimsData, error: claimsError } = await authClient.auth.getClaims(token);
     if (claimsError || !claimsData?.claims) {
       return new Response(JSON.stringify({ error: "Invalid token" }), {
@@ -39,7 +37,7 @@ serve(async (req) => {
       _max_requests: 15,
     });
 
-    if (allowed === false) {
+    if (allowed !== true) {
       console.warn(`[AI-DIAGNOSTIC RATE-LIMIT] Blocked user=${userId}`);
       return new Response(
         JSON.stringify({ error: "Trop de requêtes IA. Réessayez dans quelques secondes." }),
@@ -47,7 +45,8 @@ serve(async (req) => {
       );
     }
 
-    const { messages, mode } = await req.json();
+    const parsed = await readJsonWithLimit<{ messages?: Array<{ role: string; content: string }>; mode?: string }>(req, 200_000);
+    const { messages, mode } = parsed;
     const OPENROUTER_API_KEY = Deno.env.get("OPENROUTER_API_KEY");
     if (!OPENROUTER_API_KEY) throw new Error("OPENROUTER_API_KEY is not configured");
     const AI_MODEL = Deno.env.get("OPENROUTER_MODEL") ?? "google/gemini-2.5-flash";
@@ -161,8 +160,10 @@ Réponds en français, de manière claire et concise. Utilise le format markdown
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (e) {
-    console.error("ai-diagnostic error:", e);
-    return new Response(JSON.stringify({ error: e instanceof Error ? e.message : "Erreur inconnue" }), {
+    if (e instanceof Response) return e;
+    const errorId = crypto.randomUUID();
+    console.error(`[AI-DIAGNOSTIC][${errorId}]`, e instanceof Error ? e.message : e);
+    return new Response(JSON.stringify({ error: "Une erreur est survenue", id: errorId }), {
       status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   }
