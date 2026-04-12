@@ -295,11 +295,15 @@ async function sendResend(to: string, subject: string, html: string, attachments
   // Reply-to also needs validation against header injection
   const safeReplyTo = isValidEmail(replyTo) ? replyTo : REPLY_TO;
 
+  // C3-extended: strip CR/LF from subject to prevent header injection via user-controlled
+  // fields (e.g. d.reference) that flow into template subject lines.
+  const safeSubject = String(subject).replace(/[\r\n\t]/g, " ").slice(0, 998);
+
   const payload: Record<string, unknown> = {
     from: FROM_EMAIL,
     to: [to],
     reply_to: safeReplyTo,
-    subject,
+    subject: safeSubject,
     html,
   };
 

@@ -36,3 +36,4 @@ supabase/.temp/
 .dns_update.py
 pentest-results.md
 .pentest_*.py
+.pentest_hardcheck.py
