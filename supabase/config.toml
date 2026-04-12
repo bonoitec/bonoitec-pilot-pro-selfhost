@@ -1,8 +1,10 @@
 project_id = "rkfkibpcrqkchmtoogxq"
 
 [auth]
-site_url = "https://bonoitec-pilot-pro.vercel.app"
+site_url = "https://bonoitecpilot.fr"
 additional_redirect_urls = [
+  "https://bonoitecpilot.fr/**",
+  "https://www.bonoitecpilot.fr/**",
   "https://bonoitec-pilot-pro.vercel.app/**",
   "http://localhost:8081/**",
   "http://localhost:8080/**",
