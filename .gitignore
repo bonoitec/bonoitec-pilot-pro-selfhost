@@ -31,3 +31,6 @@ dist-ssr
 
 # Supabase CLI temp files
 supabase/.temp/
+.vercel
+# DNS update script (contains API key)
+.dns_update.py

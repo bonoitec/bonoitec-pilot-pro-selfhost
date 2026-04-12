@@ -1,73 +1,90 @@
-# Welcome to your Lovable project
+# BonoitecPilot
 
-## Project info
+Logiciel SaaS de gestion pour ateliers de réparation d'appareils électroniques (smartphones, tablettes, consoles, ordinateurs).
 
-**URL**: https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID
+**Production:** https://bonoitecpilot.fr
 
-## How can I edit this code?
+## Stack
 
-There are several ways of editing your application.
+- **Frontend:** Vite + React 18 + TypeScript + Tailwind CSS + shadcn/ui
+- **Backend:** Supabase (Postgres + Auth + Edge Functions + Storage)
+- **Hosting:** Vercel
+- **Email:** Resend (`noreply@bonoitecpilot.fr`)
+- **AI:** OpenRouter (Gemini 2.5 Flash)
+- **Payments:** Stripe (subscriptions)
+- **CAPTCHA:** Cloudflare Turnstile (optional)
 
-**Use Lovable**
+## Features
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and start prompting.
+- Repair workflow (intake wizard → diagnostic → status board → restitution)
+- Client & device management with IMEI lookup
+- Quotes & invoices with PDF generation
+- Inventory management with auto-deduction on parts use
+- Real-time profitability tracking and margin analysis
+- AI diagnostic assistant
+- QR code customer deposits
+- Public repair tracking page
+- Multi-tenant architecture with full RLS isolation
 
-Changes made via Lovable will be committed automatically to this repo.
+## Local development
 
-**Use your preferred IDE**
-
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
-
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
-
-Follow these steps:
+Requires Node.js 20+ and a Supabase project (or use the existing one configured in `.env`).
 
 ```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
+git clone https://github.com/bonoitec/bonoitec-pilot-pro-selfhost.git
+cd bonoitec-pilot-pro-selfhost
+npm install
+cp .env.example .env  # then edit with your Supabase credentials
 npm run dev
 ```
 
-**Edit a file directly in GitHub**
+App opens at http://localhost:8081
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+## Environment variables
 
-**Use GitHub Codespaces**
+| Name | Required | Description |
+|------|----------|-------------|
+| `VITE_SUPABASE_URL` | Yes | Your Supabase project URL |
+| `VITE_SUPABASE_PUBLISHABLE_KEY` | Yes | Supabase anon key |
+| `VITE_SUPABASE_PROJECT_ID` | Yes | Supabase project ref |
+| `VITE_APP_URL` | No | Public URL (defaults to `window.location.origin`) |
+| `VITE_TURNSTILE_SITE_KEY` | No | Cloudflare Turnstile site key (leave empty to disable) |
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+## Edge function secrets
 
-## What technologies are used for this project?
+Set via `npx supabase secrets set KEY=value --project-ref <ref>`:
 
-This project is built with:
+| Name | Used by |
+|------|---------|
+| `RESEND_API_KEY` | `send-email`, `send-repair-notification` |
+| `OPENROUTER_API_KEY` | `ai-diagnostic`, `product-assistant` |
+| `OPENROUTER_MODEL` | `ai-diagnostic`, `product-assistant` |
+| `STRIPE_SECRET_KEY` | `create-checkout`, `check-subscription`, `customer-portal` |
+| `TURNSTILE_SECRET_KEY` | `verify-turnstile` |
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+## Database & migrations
 
-## How can I deploy this project?
+Schema lives in `supabase/migrations/`. Push to a linked project:
 
-Simply open [Lovable](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and click on Share -> Publish.
+```sh
+npx supabase link --project-ref <project-ref>
+npx supabase db push --include-all
+```
 
-## Can I connect a custom domain to my Lovable project?
+## Edge functions
 
-Yes, you can!
+```sh
+npx supabase functions deploy
+```
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+## Auth config
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+`supabase/config.toml` controls auth settings (site URL, SMTP, OAuth providers). Push with:
+
+```sh
+RESEND_API_KEY=... GOOGLE_CLIENT_ID=... GOOGLE_CLIENT_SECRET=... npx supabase config push --project-ref <ref>
+```
+
+## License
+
+Proprietary.
