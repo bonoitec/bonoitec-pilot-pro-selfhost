@@ -37,3 +37,4 @@ supabase/.temp/
 pentest-results.md
 .pentest_*.py
 .pentest_hardcheck.py
+.pentest_expanded.py
