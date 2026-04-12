@@ -22,3 +22,12 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+.db_password.local
+
+# Env files — never commit secrets
+.env
+.env.local
+.env.*.local
+
+# Supabase CLI temp files
+supabase/.temp/

@@ -1052,7 +1052,8 @@ export async function generateIntakePDF(org: OrgInfo, data: IntakePdfData, optio
 
   // ── QR CODE DE SUIVI ──
   if (data.trackingCode) {
-    const trackingUrl = `https://bonoitec-pilot-pro.lovable.app/repair/${data.trackingCode}`;
+    const baseUrl = (import.meta.env.VITE_APP_URL as string | undefined) ?? window.location.origin;
+    const trackingUrl = `${baseUrl}/repair/${data.trackingCode}`;
     try {
       const qrDataUrl = await QRCode.toDataURL(trackingUrl, { width: 200, margin: 1, color: { dark: "#1a1a2e", light: "#ffffff" } });
       const qrSize = 24;

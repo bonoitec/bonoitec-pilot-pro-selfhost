@@ -70,7 +70,7 @@ const Repairs = () => {
               status,
               statusLabel: statusLabels[status] || status,
               message: getAutoEmailMessage(status, device, repair.reference),
-              trackingUrl: repair.tracking_code ? `https://bonoitec-pilot-pro.lovable.app/repair/${repair.tracking_code}` : "",
+              trackingUrl: repair.tracking_code ? `${(import.meta.env.VITE_APP_URL as string | undefined) ?? window.location.origin}/repair/${repair.tracking_code}` : "",
             },
             organizationId: repair.organization_id,
             repairId: repair.id,

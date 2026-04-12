@@ -112,7 +112,7 @@ export function RestitutionDialog({ open, onOpenChange, repair }: Props) {
               status: "pret_a_recuperer",
               statusLabel: statusLabels["pret_a_recuperer"],
               message: `Votre ${device} vous a été restitué. L'intervention est clôturée. Merci de votre confiance !`,
-              trackingUrl: repair.tracking_code ? `https://bonoitec-pilot-pro.lovable.app/repair/${repair.tracking_code}` : "",
+              trackingUrl: repair.tracking_code ? `${(import.meta.env.VITE_APP_URL as string | undefined) ?? window.location.origin}/repair/${repair.tracking_code}` : "",
               googleReviewUrl: org?.google_review_url || "",
             },
             organizationId: repair.organization_id,

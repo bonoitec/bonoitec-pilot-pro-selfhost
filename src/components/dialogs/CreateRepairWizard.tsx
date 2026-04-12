@@ -362,7 +362,7 @@ export function CreateRepairWizard({ open, onOpenChange }: Props) {
       if (clientEmail) {
         try {
           const deviceLabel = repair.devices ? `${repair.devices.brand} ${repair.devices.model}` : `${device.brand} ${device.model}`;
-          const trackingUrl = repair.tracking_code ? `https://bonoitec-pilot-pro.lovable.app/repair/${repair.tracking_code}` : "";
+          const trackingUrl = repair.tracking_code ? `${(import.meta.env.VITE_APP_URL as string | undefined) ?? window.location.origin}/repair/${repair.tracking_code}` : "";
           await supabase.functions.invoke("send-email", {
             body: {
               template: "repair_created",

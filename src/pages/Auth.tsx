@@ -1,7 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { lovable } from "@/integrations/lovable/index";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -20,7 +19,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import heroDashboard from "@/assets/hero-dashboard.png";
 
-const TURNSTILE_SITE_KEY = "0x4AAAAAACxKnuYwjuSJueXn";
+const TURNSTILE_SITE_KEY = (import.meta.env.VITE_TURNSTILE_SITE_KEY as string | undefined) ?? "";
+const TURNSTILE_ENABLED = TURNSTILE_SITE_KEY.length > 0;
 
 declare global {
   interface Window {
@@ -177,6 +177,7 @@ const Auth = () => {
   const [activeTab, setActiveTab] = useState<"login" | "signup">("signup");
 
   useEffect(() => {
+    if (!TURNSTILE_ENABLED) return;
     const timer = setTimeout(() => {
       if (activeTab === "signup") {
         renderTurnstileWidget(turnstileRef, turnstileWidgetId, setTurnstileToken);
@@ -268,32 +269,36 @@ const Auth = () => {
     e.preventDefault();
     setErrors({});
 
-    // Turnstile CAPTCHA verification
-    if (!loginTurnstileToken) {
-      toast.error("Veuillez compléter la vérification anti-bot.");
-      return;
+    // Turnstile CAPTCHA verification (only if enabled)
+    if (TURNSTILE_ENABLED) {
+      if (!loginTurnstileToken) {
+        toast.error("Veuillez compléter la vérification anti-bot.");
+        return;
+      }
     }
 
     setLoading(true);
 
-    // Server-side Turnstile verification
-    try {
-      const { data: verifyData, error: verifyError } = await supabase.functions.invoke("verify-turnstile", {
-        body: { token: loginTurnstileToken },
-      });
-      if (verifyError || !verifyData?.success) {
-        setLoading(false);
-        toast.error("La vérification anti-bot a échoué.", { description: "Veuillez réessayer." });
-        if (loginTurnstileWidgetId.current && window.turnstile) {
-          window.turnstile.reset(loginTurnstileWidgetId.current);
+    // Server-side Turnstile verification (only if enabled)
+    if (TURNSTILE_ENABLED) {
+      try {
+        const { data: verifyData, error: verifyError } = await supabase.functions.invoke("verify-turnstile", {
+          body: { token: loginTurnstileToken },
+        });
+        if (verifyError || !verifyData?.success) {
+          setLoading(false);
+          toast.error("La vérification anti-bot a échoué.", { description: "Veuillez réessayer." });
+          if (loginTurnstileWidgetId.current && window.turnstile) {
+            window.turnstile.reset(loginTurnstileWidgetId.current);
+          }
+          setLoginTurnstileToken(null);
+          return;
         }
-        setLoginTurnstileToken(null);
+      } catch {
+        setLoading(false);
+        toast.error("Erreur lors de la vérification. Veuillez réessayer.");
         return;
       }
-    } catch {
-      setLoading(false);
-      toast.error("Erreur lors de la vérification. Veuillez réessayer.");
-      return;
     }
 
     const { data, error } = await supabase.auth.signInWithPassword({ email: loginEmail, password: loginPassword });
@@ -334,36 +339,40 @@ const Auth = () => {
       return;
     }
 
-    // Turnstile CAPTCHA verification
-    if (!turnstileToken) {
-      toast.error("Veuillez compléter la vérification anti-bot.");
-      return;
+    // Turnstile CAPTCHA verification (only if enabled)
+    if (TURNSTILE_ENABLED) {
+      if (!turnstileToken) {
+        toast.error("Veuillez compléter la vérification anti-bot.");
+        return;
+      }
     }
 
     recordSignupAttempt();
     setLoading(true);
 
-    // Server-side Turnstile verification
-    try {
-      const { data: verifyData, error: verifyError } = await supabase.functions.invoke("verify-turnstile", {
-        body: { token: turnstileToken },
-      });
-      if (verifyError || !verifyData?.success) {
-        setLoading(false);
-        toast.error("La vérification anti-bot a échoué.", {
-          description: "Veuillez réessayer.",
+    // Server-side Turnstile verification (only if enabled)
+    if (TURNSTILE_ENABLED) {
+      try {
+        const { data: verifyData, error: verifyError } = await supabase.functions.invoke("verify-turnstile", {
+          body: { token: turnstileToken },
         });
-        // Reset the widget
-        if (turnstileWidgetId.current && window.turnstile) {
-          window.turnstile.reset(turnstileWidgetId.current);
+        if (verifyError || !verifyData?.success) {
+          setLoading(false);
+          toast.error("La vérification anti-bot a échoué.", {
+            description: "Veuillez réessayer.",
+          });
+          // Reset the widget
+          if (turnstileWidgetId.current && window.turnstile) {
+            window.turnstile.reset(turnstileWidgetId.current);
+          }
+          setTurnstileToken(null);
+          return;
         }
-        setTurnstileToken(null);
+      } catch {
+        setLoading(false);
+        toast.error("Erreur lors de la vérification. Veuillez réessayer.");
         return;
       }
-    } catch {
-      setLoading(false);
-      toast.error("Erreur lors de la vérification. Veuillez réessayer.");
-      return;
     }
 
     const { data: signupData, error } = await supabase.auth.signUp({
@@ -393,7 +402,10 @@ const Auth = () => {
   const handleGoogleLogin = async () => {
     localStorage.setItem("auth_intent", activeTab);
     setLoading(true);
-    const { error } = await lovable.auth.signInWithOAuth("google", { redirect_uri: `${window.location.origin}/auth` });
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: "google",
+      options: { redirectTo: `${window.location.origin}/auth` },
+    });
     setLoading(false);
     if (error) toast.error("Erreur lors de la connexion Google");
   };
@@ -595,9 +607,9 @@ const Auth = () => {
                 </div>
 
                 {/* Cloudflare Turnstile CAPTCHA */}
-                <div ref={turnstileRef} className="flex justify-center" />
+                {TURNSTILE_ENABLED && <div ref={turnstileRef} className="flex justify-center" />}
 
-                <Button type="submit" variant="premium" className="w-full h-[42px] text-sm font-semibold mt-1 rounded-xl" disabled={loading || !turnstileToken}>
+                <Button type="submit" variant="premium" className="w-full h-[42px] text-sm font-semibold mt-1 rounded-xl" disabled={loading || (TURNSTILE_ENABLED && !turnstileToken)}>
                   {loading && <Loader2 className="h-4 w-4 animate-spin" />}
                   Créer mon compte
                 </Button>
@@ -658,9 +670,9 @@ const Auth = () => {
                 </div>
 
                 {/* Cloudflare Turnstile CAPTCHA */}
-                <div ref={loginTurnstileRef} className="flex justify-center" />
+                {TURNSTILE_ENABLED && <div ref={loginTurnstileRef} className="flex justify-center" />}
 
-                <Button type="submit" variant="premium" className="w-full h-[42px] text-sm font-semibold mt-1 rounded-xl" disabled={loading || !loginTurnstileToken}>
+                <Button type="submit" variant="premium" className="w-full h-[42px] text-sm font-semibold mt-1 rounded-xl" disabled={loading || (TURNSTILE_ENABLED && !loginTurnstileToken)}>
                   {loading && <Loader2 className="h-4 w-4 animate-spin" />}
                   Se connecter
                 </Button>

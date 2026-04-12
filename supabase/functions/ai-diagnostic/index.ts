@@ -48,8 +48,9 @@ serve(async (req) => {
     }
 
     const { messages, mode } = await req.json();
-    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-    if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
+    const OPENROUTER_API_KEY = Deno.env.get("OPENROUTER_API_KEY");
+    if (!OPENROUTER_API_KEY) throw new Error("OPENROUTER_API_KEY is not configured");
+    const AI_MODEL = Deno.env.get("OPENROUTER_MODEL") ?? "google/gemini-2.5-flash";
 
     // Validate message content length
     const safeMessages = (messages || []).slice(-10);
@@ -113,14 +114,16 @@ Tu aides les techniciens avec les diagnostics, les prix, les pièces et les cons
 Réponds en français, de manière claire et concise. Utilise le format markdown pour la mise en forme.`;
     }
 
-    const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+    const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
       method: "POST",
       headers: {
-        Authorization: `Bearer ${LOVABLE_API_KEY}`,
+        Authorization: `Bearer ${OPENROUTER_API_KEY}`,
         "Content-Type": "application/json",
+        "HTTP-Referer": Deno.env.get("APP_URL") ?? "https://bonoitecpilot.fr",
+        "X-Title": "BonoitecPilot",
       },
       body: JSON.stringify({
-        model: "google/gemini-3-flash-preview",
+        model: AI_MODEL,
         messages: [
           { role: "system", content: systemPrompt },
           ...safeMessages,
