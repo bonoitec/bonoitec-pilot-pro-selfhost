@@ -3,14 +3,15 @@ import { AdminShell } from "./AdminShell";
 import { StatsBar } from "./components/StatsBar";
 import { ShopGrid } from "./components/ShopGrid";
 import { ShopDetailDialog } from "./components/ShopDetailDialog";
+import { AuditLogSheet } from "./components/AuditLogSheet";
 
 export default function SuperAdmin() {
   const [selectedOrgId, setSelectedOrgId] = useState<string | null>(null);
+  const [auditOpen, setAuditOpen] = useState(false);
 
   return (
     <AdminShell
-      onOpenAudit={() => alert("Historique des actions — prochaine version")}
-      onOpenFailedEmails={() => alert("Emails non délivrés — prochaine version")}
+      onOpenAudit={() => setAuditOpen(true)}
     >
       <div className="space-y-6 animate-fade-in">
         {/* Page header */}
@@ -30,6 +31,8 @@ export default function SuperAdmin() {
           open={selectedOrgId !== null}
           onClose={() => setSelectedOrgId(null)}
         />
+
+        <AuditLogSheet open={auditOpen} onClose={() => setAuditOpen(false)} />
       </div>
     </AdminShell>
   );

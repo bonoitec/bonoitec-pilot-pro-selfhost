@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
@@ -6,12 +7,16 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
-  Building2, Mail, Phone, Euro, Users, Wrench, Package, Receipt, AlertTriangle,
+  Building2, Mail, Phone, Users, Wrench, Package, Receipt, AlertTriangle,
   CheckCircle2, XCircle, Edit3, Clock, Gift, Power, ExternalLink, Trash2,
   KeyRound, UserCog, MailCheck,
 } from "lucide-react";
 import { format, formatDistanceToNow } from "date-fns";
 import { fr } from "date-fns/locale";
+import {
+  EditOrgDialog, ExtendTrialDialog, GrantSubscriptionDialog, ToggleSubscriptionDialog, DeleteOrgDialog,
+  EditUserDialog, ChangeRoleDialog, VerifyEmailDialog, ResetPasswordDialog, DeleteUserDialog,
+} from "./AdminActionDialogs";
 
 type Shop = {
   id: string;
@@ -163,12 +168,18 @@ export function ShopDetailDialog({ orgId, open, onClose }: {
       if (error) throw error;
       return data as OrgDetail;
     },
+    staleTime: 0,
+    refetchOnMount: "always",
   });
 
-  const handleComingSoon = () => {
-    // Phase 2 will replace these stubs
-    alert("Action disponible dans la prochaine version");
-  };
+  const [openDialog, setOpenDialog] = useState<
+    | null
+    | "edit_org" | "extend_trial" | "grant_sub" | "toggle_sub" | "delete_org"
+  >(null);
+  const [userDialog, setUserDialog] = useState<{
+    kind: "edit" | "role" | "verify" | "reset" | "delete";
+    user: User;
+  } | null>(null);
 
   return (
     <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
@@ -207,21 +218,22 @@ export function ShopDetailDialog({ orgId, open, onClose }: {
               {data.shop.siret && <span className="text-xs">SIRET : {data.shop.siret}</span>}
             </div>
 
-            {/* Action bar — Phase 2 actions are stubs */}
+            {/* Action bar */}
             <Card className="border-primary/20 bg-primary/5">
               <CardContent className="p-3">
                 <div className="flex flex-wrap gap-2">
-                  <Button variant="outline" size="sm" className="gap-1.5 h-8" onClick={handleComingSoon}>
+                  <Button variant="outline" size="sm" className="gap-1.5 h-8" onClick={() => setOpenDialog("edit_org")}>
                     <Edit3 className="h-3.5 w-3.5" />Modifier infos
                   </Button>
-                  <Button variant="outline" size="sm" className="gap-1.5 h-8" onClick={handleComingSoon}>
+                  <Button variant="outline" size="sm" className="gap-1.5 h-8" onClick={() => setOpenDialog("extend_trial")}>
                     <Clock className="h-3.5 w-3.5" />Prolonger l'essai
                   </Button>
-                  <Button variant="outline" size="sm" className="gap-1.5 h-8" onClick={handleComingSoon}>
+                  <Button variant="outline" size="sm" className="gap-1.5 h-8" onClick={() => setOpenDialog("grant_sub")}>
                     <Gift className="h-3.5 w-3.5" />Offrir un abonnement
                   </Button>
-                  <Button variant="outline" size="sm" className="gap-1.5 h-8" onClick={handleComingSoon}>
-                    <Power className="h-3.5 w-3.5" />Abonnement ON/OFF
+                  <Button variant="outline" size="sm" className="gap-1.5 h-8" onClick={() => setOpenDialog("toggle_sub")}>
+                    <Power className="h-3.5 w-3.5" />
+                    {data.shop.subscription_status === "active" ? "Suspendre" : "Activer"}
                   </Button>
                   {data.shop.stripe_customer_id && (
                     <Button variant="outline" size="sm" className="gap-1.5 h-8" asChild>
@@ -230,13 +242,10 @@ export function ShopDetailDialog({ orgId, open, onClose }: {
                       </a>
                     </Button>
                   )}
-                  <Button variant="outline" size="sm" className="gap-1.5 h-8 text-destructive hover:text-destructive hover:bg-destructive/10 ml-auto" onClick={handleComingSoon}>
+                  <Button variant="outline" size="sm" className="gap-1.5 h-8 text-destructive hover:text-destructive hover:bg-destructive/10 ml-auto" onClick={() => setOpenDialog("delete_org")}>
                     <Trash2 className="h-3.5 w-3.5" />Supprimer
                   </Button>
                 </div>
-                <p className="text-[10px] text-muted-foreground mt-2">
-                  ⚠ Les actions seront disponibles dans la prochaine version. Cette vue est en lecture seule pour l'instant.
-                </p>
               </CardContent>
             </Card>
 
@@ -274,23 +283,27 @@ export function ShopDetailDialog({ orgId, open, onClose }: {
                             ? <CheckCircle2 className="h-3.5 w-3.5 text-success" />
                             : <XCircle className="h-3.5 w-3.5 text-muted-foreground/40" />}
                           <div className="flex gap-1 ml-1">
-                            <Button variant="ghost" size="sm" className="h-6 w-6 p-0" onClick={handleComingSoon} title="Modifier">
+                            <Button variant="ghost" size="sm" className="h-6 w-6 p-0" onClick={() => setUserDialog({ kind: "edit", user: u })} title="Modifier">
                               <Edit3 className="h-3 w-3" />
                             </Button>
-                            <Button variant="ghost" size="sm" className="h-6 w-6 p-0" onClick={handleComingSoon} title="Changer le rôle">
-                              <UserCog className="h-3 w-3" />
-                            </Button>
-                            <Button variant="ghost" size="sm" className="h-6 w-6 p-0" onClick={handleComingSoon} title="Reset mot de passe">
+                            {u.role !== "super_admin" && (
+                              <Button variant="ghost" size="sm" className="h-6 w-6 p-0" onClick={() => setUserDialog({ kind: "role", user: u })} title="Changer le rôle">
+                                <UserCog className="h-3 w-3" />
+                              </Button>
+                            )}
+                            <Button variant="ghost" size="sm" className="h-6 w-6 p-0" onClick={() => setUserDialog({ kind: "reset", user: u })} title="Reset mot de passe">
                               <KeyRound className="h-3 w-3" />
                             </Button>
                             {!u.email_confirmed_at && (
-                              <Button variant="ghost" size="sm" className="h-6 w-6 p-0" onClick={handleComingSoon} title="Valider email">
+                              <Button variant="ghost" size="sm" className="h-6 w-6 p-0" onClick={() => setUserDialog({ kind: "verify", user: u })} title="Valider email">
                                 <MailCheck className="h-3 w-3" />
                               </Button>
                             )}
-                            <Button variant="ghost" size="sm" className="h-6 w-6 p-0 text-destructive hover:bg-destructive/10" onClick={handleComingSoon} title="Supprimer">
-                              <Trash2 className="h-3 w-3" />
-                            </Button>
+                            {u.role !== "super_admin" && (
+                              <Button variant="ghost" size="sm" className="h-6 w-6 p-0 text-destructive hover:bg-destructive/10" onClick={() => setUserDialog({ kind: "delete", user: u })} title="Supprimer">
+                                <Trash2 className="h-3 w-3" />
+                              </Button>
+                            )}
                           </div>
                         </div>
                       </div>
@@ -409,6 +422,89 @@ export function ShopDetailDialog({ orgId, open, onClose }: {
           </>
         )}
       </DialogContent>
+
+      {/* Shop-level action dialogs */}
+      {data && (
+        <>
+          <EditOrgDialog
+            open={openDialog === "edit_org"}
+            onClose={() => setOpenDialog(null)}
+            shop={data.shop}
+          />
+          <ExtendTrialDialog
+            open={openDialog === "extend_trial"}
+            onClose={() => setOpenDialog(null)}
+            orgId={data.shop.id}
+            orgName={data.shop.name}
+          />
+          <GrantSubscriptionDialog
+            open={openDialog === "grant_sub"}
+            onClose={() => setOpenDialog(null)}
+            orgId={data.shop.id}
+            orgName={data.shop.name}
+          />
+          <ToggleSubscriptionDialog
+            open={openDialog === "toggle_sub"}
+            onClose={() => setOpenDialog(null)}
+            orgId={data.shop.id}
+            orgName={data.shop.name}
+            currentStatus={data.shop.subscription_status}
+          />
+          <DeleteOrgDialog
+            open={openDialog === "delete_org"}
+            onClose={() => {
+              setOpenDialog(null);
+              // Also close the parent detail dialog — org no longer exists after deletion
+              if (openDialog === "delete_org") onClose();
+            }}
+            orgId={data.shop.id}
+            orgName={data.shop.name}
+          />
+        </>
+      )}
+
+      {/* User-level action dialogs */}
+      {userDialog && data && (
+        <>
+          {userDialog.kind === "edit" && (
+            <EditUserDialog
+              open
+              onClose={() => setUserDialog(null)}
+              user={userDialog.user}
+            />
+          )}
+          {userDialog.kind === "role" && (
+            <ChangeRoleDialog
+              open
+              onClose={() => setUserDialog(null)}
+              user={userDialog.user}
+              orgId={data.shop.id}
+              currentRole={userDialog.user.role}
+            />
+          )}
+          {userDialog.kind === "verify" && (
+            <VerifyEmailDialog
+              open
+              onClose={() => setUserDialog(null)}
+              user={userDialog.user}
+            />
+          )}
+          {userDialog.kind === "reset" && (
+            <ResetPasswordDialog
+              open
+              onClose={() => setUserDialog(null)}
+              user={userDialog.user}
+            />
+          )}
+          {userDialog.kind === "delete" && (
+            <DeleteUserDialog
+              open
+              onClose={() => setUserDialog(null)}
+              user={userDialog.user}
+            />
+          )}
+        </>
+      )}
     </Dialog>
   );
 }
