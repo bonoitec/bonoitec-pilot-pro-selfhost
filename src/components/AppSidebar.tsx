@@ -2,7 +2,7 @@ import {
   LayoutDashboard, Wrench, Users, Smartphone, Package,
   FileText, Receipt, UserCog, BarChart3, Bot, Settings,
   Zap, BookOpen, QrCode, Cpu, ShoppingBag, Bell, Cog,
-  MessageSquare, BadgeDollarSign,
+  MessageSquare, BadgeDollarSign, Shield,
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
@@ -11,6 +11,7 @@ import {
   SidebarGroupLabel, SidebarMenu, SidebarMenuButton, SidebarMenuItem,
   SidebarHeader, SidebarFooter, useSidebar,
 } from "@/components/ui/sidebar";
+import { useIsSuperAdmin } from "@/lib/superAdmin";
 
 const mainItems = [
   { title: "Dashboard", url: "/dashboard", icon: LayoutDashboard },
@@ -41,6 +42,10 @@ const toolsItems = [
   { title: "Rentabilité", url: "/profitability", icon: BarChart3 },
 ];
 
+const adminItems = [
+  { title: "Super Admin", url: "/admin", icon: Shield },
+];
+
 const bottomItems = [
   { title: "Paramètres", url: "/settings", icon: Settings },
 ];
@@ -50,6 +55,7 @@ export function AppSidebar() {
   const collapsed = state === "collapsed";
   const location = useLocation();
   const currentPath = location.pathname;
+  const { isSuperAdmin } = useIsSuperAdmin();
 
   const isActive = (path: string) =>
     path === "/" ? currentPath === "/" : currentPath.startsWith(path);
@@ -114,6 +120,15 @@ export function AppSidebar() {
             {renderMenu(toolsItems)}
           </SidebarGroupContent>
         </SidebarGroup>
+
+        {isSuperAdmin && (
+          <SidebarGroup>
+            {!collapsed && <SidebarGroupLabel className="text-sidebar-foreground/30 text-[10px] uppercase tracking-wider font-semibold">Admin</SidebarGroupLabel>}
+            <SidebarGroupContent>
+              {renderMenu(adminItems)}
+            </SidebarGroupContent>
+          </SidebarGroup>
+        )}
       </SidebarContent>
 
       <SidebarFooter className="px-2 pb-4">

@@ -50,6 +50,8 @@ import Profitability from "./pages/Profitability";
 import Sales from "./pages/Sales";
 import Auth from "./pages/Auth";
 import ResetPassword from "./pages/ResetPassword";
+import SuperAdmin from "./pages/SuperAdmin";
+import { SuperAdminRoute } from "@/components/SuperAdminRoute";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -110,6 +112,7 @@ const App = () => (
               <Route path="/profitability" element={<Profitability />} />
               <Route path="/sales" element={<Sales />} />
               <Route path="/settings" element={<SettingsPage />} />
+              <Route path="/admin" element={<SuperAdminRoute><SuperAdmin /></SuperAdminRoute>} />
             </Route>
             <Route path="*" element={<NotFound />} />
           </Routes>
