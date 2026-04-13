@@ -55,15 +55,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session) {
         hadSessionRef.current = true;
-        // Verify the user still exists by trying to get fresh user data
-        supabase.auth.getUser().then(({ error }) => {
-          if (error) {
-            // User was deleted — clear session
+        // Verify the user still exists. Only force-sign-out on a true auth error
+        // (401/invalid token). Transient network/5xx errors must NOT wipe the session
+        // — that would kick the user out mid-form and lose their work.
+        supabase.auth.getUser().then(({ data, error }) => {
+          const looksDeleted =
+            error &&
+            typeof error === "object" &&
+            "status" in error &&
+            ((error as { status: number }).status === 401 ||
+              (error as { status: number }).status === 403);
+
+          if (looksDeleted) {
+            // Actual auth failure — user was deleted or token is invalid
             setSession(null);
             setLoading(false);
             hadSessionRef.current = false;
             supabase.auth.signOut().catch(() => {});
           } else {
+            // Either success, or transient error — trust the existing session
             setSession(session);
             setLoading(false);
           }

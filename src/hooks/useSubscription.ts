@@ -25,7 +25,9 @@ export function useSubscription() {
 
   const checkSubscription = useCallback(async () => {
     if (!session?.access_token) return;
-    setState((s) => ({ ...s, isLoading: true }));
+    // NOTE: do NOT set isLoading:true here — it causes AppLayout's loading gate
+    // to fire on every background refetch and remount the whole Outlet, destroying
+    // form state. Keep isLoading sticky after the first successful load.
     try {
       const { data, error } = await supabase.functions.invoke("check-subscription", {
         headers: { Authorization: `Bearer ${session.access_token}` },
@@ -39,19 +41,19 @@ export function useSubscription() {
         cancelAtPeriodEnd: data?.cancel_at_period_end ?? false,
         isLoading: false,
       });
-      // When subscription status changes, invalidate trial-status cache
-      // so useTrialStatus picks up the DB update immediately
-      queryClient.invalidateQueries({ queryKey: ["trial-status"] });
     } catch {
+      // Keep previous state on transient failures; just mark no longer loading.
       setState((s) => ({ ...s, isLoading: false }));
     }
-  }, [session?.access_token, queryClient]);
+  }, [session?.access_token]);
 
-  // Check on mount and every 60s
+  // Check on mount and every 5 minutes (was 60s — unnecessarily aggressive).
+  // Invalidate trial-status only on user-visible transitions (checkout success),
+  // not on background polls, so useTrialStatus doesn't refetch every poll either.
   useEffect(() => {
     if (!session) return;
     checkSubscription();
-    const interval = setInterval(checkSubscription, 60_000);
+    const interval = setInterval(checkSubscription, 5 * 60 * 1000);
     return () => clearInterval(interval);
   }, [session, checkSubscription]);
 

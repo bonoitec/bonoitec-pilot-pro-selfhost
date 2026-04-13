@@ -11,7 +11,7 @@ import { TrialBanner } from "@/components/TrialBanner";
 import { TrialExpiredWall } from "@/components/TrialExpiredWall";
 import { useTrialStatus } from "@/hooks/useTrialStatus";
 import { useSubscription } from "@/hooks/useSubscription";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { useIsSuperAdmin } from "@/lib/superAdmin";
 import { toast } from "sonner";
 import {
@@ -29,14 +29,28 @@ export function AppLayout() {
   const { checkSubscription, subscribed, isLoading: subLoading } = useSubscription();
   const { isSuperAdmin, isLoading: saLoading } = useIsSuperAdmin();
 
-  // Handle checkout success at layout level (before TrialExpiredWall blocks Outlet)
+  // Sticky "first load done" flag. Once all three status queries have resolved
+  // at least once, we never show the full-screen loader again — background
+  // refetches must not unmount children or users lose form state.
+  const firstLoadDoneRef = useRef(false);
+  if (!firstLoadDoneRef.current && !trialLoading && !subLoading && !saLoading) {
+    firstLoadDoneRef.current = true;
+  }
+  const showInitialLoader = !firstLoadDoneRef.current && (trialLoading || subLoading || saLoading);
+
+  // Handle checkout success at layout level (before TrialExpiredWall blocks Outlet).
+  // checkSubscription is intentionally OMITTED from deps — its identity changes on
+  // token refresh and would retrigger this effect unnecessarily. The ref stays stable.
+  const checkSubscriptionRef = useRef(checkSubscription);
+  checkSubscriptionRef.current = checkSubscription;
   useEffect(() => {
     if (searchParams.get("checkout") === "success") {
       toast.success("Paiement réussi ! Votre abonnement est maintenant actif.");
-      checkSubscription();
+      checkSubscriptionRef.current();
       setSearchParams({}, { replace: true });
     }
-  }, [searchParams, checkSubscription, setSearchParams]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams]);
 
   const handleSignOut = async () => {
     await signOut();
@@ -47,9 +61,10 @@ export function AppLayout() {
     ? user.user_metadata.full_name.split(" ").map((n: string) => n[0]).join("").toUpperCase().slice(0, 2)
     : user?.email?.slice(0, 2).toUpperCase() ?? "?";
 
-  // Show loader while trial/subscription/super-admin status is being determined
-  // This prevents expired users from briefly seeing dashboard content
-  if (trialLoading || subLoading || saLoading) {
+  // Full-screen loader ONLY on very first load — never on background refetches,
+  // so in-flight forms don't get unmounted when the subscription poll / super-admin
+  // check / trial status refetches in the background.
+  if (showInitialLoader) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />

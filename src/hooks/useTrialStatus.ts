@@ -23,7 +23,8 @@ export function useTrialStatus(): TrialStatus & { isLoading: boolean } {
       return data;
     },
     enabled: !!user,
-    staleTime: 60_000,
+    staleTime: 5 * 60 * 1000, // 5 min — trial state rarely changes mid-session
+    refetchOnWindowFocus: false, // never retrigger AppLayout's loading gate on focus
   });
 
   const now = new Date();
