@@ -47,7 +47,8 @@ export function ShopGrid({ onSelectShop }: { onSelectShop: (orgId: string) => vo
       }
       return rows;
     },
-    staleTime: 30_000,
+    staleTime: 0,
+    refetchOnMount: "always",
   });
 
   const total = shops[0]?.total_count ?? 0;

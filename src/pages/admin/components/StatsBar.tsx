@@ -32,7 +32,8 @@ export function StatsBar() {
       if (error) throw error;
       return data as PlatformStats;
     },
-    staleTime: 60_000,
+    staleTime: 0,
+    refetchOnMount: "always",
     refetchInterval: 60_000,
   });
 

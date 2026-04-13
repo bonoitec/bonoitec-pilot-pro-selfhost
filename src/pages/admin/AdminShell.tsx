@@ -1,14 +1,10 @@
-import { ReactNode } from "react";
+import { ReactNode, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
-import { Shield, LogOut, ClipboardList, MailWarning } from "lucide-react";
+import { Shield, LogOut, ClipboardList, MailWarning, RefreshCw } from "lucide-react";
 
-/**
- * AdminShell — top-level layout for /admin pages.
- * Intentionally DOES NOT include AppSidebar, customer header, or trial banner.
- * Admin is a separate visual context from the customer app.
- */
 export function AdminShell({
   children,
   onOpenAudit,
@@ -22,6 +18,16 @@ export function AdminShell({
 }) {
   const { signOut } = useAuth();
   const navigate = useNavigate();
+  const qc = useQueryClient();
+  const [refreshing, setRefreshing] = useState(false);
+
+  const handleRefresh = async () => {
+    setRefreshing(true);
+    await qc.invalidateQueries({
+      predicate: (q) => typeof q.queryKey[0] === "string" && (q.queryKey[0] as string).startsWith("admin-"),
+    });
+    setTimeout(() => setRefreshing(false), 400);
+  };
 
   const handleSignOut = async () => {
     await signOut();
@@ -43,6 +49,17 @@ export function AdminShell({
         </div>
 
         <div className="flex items-center gap-1">
+          <Button
+            variant="ghost"
+            size="sm"
+            className="gap-1.5 h-8"
+            onClick={handleRefresh}
+            disabled={refreshing}
+            title="Actualiser les données"
+          >
+            <RefreshCw className={`h-4 w-4 ${refreshing ? "animate-spin" : ""}`} />
+            <span className="hidden sm:inline text-xs">Actualiser</span>
+          </Button>
           {onOpenFailedEmails && (
             <Button
               variant="ghost"
