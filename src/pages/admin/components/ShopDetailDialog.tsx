@@ -185,11 +185,17 @@ export function ShopDetailDialog({ orgId, open, onClose }: {
     <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
         {isLoading || !data ? (
-          <div className="space-y-4 py-6">
-            <Skeleton className="h-20 w-full rounded-xl" />
-            <Skeleton className="h-40 w-full rounded-xl" />
-            <Skeleton className="h-40 w-full rounded-xl" />
-          </div>
+          <>
+            <DialogHeader className="sr-only">
+              <DialogTitle>Chargement de l'atelier</DialogTitle>
+              <DialogDescription>Veuillez patienter pendant le chargement des détails.</DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4 py-6">
+              <Skeleton className="h-20 w-full rounded-xl" />
+              <Skeleton className="h-40 w-full rounded-xl" />
+              <Skeleton className="h-40 w-full rounded-xl" />
+            </div>
+          </>
         ) : (
           <>
             <DialogHeader>
