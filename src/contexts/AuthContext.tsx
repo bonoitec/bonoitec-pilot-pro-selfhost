@@ -27,6 +27,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
+        // eslint-disable-next-line no-console
+        console.warn(`[refresh-telemetry ${new Date().toISOString()}] auth event:`, event, { hasSession: !!session, hadSession: hadSessionRef.current });
+
         if (event === "SIGNED_OUT") {
           setSession(null);
           setLoading(false);
@@ -34,9 +37,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           return;
         }
 
-        // If we previously had a session but now it's null, the token refresh
-        // likely failed (deleted user). Force clean sign out.
+        // Force sign-out path (defensive). If Supabase fires TOKEN_REFRESHED
+        // with NO session after we previously had one, the session is dead.
         if (hadSessionRef.current && !session && event === "TOKEN_REFRESHED") {
+          // eslint-disable-next-line no-console
+          console.warn(`[refresh-telemetry] FORCE SIGNOUT — TOKEN_REFRESHED with null session`);
           setSession(null);
           setLoading(false);
           hadSessionRef.current = false;
