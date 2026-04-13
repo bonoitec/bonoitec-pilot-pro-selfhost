@@ -98,7 +98,9 @@ src/pages/admin/
 │       ├── VerifyEmailDialog.tsx
 │       ├── DeleteUserDialog.tsx      # typed confirmation (type email)
 │       ├── ResetPasswordDialog.tsx
+│       ├── PromoteSuperAdminDialog.tsx  # triple confirmation, can't self-promote via UI
 │       └── ReasonPromptDialog.tsx    # generic wrapper for actions needing a reason
+├── FailedNotificationsSheet.tsx      # slide-in drawer for delivery failures (same pattern as AuditLogSheet)
 
 supabase/migrations/
 ├── {ts}_admin_audit_log_table.sql            # audit log table + RLS
@@ -156,7 +158,7 @@ CREATE POLICY "Deny all direct access" ON public.admin_audit_log
 
 Each write RPC takes a `_reason text NOT NULL` parameter. Each writes exactly one `admin_audit_log` row inside the same transaction, so the action + audit are atomic.
 
-**Shop-level (6):**
+**Shop-level (5):**
 | RPC | Params | Behavior |
 |---|---|---|
 | `admin_update_organization` | `_org_id, _name, _email, _phone, _siret, _reason` | UPDATE organizations SET ... + log |
@@ -164,7 +166,6 @@ Each write RPC takes a `_reason text NOT NULL` parameter. Each writes exactly on
 | `admin_grant_subscription` | `_org_id, _plan text, _months int, _reason` | subscription_status='active', plan_name=`_plan`, trial_end_date = now() + `_months` months. Plan must be in `('monthly','quarterly','annual')`. |
 | `admin_set_subscription_active` | `_org_id, _active boolean, _reason` | ON → restore to 'trial' or 'active' depending on current plan. OFF → subscription_status='trial_expired'. |
 | `admin_delete_organization` | `_org_id, _confirm_name, _reason` | Verifies `_confirm_name = organizations.name`. Cascade delete via FKs. |
-| `admin_promote_super_admin` | `_user_id, _reason` | Inserts user_roles row with role='super_admin' for current user's org. |
 
 **User-level (5):**
 | RPC | Params | Behavior |
@@ -174,6 +175,11 @@ Each write RPC takes a `_reason text NOT NULL` parameter. Each writes exactly on
 | `admin_verify_user_email` | `_user_id, _reason` | UPDATE auth.users SET email_confirmed_at = now() + log. |
 | `admin_delete_user` | `_user_id, _confirm_email, _reason` | Verifies `_confirm_email = auth.users.email`. DELETE FROM auth.users (cascades via existing trigger). Cannot self-delete. |
 | (password reset) | — | Not an RPC — see edge function below |
+
+**Platform-level (1):**
+| RPC | Params | Behavior |
+|---|---|---|
+| `admin_promote_super_admin` | `_user_id, _org_id, _reason` | Inserts user_roles row with role='super_admin'. Caller cannot promote themselves via this RPC (must be done manually via service_role). Triple-confirmation on the UI side. |
 
 ### New edge function: `admin-reset-user-password`
 
@@ -217,7 +223,15 @@ Called inside every write RPC.
 
 **AdminShell top bar:**
 - Left: 🛡 icon + "BonoitecPilot Admin" (font-display)
-- Right: [Audit] button (opens Sheet), [Déconnect.] button
+- Right: [Audit] button (opens `AuditLogSheet`), [Emails échoués] button (opens `FailedNotificationsSheet`, badge counter when > 0), [Déconnect.] button
+- On mobile the buttons collapse into an overflow menu (not a priority; desktop-first)
+
+**FailedNotificationsSheet** (slide-in from right, same `Sheet` component as audit log):
+- Title: "Emails non délivrés"
+- List of the last 50 failed notifications, most recent first
+- Each row: recipient (masked in logs but visible here), organization, error message (truncated), timestamp
+- No actions — read-only observability
+- Refetch every 60 s while the sheet is open
 
 **StatsBar:** reuses the exact Card pattern from `src/pages/Index.tsx:60-93`:
 - `grid grid-cols-2 md:grid-cols-6 gap-4`
