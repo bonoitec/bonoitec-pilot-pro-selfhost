@@ -4,6 +4,17 @@ import { supabase } from "@/integrations/supabase/client";
 const GIS_SRC = "https://accounts.google.com/gsi/client";
 const CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID as string | undefined;
 
+type GsiButtonOptions = {
+  theme?: "outline" | "filled_blue" | "filled_black";
+  size?: "small" | "medium" | "large";
+  type?: "standard" | "icon";
+  text?: "signin_with" | "signup_with" | "continue_with" | "signin";
+  shape?: "rectangular" | "pill" | "circle" | "square";
+  logo_alignment?: "left" | "center";
+  width?: number;
+  locale?: string;
+};
+
 type GSI = {
   accounts: {
     id: {
@@ -17,15 +28,8 @@ type GSI = {
         cancel_on_tap_outside?: boolean;
       }) => void;
       prompt: (cb?: (n: unknown) => void) => void;
+      renderButton: (parent: HTMLElement, options: GsiButtonOptions) => void;
       disableAutoSelect: () => void;
-    };
-    oauth2: {
-      initCodeClient: (config: {
-        client_id: string;
-        scope: string;
-        ux_mode: "popup" | "redirect";
-        callback: (response: { code?: string; error?: string }) => void;
-      }) => { requestCode: () => void };
     };
   };
 };
@@ -179,35 +183,58 @@ export function useGoogleSignIn() {
   }, []);
 
   /**
-   * Render a Google-branded button inside a container element.
-   * Returns a cleanup function that can be called on unmount.
+   * Render Google's official branded button inside a container element.
+   * Clicking the button opens the full account picker + consent popup that shows
+   * the BonoitecPilot app name + logo from the OAuth consent screen (not the
+   * Supabase redirect URI host).
    */
   const renderButton = useCallback(
-    (container: HTMLElement, onSuccess: () => void, onError: (e: string) => void) => {
-      if (!CLIENT_ID || !window.google?.accounts?.id) return;
+    async (
+      container: HTMLElement,
+      options: GsiButtonOptions = { theme: "outline", size: "large", text: "continue_with", shape: "pill", width: 360, locale: "fr_FR" },
+      onSuccess?: () => void,
+      onError?: (e: string) => void,
+    ) => {
+      if (!CLIENT_ID) {
+        onError?.("VITE_GOOGLE_CLIENT_ID missing");
+        return;
+      }
+      try {
+        await loadGsiScript();
+      } catch {
+        onError?.("Google Identity Services script could not load");
+        return;
+      }
+      if (!window.google?.accounts?.id) {
+        onError?.("GIS not available");
+        return;
+      }
 
       const rawNonce = randomNonce();
-      sha256Hex(rawNonce).then((hashedNonce) => {
-        window.google!.accounts.id.initialize({
-          client_id: CLIENT_ID,
-          nonce: hashedNonce,
-          callback: async (response) => {
-            if (!response?.credential) {
-              onError("Aucun jeton reçu de Google");
-              return;
-            }
-            const { error } = await supabase.auth.signInWithIdToken({
-              provider: "google",
-              token: response.credential,
-              nonce: rawNonce,
-            });
-            if (error) onError(error.message);
-            else onSuccess();
-          },
-        });
-        // Note: we don't use renderButton here because we keep our own styled button;
-        // the `signIn` callable above is what the app uses.
+      const hashedNonce = await sha256Hex(rawNonce);
+
+      window.google.accounts.id.initialize({
+        client_id: CLIENT_ID,
+        nonce: hashedNonce,
+        ux_mode: "popup",
+        callback: async (response) => {
+          if (!response?.credential) {
+            onError?.("Aucun jeton reçu de Google");
+            return;
+          }
+          const { error } = await supabase.auth.signInWithIdToken({
+            provider: "google",
+            token: response.credential,
+            nonce: rawNonce,
+          });
+          if (error) onError?.(error.message);
+          else onSuccess?.();
+        },
       });
+
+      // Clear previous button (if re-rendering) then mount a fresh one
+      container.innerHTML = "";
+      window.google.accounts.id.renderButton(container, options);
     },
     [],
   );
