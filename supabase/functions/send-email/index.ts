@@ -52,32 +52,19 @@ function emailLayout(
   content: string,
   preheader = "",
   orgContact?: { name?: string; phone?: string; email?: string },
-  useShopIdentity: boolean = true,
+  _unused: boolean = true,
 ): string {
   const escapedName = orgContact?.name ? esc(orgContact.name) : "";
   const escapedEmail = orgContact?.email ? esc(orgContact.email) : "";
-  const escapedPhone = orgContact?.phone ? esc(orgContact.phone) : "";
-  // Header title = shop name (for client-facing emails) or BonoitecPilot (for platform-facing).
-  const headerTitle = useShopIdentity && escapedName ? escapedName : "BonoitecPilot";
-  const headerSubtitle = useShopIdentity && escapedName
-    ? "R&eacute;paration &amp; service apr&egrave;s-vente"
-    : "Gestion professionnelle de r&eacute;parations";
-
-  // Store identity block: shop name (bold) + email + phone on their own lines
-  const storeLines: string[] = [];
-  if (escapedEmail) {
-    storeLines.push(`<a href="mailto:${escapedEmail}" style="color:${BRAND.primary};text-decoration:none;">${escapedEmail}</a>`);
-  }
-  if (escapedPhone) {
-    storeLines.push(escapedPhone);
-  }
-  const hasStoreInfo = escapedName || storeLines.length > 0;
-  const storeBlock = hasStoreInfo
-    ? `
-      ${escapedName ? `<p style="color:${BRAND.foreground};font-size:13px;line-height:1.5;margin:0 0 4px 0;font-weight:700;font-family:'Segoe UI',Tahoma,Geneva,Verdana,Arial,sans-serif;">${escapedName}</p>` : ""}
-      ${storeLines.length > 0 ? `<p style="color:${BRAND.muted};font-size:12px;line-height:1.5;margin:0 0 12px 0;font-family:'Segoe UI',Tahoma,Geneva,Verdana,Arial,sans-serif;">${storeLines.join(" &middot; ")}</p>` : ""}
-    `
-    : "";
+  // Footer line 2: shop name + shop email (combined).
+  // Shows when either name or email is present; phone is dropped from this line.
+  const atelierLine = (() => {
+    if (!escapedName && !escapedEmail) return "";
+    const parts: string[] = [];
+    if (escapedName) parts.push(`<strong style="color:${BRAND.foreground};">${escapedName}</strong>`);
+    if (escapedEmail) parts.push(`<a href="mailto:${escapedEmail}" style="color:${BRAND.primary};text-decoration:none;">${escapedEmail}</a>`);
+    return parts.join(" &middot; ");
+  })();
 
   return `<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" lang="fr">
@@ -107,9 +94,10 @@ function emailLayout(
         <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="580" style="max-width:580px;width:100%;background-color:${BRAND.white};border-radius:12px;overflow:hidden;border:1px solid ${BRAND.border};">
           <!-- Header -->
           <tr>
-            <td style="background-color:${BRAND.primary};padding:28px 32px;text-align:center;">
-              <h1 style="color:${BRAND.white};font-size:22px;font-weight:700;margin:0;letter-spacing:-0.3px;font-family:'Segoe UI',Tahoma,Geneva,Verdana,Arial,sans-serif;">${useShopIdentity && escapedName ? headerTitle : "&#9889; " + headerTitle}</h1>
-              <p style="color:rgba(255,255,255,0.8);font-size:12px;margin:4px 0 0 0;font-family:'Segoe UI',Tahoma,Geneva,Verdana,Arial,sans-serif;">${headerSubtitle}</p>
+            <td style="background-color:${BRAND.primary};padding:36px 32px 32px;text-align:center;">
+              <img src="https://bonoitecpilot.fr/logo-bonoitecpilot.png" width="72" height="72" alt="BonoitecPilot" style="display:block;margin:0 auto 14px;border-radius:16px;border:0;outline:none;box-shadow:0 8px 24px rgba(0,0,0,0.25);" />
+              <h1 style="color:${BRAND.white};font-size:24px;font-weight:700;margin:0;letter-spacing:-0.4px;font-family:'Segoe UI',Tahoma,Geneva,Verdana,Arial,sans-serif;">BonoitecPilot</h1>
+              <p style="color:rgba(255,255,255,0.85);font-size:12px;margin:6px 0 0 0;font-family:'Segoe UI',Tahoma,Geneva,Verdana,Arial,sans-serif;letter-spacing:0.3px;">Gestion professionnelle de r&eacute;parations</p>
             </td>
           </tr>
           <!-- Body -->
@@ -121,10 +109,9 @@ function emailLayout(
           <!-- Footer -->
           <tr>
             <td style="background-color:${BRAND.background};padding:24px 32px;text-align:center;border-top:1px solid ${BRAND.border};">
-              ${storeBlock}
-              ${hasStoreInfo ? `<hr style="border:none;border-top:1px solid ${BRAND.border};margin:12px auto;max-width:120px;" />` : ""}
-              <p style="color:${BRAND.muted};font-size:12px;line-height:1.6;margin:0;font-family:'Segoe UI',Tahoma,Geneva,Verdana,Arial,sans-serif;">
-                Envoy&eacute; via <strong>BonoitecPilot</strong> &mdash; Votre atelier connect&eacute;<br />
+              <p style="color:${BRAND.muted};font-size:12px;line-height:1.7;margin:0;font-family:'Segoe UI',Tahoma,Geneva,Verdana,Arial,sans-serif;">
+                BonoitecPilot &mdash; Votre atelier connect&eacute;<br />
+                ${atelierLine ? atelierLine + "<br />" : ""}
                 Support&nbsp;: <a href="mailto:contact@app.bonoitecpilot.fr" style="color:${BRAND.primary};text-decoration:none;">contact@app.bonoitecpilot.fr</a>
               </p>
               <p style="margin-top:12px;font-size:11px;color:#94a3b8;font-family:'Segoe UI',Tahoma,Geneva,Verdana,Arial,sans-serif;">
@@ -148,15 +135,9 @@ const INFO_P_STYLE = `color:${BRAND.foreground};margin:4px 0;font-size:13px;font
 const BTN_STYLE = `display:inline-block;background-color:${BRAND.primary};color:${BRAND.white};text-decoration:none;padding:12px 28px;border-radius:8px;font-weight:600;font-size:14px;margin:20px 0;font-family:'Segoe UI',Tahoma,Geneva,Verdana,Arial,sans-serif;`;
 const DIVIDER_STYLE = `border:none;border-top:1px solid ${BRAND.border};margin:24px 0;`;
 
-// Client-facing templates sign with the shop name (fallback to "L'équipe BonoitecPilot").
-// Platform-facing templates (welcome_signup, login_alert) always sign with "L'équipe BonoitecPilot".
-function shopSig(oc?: { name?: string }): string {
-  return oc?.name ? esc(oc.name) : "L&rsquo;&eacute;quipe BonoitecPilot";
-}
-
 const templates: Record<string, (data: Record<string, string>, orgContact?: { name?: string; phone?: string; email?: string }) => { subject: string; html: string }> = {
   quote_ready: (d, oc) => ({
-    subject: oc?.name ? `Votre devis ${esc(d.reference)} — ${esc(oc.name)}` : `Votre devis ${esc(d.reference)} est disponible`,
+    subject: `Votre devis ${esc(d.reference)} est disponible`,
     html: emailLayout(`
       <div style="${BODY_STYLE}">
         <h2 style="${H2_STYLE}">&#128203; Votre devis est pr&ecirc;t</h2>
@@ -168,13 +149,13 @@ const templates: Record<string, (data: Record<string, string>, orgContact?: { na
           <p style="${INFO_P_STYLE}"><strong style="color:${BRAND.primary};">Montant TTC :</strong> ${esc(d.totalTTC) || "&mdash;"} &euro;</p>
         </div>
         <p style="${P_STYLE}">Ce devis est valable 14 jours. N'h&eacute;sitez pas &agrave; nous contacter pour toute question.</p>
-        <p style="${P_STYLE}">Cordialement,<br /><strong>${shopSig(oc)}</strong></p>
+        <p style="${P_STYLE}">Cordialement,<br /><strong>L&rsquo;&eacute;quipe BonoitecPilot</strong></p>
       </div>
     `, `Votre devis ${d.reference} est disponible`, oc, true),
   }),
 
   repair_completed: (d, oc) => ({
-    subject: oc?.name ? `Réparation ${esc(d.reference)} terminée — ${esc(oc.name)}` : `Réparation ${esc(d.reference)} terminée — Appareil prêt`,
+    subject: `Réparation ${esc(d.reference)} terminée — Appareil prêt`,
     html: emailLayout(`
       <div style="${BODY_STYLE}">
         <h2 style="${H2_STYLE}">&#9989; R&eacute;paration termin&eacute;e !</h2>
@@ -187,13 +168,13 @@ const templates: Record<string, (data: Record<string, string>, orgContact?: { na
         </div>
         <p style="${P_STYLE}">Vous pouvez venir le r&eacute;cup&eacute;rer &agrave; notre atelier aux horaires d'ouverture.</p>
         ${safeUrl(d.trackingUrl) ? `<a href="${safeUrl(d.trackingUrl)}" style="${BTN_STYLE}">Suivre ma r&eacute;paration</a>` : ""}
-        <p style="${P_STYLE}">Merci de votre confiance !<br /><strong>${shopSig(oc)}</strong></p>
+        <p style="${P_STYLE}">Merci de votre confiance !<br /><strong>L&rsquo;&eacute;quipe BonoitecPilot</strong></p>
       </div>
     `, `Votre réparation ${d.reference} est terminée`, oc, true),
   }),
 
   invoice_sent: (d, oc) => ({
-    subject: oc?.name ? `Facture ${esc(d.reference)} — ${esc(oc.name)}` : `Facture ${esc(d.reference)}`,
+    subject: `Facture ${esc(d.reference)} — BonoitecPilot`,
     html: emailLayout(`
       <div style="${BODY_STYLE}">
         <h2 style="${H2_STYLE}">&#129534; Votre facture</h2>
@@ -206,7 +187,7 @@ const templates: Record<string, (data: Record<string, string>, orgContact?: { na
           ${d.paymentMethod ? `<p style="${INFO_P_STYLE}"><strong style="color:${BRAND.primary};">Paiement :</strong> ${esc(d.paymentMethod)}</p>` : ""}
         </div>
         <p style="${P_STYLE}">Pour toute question concernant cette facture, n'h&eacute;sitez pas &agrave; nous contacter.</p>
-        <p style="${P_STYLE}">Cordialement,<br /><strong>${shopSig(oc)}</strong></p>
+        <p style="${P_STYLE}">Cordialement,<br /><strong>L&rsquo;&eacute;quipe BonoitecPilot</strong></p>
       </div>
     `, `Facture ${d.reference}`, oc, true),
   }),
@@ -230,20 +211,20 @@ const templates: Record<string, (data: Record<string, string>, orgContact?: { na
         <p style="${P_STYLE}text-align:center;">Si vous &ecirc;tes satisfait de notre service, n'h&eacute;sitez pas &agrave; nous laisser un petit avis :</p>
         <p style="text-align:center;"><a href="${safeUrl(d.googleReviewUrl)}" style="${BTN_STYLE}">Laisser un avis</a></p>
         ` : ""}
-        <p style="${P_STYLE}">Cordialement,<br /><strong>${shopSig(oc)}</strong></p>
+        <p style="${P_STYLE}">Cordialement,<br /><strong>L&rsquo;&eacute;quipe BonoitecPilot</strong></p>
       </div>
     `, `Réparation ${d.reference} — ${d.statusLabel || "mise à jour"}`, oc, true),
   }),
 
   client_notification: (d, oc) => ({
-    subject: esc(d.subject) || (oc?.name ? `Notification — ${esc(oc.name)}` : "Notification — BonoitecPilot"),
+    subject: esc(d.subject) || "Notification — BonoitecPilot",
     html: emailLayout(`
       <div style="${BODY_STYLE}">
         <h2 style="${H2_STYLE}">&#128236; ${esc(d.subject) || "Message"}</h2>
         <p style="${P_STYLE}">Bonjour ${esc(d.clientName) || ""},</p>
         <p style="${P_STYLE}">${esc(d.message) || ""}</p>
         ${safeUrl(d.trackingUrl) ? `<a href="${safeUrl(d.trackingUrl)}" style="${BTN_STYLE}">Acc&eacute;der &agrave; mon espace</a>` : ""}
-        <p style="${P_STYLE}">Cordialement,<br /><strong>${shopSig(oc)}</strong></p>
+        <p style="${P_STYLE}">Cordialement,<br /><strong>L&rsquo;&eacute;quipe BonoitecPilot</strong></p>
       </div>
     `, "", oc, true),
   }),
@@ -272,7 +253,7 @@ const templates: Record<string, (data: Record<string, string>, orgContact?: { na
 
   // Client-facing
   repair_created: (d, oc) => ({
-    subject: oc?.name ? `Réparation enregistrée — ${esc(d.reference)} · ${esc(oc.name)}` : `Réparation enregistrée — ${esc(d.reference)}`,
+    subject: `Réparation enregistrée — ${esc(d.reference)}`,
     html: emailLayout(`
       <div style="${BODY_STYLE}">
         <h2 style="${H2_STYLE}">&#128241; Votre r&eacute;paration a &eacute;t&eacute; enregistr&eacute;e</h2>
@@ -287,7 +268,7 @@ const templates: Record<string, (data: Record<string, string>, orgContact?: { na
         <p style="${P_STYLE}">Vous pouvez suivre l'avancement de votre r&eacute;paration en temps r&eacute;el gr&acirc;ce au lien ci-dessous :</p>
         ${safeUrl(d.trackingUrl) ? `<a href="${safeUrl(d.trackingUrl)}" style="${BTN_STYLE}">Suivre ma r&eacute;paration</a>` : ""}
         <p style="${P_STYLE}">Nous vous tiendrons inform&eacute;(e) &agrave; chaque &eacute;tape.</p>
-        <p style="${P_STYLE}">Cordialement,<br /><strong>${shopSig(oc)}</strong></p>
+        <p style="${P_STYLE}">Cordialement,<br /><strong>L&rsquo;&eacute;quipe BonoitecPilot</strong></p>
       </div>
     `, `Réparation ${d.reference} enregistrée — suivez son avancement`, oc, true),
   }),
@@ -314,16 +295,6 @@ const templates: Record<string, (data: Record<string, string>, orgContact?: { na
   }),
 };
 
-// Templates that are sent to the shop's clients (should use shop identity in from + header + signature).
-// Anything not in this set uses platform identity ("BonoitecPilot").
-const CLIENT_FACING_TEMPLATES = new Set([
-  "quote_ready",
-  "repair_completed",
-  "invoice_sent",
-  "status_update",
-  "client_notification",
-  "repair_created",
-]);
 
 // ─── Resend Send ────────────────────────────────────────────────────
 
@@ -511,12 +482,10 @@ Deno.serve(async (req) => {
     let errorMessage: string | null = null;
 
     try {
-      // Client-facing emails are branded with the shop's identity.
-      // Platform-facing emails (welcome, login alert) keep the BonoitecPilot brand.
-      const clientFacing = CLIENT_FACING_TEMPLATES.has(template);
+      // From: always "BonoitecPilot <noreply@bonoitecpilot.fr>".
+      // Reply-to: shop email if valid, so clients reply directly to the shop.
       const replyTo = orgContact?.email && isValidEmail(orgContact.email) ? orgContact.email : undefined;
-      const fromName = clientFacing && orgContact?.name ? orgContact.name : undefined;
-      await sendResend(to, subject, html, attachments, replyTo, fromName);
+      await sendResend(to, subject, html, attachments, replyTo);
     } catch (sendError) {
       status = "failed";
       errorMessage = sendError instanceof Error ? sendError.message : "Resend error";
