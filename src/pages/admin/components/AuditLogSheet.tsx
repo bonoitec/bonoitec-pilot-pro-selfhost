@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ClipboardList, Building2, User, Shield, AlertCircle } from "lucide-react";
+import { ClipboardList, Building2, User, Shield, AlertCircle, FileText } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { fr } from "date-fns/locale";
 
@@ -34,11 +34,17 @@ const actionLabel: Record<string, string> = {
   delete_user: "Supprimer utilisateur",
   reset_password: "Réinitialiser mot de passe",
   promote_super_admin: "Promouvoir super-admin",
+  create_blog: "Créer un article",
+  update_blog: "Modifier un article",
+  delete_blog: "Supprimer un article",
+  publish_blog: "Publier un article",
+  unpublish_blog: "Dépublier un article",
 };
 
 function targetIcon(type: string) {
   if (type === "organization") return <Building2 className="h-3.5 w-3.5" />;
   if (type === "user") return <User className="h-3.5 w-3.5" />;
+  if (type === "blog") return <FileText className="h-3.5 w-3.5" />;
   return <Shield className="h-3.5 w-3.5" />;
 }
 

@@ -1,6 +1,7 @@
 import { motion, useInView, AnimatePresence } from "framer-motion";
-import { useRef, useState, useEffect, useCallback } from "react";
+import { useRef, useState, useEffect, useCallback, useMemo } from "react";
 import { Link } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
 import { ArrowRight, ChevronLeft, ChevronRight } from "lucide-react";
 import blogOrganiser from "@/assets/blog-organiser-atelier.jpg";
 import blogFacturation from "@/assets/blog-facturation.jpg";
@@ -8,8 +9,9 @@ import blogCentraliser from "@/assets/blog-centraliser.jpg";
 import blogSuiviClient from "@/assets/blog-suivi-client.jpg";
 import blogDevis from "@/assets/blog-devis-rapides.jpg";
 import blogAllieGestion from "@/assets/blog-allie-gestion.jpg";
+import { fetchPublishedPosts } from "@/lib/blogPosts";
 
-const articles = [
+const hardcodedArticles = [
   {
     slug: "organiser-atelier",
     category: "Organisation",
@@ -54,15 +56,6 @@ const articles = [
   },
 ];
 
-// Show 3 articles at a time on desktop, pick a sliding window
-function getVisibleArticles(startIndex: number) {
-  const result = [];
-  for (let i = 0; i < 3; i++) {
-    result.push(articles[(startIndex + i) % articles.length]);
-  }
-  return result;
-}
-
 const AUTOPLAY_INTERVAL = 5000;
 
 const BlogSection = ({ expanded = false }: { expanded?: boolean }) => {
@@ -72,15 +65,33 @@ const BlogSection = ({ expanded = false }: { expanded?: boolean }) => {
   const [isPaused, setIsPaused] = useState(false);
   const [direction, setDirection] = useState(1);
 
+  // Fetch DB posts and merge with the hardcoded ones. DB posts show first (newest).
+  const { data: dbPosts = [] } = useQuery({
+    queryKey: ["public-blog-posts"],
+    queryFn: fetchPublishedPosts,
+    staleTime: 60_000,
+  });
+
+  const articles = useMemo(() => {
+    const dbArticles = dbPosts.map((p) => ({
+      slug: p.slug,
+      category: p.category,
+      title: p.title,
+      excerpt: p.excerpt,
+      image: p.cover_image_url || blogAllieGestion,
+    }));
+    return [...dbArticles, ...hardcodedArticles];
+  }, [dbPosts]);
+
   const next = useCallback(() => {
     setDirection(1);
     setStartIndex((prev) => (prev + 1) % articles.length);
-  }, []);
+  }, [articles.length]);
 
   const prev = useCallback(() => {
     setDirection(-1);
     setStartIndex((prev) => (prev - 1 + articles.length) % articles.length);
-  }, []);
+  }, [articles.length]);
 
   // Autoplay
   useEffect(() => {
@@ -89,7 +100,14 @@ const BlogSection = ({ expanded = false }: { expanded?: boolean }) => {
     return () => clearInterval(timer);
   }, [isPaused, next]);
 
-  const visibleArticles = getVisibleArticles(startIndex);
+  const visibleArticles = useMemo(() => {
+    if (articles.length === 0) return [];
+    const result = [];
+    for (let i = 0; i < 3; i++) {
+      result.push(articles[(startIndex + i) % articles.length]);
+    }
+    return result;
+  }, [articles, startIndex]);
 
   // Progress bar for autoplay
   const [progress, setProgress] = useState(0);

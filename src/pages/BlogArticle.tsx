@@ -1,7 +1,11 @@
 import { useParams, Link } from "react-router-dom";
 import { ArrowLeft, Share2, Linkedin, Twitter, Facebook, Clock, Tag } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
+import { fetchPublishedPostBySlug } from "@/lib/blogPosts";
+import { format } from "date-fns";
+import { fr } from "date-fns/locale";
 import blogOrganiser from "@/assets/blog-organiser-atelier.jpg";
 import blogFacturation from "@/assets/blog-facturation.jpg";
 import blogCentraliser from "@/assets/blog-centraliser.jpg";
@@ -361,7 +365,35 @@ function ShareButtons({ title }: { title: string }) {
 export default function BlogArticle() {
   const { slug } = useParams<{ slug: string }>();
   const [activeId, setActiveId] = useState("");
-  const article = articles.find((a) => a.slug === slug);
+
+  // Try hardcoded first, then fall through to DB
+  const hardcoded = articles.find((a) => a.slug === slug);
+
+  const { data: dbPost, isLoading: dbLoading } = useQuery({
+    queryKey: ["public-blog-post", slug],
+    queryFn: () => fetchPublishedPostBySlug(slug!),
+    enabled: !!slug && !hardcoded,
+    staleTime: 60_000,
+  });
+
+  // Normalize DB post into the Article shape used by the renderer below
+  const article: Article | undefined = useMemo(() => {
+    if (hardcoded) return hardcoded;
+    if (!dbPost) return undefined;
+    return {
+      slug: dbPost.slug,
+      category: dbPost.category,
+      title: dbPost.title,
+      excerpt: dbPost.excerpt,
+      image: dbPost.cover_image_url || blogAllieGestion,
+      date: dbPost.published_at
+        ? format(new Date(dbPost.published_at), "d MMMM yyyy", { locale: fr })
+        : "",
+      readTime: dbPost.read_time_minutes ? `${dbPost.read_time_minutes} min` : "5 min",
+      author: dbPost.author,
+      sections: dbPost.sections,
+    };
+  }, [hardcoded, dbPost]);
 
   useEffect(() => {
     if (!article) return;
@@ -378,6 +410,14 @@ export default function BlogArticle() {
     });
     return () => observer.disconnect();
   }, [article]);
+
+  if (!hardcoded && dbLoading) {
+    return (
+      <div className="min-h-[60vh] flex items-center justify-center">
+        <div className="text-sm text-muted-foreground">Chargement…</div>
+      </div>
+    );
+  }
 
   if (!article) {
     return (
