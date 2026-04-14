@@ -80,8 +80,12 @@ const BlogSection = ({ expanded = false }: { expanded?: boolean }) => {
       excerpt: p.excerpt,
       image: p.cover_image_url || blogAllieGestion,
     }));
-    return [...dbArticles, ...hardcodedArticles];
-  }, [dbPosts]);
+    // Latest first: DB posts (already sorted published_at DESC by the RPC),
+    // then hardcoded articles to fill. Capped at 6 on the homepage so the
+    // newest post stays prominently visible in the autoplay loop.
+    const merged = [...dbArticles, ...hardcodedArticles];
+    return expanded ? merged : merged.slice(0, 6);
+  }, [dbPosts, expanded]);
 
   const next = useCallback(() => {
     setDirection(1);
