@@ -403,17 +403,24 @@ function BlogFormDialog({
             </div>
           </div>
 
-          <div className="flex items-center gap-2 p-3 rounded-lg bg-primary/5 border border-primary/20">
+          <div className={`flex items-start gap-2 p-3 rounded-lg border ${publishAfter ? "bg-success/5 border-success/30" : "bg-warning/5 border-warning/30"}`}>
             <input
               type="checkbox"
               id="publish-after"
               checked={publishAfter}
               onChange={(e) => setPublishAfter(e.target.checked)}
-              className="h-4 w-4"
+              className="h-4 w-4 mt-0.5"
             />
-            <Label htmlFor="publish-after" className="text-sm cursor-pointer">
-              {publishAfter ? "Publier immédiatement" : "Enregistrer comme brouillon"}
-            </Label>
+            <div className="flex-1">
+              <Label htmlFor="publish-after" className="text-sm font-medium cursor-pointer">
+                Publier immédiatement sur le blog
+              </Label>
+              <p className="text-[11px] text-muted-foreground mt-0.5">
+                {publishAfter
+                  ? "✓ L'article sera visible sur bonoitecpilot.fr/blog dès l'enregistrement."
+                  : "⚠ Décoché : l'article sera enregistré comme brouillon (invisible sur le site)."}
+              </p>
+            </div>
           </div>
 
           <ReasonField value={reason} onChange={setReason} />
@@ -429,7 +436,9 @@ function BlogFormDialog({
             <Button variant="outline" onClick={onClose}>Annuler</Button>
             <Button onClick={() => mutation.mutate()} disabled={!canSubmit || mutation.isPending || uploading}>
               {mutation.isPending && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
-              {post ? "Enregistrer" : "Créer l'article"}
+              {publishAfter
+                ? (post ? "Enregistrer et publier" : "Publier l'article")
+                : (post ? "Enregistrer le brouillon" : "Enregistrer comme brouillon")}
             </Button>
           </div>
         </DialogFooter>
@@ -611,7 +620,7 @@ export function BlogManagementSheet({ open, onClose }: { open: boolean; onClose:
         open={formOpen}
         onClose={() => setFormOpen(false)}
         post={editingPost}
-        defaultPublished={editingPost?.published ?? false}
+        defaultPublished={editingPost?.published ?? true}
       />
 
       <DeleteBlogDialog
