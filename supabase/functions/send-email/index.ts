@@ -48,19 +48,26 @@ function isValidEmail(s: unknown): s is string {
 
 const maskEmail = (e: string) => e.replace(/(.{2})(.*)(@.*)/, "$1***$3");
 
-function emailLayout(content: string, preheader = "", orgContact?: { phone?: string; email?: string }): string {
+function emailLayout(content: string, preheader = "", orgContact?: { name?: string; phone?: string; email?: string }): string {
+  const escapedName = orgContact?.name ? esc(orgContact.name) : "";
   const escapedEmail = orgContact?.email ? esc(orgContact.email) : "";
   const escapedPhone = orgContact?.phone ? esc(orgContact.phone) : "";
-  const footerLines: string[] = [];
+
+  // Store identity block: shop name (bold) + email + phone on their own lines
+  const storeLines: string[] = [];
   if (escapedEmail) {
-    footerLines.push(`<a href="mailto:${escapedEmail}" style="color:${BRAND.primary};text-decoration:none;">${escapedEmail}</a>`);
+    storeLines.push(`<a href="mailto:${escapedEmail}" style="color:${BRAND.primary};text-decoration:none;">${escapedEmail}</a>`);
   }
   if (escapedPhone) {
-    footerLines.push(escapedPhone);
+    storeLines.push(escapedPhone);
   }
-  const contactLine = footerLines.length > 0
-    ? footerLines.join(" &middot; ")
-    : `<a href="mailto:contact@app.bonoitecpilot.fr" style="color:${BRAND.primary};text-decoration:none;">contact@app.bonoitecpilot.fr</a>`;
+  const hasStoreInfo = escapedName || storeLines.length > 0;
+  const storeBlock = hasStoreInfo
+    ? `
+      ${escapedName ? `<p style="color:${BRAND.foreground};font-size:13px;line-height:1.5;margin:0 0 4px 0;font-weight:700;font-family:'Segoe UI',Tahoma,Geneva,Verdana,Arial,sans-serif;">${escapedName}</p>` : ""}
+      ${storeLines.length > 0 ? `<p style="color:${BRAND.muted};font-size:12px;line-height:1.5;margin:0 0 12px 0;font-family:'Segoe UI',Tahoma,Geneva,Verdana,Arial,sans-serif;">${storeLines.join(" &middot; ")}</p>` : ""}
+    `
+    : "";
 
   return `<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" lang="fr">
@@ -104,9 +111,11 @@ function emailLayout(content: string, preheader = "", orgContact?: { phone?: str
           <!-- Footer -->
           <tr>
             <td style="background-color:${BRAND.background};padding:24px 32px;text-align:center;border-top:1px solid ${BRAND.border};">
+              ${storeBlock}
+              ${hasStoreInfo ? `<hr style="border:none;border-top:1px solid ${BRAND.border};margin:12px auto;max-width:120px;" />` : ""}
               <p style="color:${BRAND.muted};font-size:12px;line-height:1.6;margin:0;font-family:'Segoe UI',Tahoma,Geneva,Verdana,Arial,sans-serif;">
-                BonoitecPilot &mdash; Votre atelier connect&eacute;<br />
-                ${contactLine}
+                Envoy&eacute; via <strong>BonoitecPilot</strong> &mdash; Votre atelier connect&eacute;<br />
+                Support&nbsp;: <a href="mailto:contact@app.bonoitecpilot.fr" style="color:${BRAND.primary};text-decoration:none;">contact@app.bonoitecpilot.fr</a>
               </p>
               <p style="margin-top:12px;font-size:11px;color:#94a3b8;font-family:'Segoe UI',Tahoma,Geneva,Verdana,Arial,sans-serif;">
                 Cet email a &eacute;t&eacute; envoy&eacute; automatiquement. Merci de ne pas y r&eacute;pondre directement.
@@ -129,7 +138,7 @@ const INFO_P_STYLE = `color:${BRAND.foreground};margin:4px 0;font-size:13px;font
 const BTN_STYLE = `display:inline-block;background-color:${BRAND.primary};color:${BRAND.white};text-decoration:none;padding:12px 28px;border-radius:8px;font-weight:600;font-size:14px;margin:20px 0;font-family:'Segoe UI',Tahoma,Geneva,Verdana,Arial,sans-serif;`;
 const DIVIDER_STYLE = `border:none;border-top:1px solid ${BRAND.border};margin:24px 0;`;
 
-const templates: Record<string, (data: Record<string, string>, orgContact?: { phone?: string; email?: string }) => { subject: string; html: string }> = {
+const templates: Record<string, (data: Record<string, string>, orgContact?: { name?: string; phone?: string; email?: string }) => { subject: string; html: string }> = {
   quote_ready: (d, oc) => ({
     subject: `Votre devis ${esc(d.reference)} est disponible`,
     html: emailLayout(`
@@ -440,16 +449,20 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Fetch organization contact info for dynamic footer
-    let orgContact: { phone?: string; email?: string } | undefined;
+    // Fetch organization identity + contact for the footer
+    let orgContact: { name?: string; phone?: string; email?: string } | undefined;
     const { data: orgData } = await supabase
       .from("organizations")
-      .select("phone, email")
+      .select("name, phone, email")
       .eq("id", effectiveOrgId)
       .single();
 
-    if (orgData && (orgData.phone || orgData.email)) {
-      orgContact = { phone: orgData.phone || undefined, email: orgData.email || undefined };
+    if (orgData && (orgData.name || orgData.phone || orgData.email)) {
+      orgContact = {
+        name: orgData.name || undefined,
+        phone: orgData.phone || undefined,
+        email: orgData.email || undefined,
+      };
     }
 
     const { subject, html } = templateFn(data || {}, orgContact);
