@@ -48,10 +48,20 @@ function isValidEmail(s: unknown): s is string {
 
 const maskEmail = (e: string) => e.replace(/(.{2})(.*)(@.*)/, "$1***$3");
 
-function emailLayout(content: string, preheader = "", orgContact?: { name?: string; phone?: string; email?: string }): string {
+function emailLayout(
+  content: string,
+  preheader = "",
+  orgContact?: { name?: string; phone?: string; email?: string },
+  useShopIdentity: boolean = true,
+): string {
   const escapedName = orgContact?.name ? esc(orgContact.name) : "";
   const escapedEmail = orgContact?.email ? esc(orgContact.email) : "";
   const escapedPhone = orgContact?.phone ? esc(orgContact.phone) : "";
+  // Header title = shop name (for client-facing emails) or BonoitecPilot (for platform-facing).
+  const headerTitle = useShopIdentity && escapedName ? escapedName : "BonoitecPilot";
+  const headerSubtitle = useShopIdentity && escapedName
+    ? "R&eacute;paration &amp; service apr&egrave;s-vente"
+    : "Gestion professionnelle de r&eacute;parations";
 
   // Store identity block: shop name (bold) + email + phone on their own lines
   const storeLines: string[] = [];
@@ -98,8 +108,8 @@ function emailLayout(content: string, preheader = "", orgContact?: { name?: stri
           <!-- Header -->
           <tr>
             <td style="background-color:${BRAND.primary};padding:28px 32px;text-align:center;">
-              <h1 style="color:${BRAND.white};font-size:22px;font-weight:700;margin:0;letter-spacing:-0.3px;font-family:'Segoe UI',Tahoma,Geneva,Verdana,Arial,sans-serif;">&#9889; BonoitecPilot</h1>
-              <p style="color:rgba(255,255,255,0.8);font-size:12px;margin:4px 0 0 0;font-family:'Segoe UI',Tahoma,Geneva,Verdana,Arial,sans-serif;">Gestion professionnelle de r&eacute;parations</p>
+              <h1 style="color:${BRAND.white};font-size:22px;font-weight:700;margin:0;letter-spacing:-0.3px;font-family:'Segoe UI',Tahoma,Geneva,Verdana,Arial,sans-serif;">${useShopIdentity && escapedName ? headerTitle : "&#9889; " + headerTitle}</h1>
+              <p style="color:rgba(255,255,255,0.8);font-size:12px;margin:4px 0 0 0;font-family:'Segoe UI',Tahoma,Geneva,Verdana,Arial,sans-serif;">${headerSubtitle}</p>
             </td>
           </tr>
           <!-- Body -->
@@ -138,9 +148,15 @@ const INFO_P_STYLE = `color:${BRAND.foreground};margin:4px 0;font-size:13px;font
 const BTN_STYLE = `display:inline-block;background-color:${BRAND.primary};color:${BRAND.white};text-decoration:none;padding:12px 28px;border-radius:8px;font-weight:600;font-size:14px;margin:20px 0;font-family:'Segoe UI',Tahoma,Geneva,Verdana,Arial,sans-serif;`;
 const DIVIDER_STYLE = `border:none;border-top:1px solid ${BRAND.border};margin:24px 0;`;
 
+// Client-facing templates sign with the shop name (fallback to "L'équipe BonoitecPilot").
+// Platform-facing templates (welcome_signup, login_alert) always sign with "L'équipe BonoitecPilot".
+function shopSig(oc?: { name?: string }): string {
+  return oc?.name ? esc(oc.name) : "L&rsquo;&eacute;quipe BonoitecPilot";
+}
+
 const templates: Record<string, (data: Record<string, string>, orgContact?: { name?: string; phone?: string; email?: string }) => { subject: string; html: string }> = {
   quote_ready: (d, oc) => ({
-    subject: `Votre devis ${esc(d.reference)} est disponible`,
+    subject: oc?.name ? `Votre devis ${esc(d.reference)} — ${esc(oc.name)}` : `Votre devis ${esc(d.reference)} est disponible`,
     html: emailLayout(`
       <div style="${BODY_STYLE}">
         <h2 style="${H2_STYLE}">&#128203; Votre devis est pr&ecirc;t</h2>
@@ -152,13 +168,13 @@ const templates: Record<string, (data: Record<string, string>, orgContact?: { na
           <p style="${INFO_P_STYLE}"><strong style="color:${BRAND.primary};">Montant TTC :</strong> ${esc(d.totalTTC) || "&mdash;"} &euro;</p>
         </div>
         <p style="${P_STYLE}">Ce devis est valable 14 jours. N'h&eacute;sitez pas &agrave; nous contacter pour toute question.</p>
-        <p style="${P_STYLE}">Cordialement,<br /><strong>L'&eacute;quipe BonoitecPilot</strong></p>
+        <p style="${P_STYLE}">Cordialement,<br /><strong>${shopSig(oc)}</strong></p>
       </div>
-    `, `Votre devis ${d.reference} est disponible`, oc),
+    `, `Votre devis ${d.reference} est disponible`, oc, true),
   }),
 
   repair_completed: (d, oc) => ({
-    subject: `Réparation ${esc(d.reference)} terminée — Appareil prêt`,
+    subject: oc?.name ? `Réparation ${esc(d.reference)} terminée — ${esc(oc.name)}` : `Réparation ${esc(d.reference)} terminée — Appareil prêt`,
     html: emailLayout(`
       <div style="${BODY_STYLE}">
         <h2 style="${H2_STYLE}">&#9989; R&eacute;paration termin&eacute;e !</h2>
@@ -171,13 +187,13 @@ const templates: Record<string, (data: Record<string, string>, orgContact?: { na
         </div>
         <p style="${P_STYLE}">Vous pouvez venir le r&eacute;cup&eacute;rer &agrave; notre atelier aux horaires d'ouverture.</p>
         ${safeUrl(d.trackingUrl) ? `<a href="${safeUrl(d.trackingUrl)}" style="${BTN_STYLE}">Suivre ma r&eacute;paration</a>` : ""}
-        <p style="${P_STYLE}">Merci de votre confiance !<br /><strong>L'&eacute;quipe BonoitecPilot</strong></p>
+        <p style="${P_STYLE}">Merci de votre confiance !<br /><strong>${shopSig(oc)}</strong></p>
       </div>
-    `, `Votre réparation ${d.reference} est terminée`, oc),
+    `, `Votre réparation ${d.reference} est terminée`, oc, true),
   }),
 
   invoice_sent: (d, oc) => ({
-    subject: `Facture ${esc(d.reference)} — BonoitecPilot`,
+    subject: oc?.name ? `Facture ${esc(d.reference)} — ${esc(oc.name)}` : `Facture ${esc(d.reference)}`,
     html: emailLayout(`
       <div style="${BODY_STYLE}">
         <h2 style="${H2_STYLE}">&#129534; Votre facture</h2>
@@ -190,9 +206,9 @@ const templates: Record<string, (data: Record<string, string>, orgContact?: { na
           ${d.paymentMethod ? `<p style="${INFO_P_STYLE}"><strong style="color:${BRAND.primary};">Paiement :</strong> ${esc(d.paymentMethod)}</p>` : ""}
         </div>
         <p style="${P_STYLE}">Pour toute question concernant cette facture, n'h&eacute;sitez pas &agrave; nous contacter.</p>
-        <p style="${P_STYLE}">Cordialement,<br /><strong>L'&eacute;quipe BonoitecPilot</strong></p>
+        <p style="${P_STYLE}">Cordialement,<br /><strong>${shopSig(oc)}</strong></p>
       </div>
-    `, `Facture ${d.reference}`, oc),
+    `, `Facture ${d.reference}`, oc, true),
   }),
 
   status_update: (d, oc) => ({
@@ -214,24 +230,25 @@ const templates: Record<string, (data: Record<string, string>, orgContact?: { na
         <p style="${P_STYLE}text-align:center;">Si vous &ecirc;tes satisfait de notre service, n'h&eacute;sitez pas &agrave; nous laisser un petit avis :</p>
         <p style="text-align:center;"><a href="${safeUrl(d.googleReviewUrl)}" style="${BTN_STYLE}">Laisser un avis</a></p>
         ` : ""}
-        <p style="${P_STYLE}">Cordialement,<br /><strong>L'&eacute;quipe BonoitecPilot</strong></p>
+        <p style="${P_STYLE}">Cordialement,<br /><strong>${shopSig(oc)}</strong></p>
       </div>
-    `, `Réparation ${d.reference} — ${d.statusLabel || "mise à jour"}`, oc),
+    `, `Réparation ${d.reference} — ${d.statusLabel || "mise à jour"}`, oc, true),
   }),
 
   client_notification: (d, oc) => ({
-    subject: esc(d.subject) || "Notification — BonoitecPilot",
+    subject: esc(d.subject) || (oc?.name ? `Notification — ${esc(oc.name)}` : "Notification — BonoitecPilot"),
     html: emailLayout(`
       <div style="${BODY_STYLE}">
         <h2 style="${H2_STYLE}">&#128236; ${esc(d.subject) || "Message"}</h2>
         <p style="${P_STYLE}">Bonjour ${esc(d.clientName) || ""},</p>
         <p style="${P_STYLE}">${esc(d.message) || ""}</p>
         ${safeUrl(d.trackingUrl) ? `<a href="${safeUrl(d.trackingUrl)}" style="${BTN_STYLE}">Acc&eacute;der &agrave; mon espace</a>` : ""}
-        <p style="${P_STYLE}">Cordialement,<br /><strong>L'&eacute;quipe BonoitecPilot</strong></p>
+        <p style="${P_STYLE}">Cordialement,<br /><strong>${shopSig(oc)}</strong></p>
       </div>
-    `, "", oc),
+    `, "", oc, true),
   }),
 
+  // Platform-facing (sent to the shop owner, not to their clients)
   welcome_signup: (d, oc) => ({
     subject: "Bienvenue sur BonoitecPilot — Votre compte a bien été créé ✅",
     html: emailLayout(`
@@ -250,11 +267,12 @@ const templates: Record<string, (data: Record<string, string>, orgContact?: { na
         <p style="${P_STYLE}">Si vous avez la moindre question, n'h&eacute;sitez pas &agrave; nous contacter. Nous sommes l&agrave; pour vous accompagner.</p>
         <p style="${P_STYLE}">&Agrave; tr&egrave;s vite,<br /><strong>L'&eacute;quipe BonoitecPilot</strong></p>
       </div>
-    `, "Bienvenue ! Votre compte BonoitecPilot est prêt.", oc),
+    `, "Bienvenue ! Votre compte BonoitecPilot est prêt.", oc, false),
   }),
 
+  // Client-facing
   repair_created: (d, oc) => ({
-    subject: `Réparation enregistrée — ${esc(d.reference)}`,
+    subject: oc?.name ? `Réparation enregistrée — ${esc(d.reference)} · ${esc(oc.name)}` : `Réparation enregistrée — ${esc(d.reference)}`,
     html: emailLayout(`
       <div style="${BODY_STYLE}">
         <h2 style="${H2_STYLE}">&#128241; Votre r&eacute;paration a &eacute;t&eacute; enregistr&eacute;e</h2>
@@ -269,11 +287,12 @@ const templates: Record<string, (data: Record<string, string>, orgContact?: { na
         <p style="${P_STYLE}">Vous pouvez suivre l'avancement de votre r&eacute;paration en temps r&eacute;el gr&acirc;ce au lien ci-dessous :</p>
         ${safeUrl(d.trackingUrl) ? `<a href="${safeUrl(d.trackingUrl)}" style="${BTN_STYLE}">Suivre ma r&eacute;paration</a>` : ""}
         <p style="${P_STYLE}">Nous vous tiendrons inform&eacute;(e) &agrave; chaque &eacute;tape.</p>
-        <p style="${P_STYLE}">Cordialement,<br /><strong>L'&eacute;quipe BonoitecPilot</strong></p>
+        <p style="${P_STYLE}">Cordialement,<br /><strong>${shopSig(oc)}</strong></p>
       </div>
-    `, `Réparation ${d.reference} enregistrée — suivez son avancement`, oc),
+    `, `Réparation ${d.reference} enregistrée — suivez son avancement`, oc, true),
   }),
 
+  // Platform-facing
   login_alert: (d, oc) => ({
     subject: "🔐 Connexion détectée sur votre compte BonoitecPilot",
     html: emailLayout(`
@@ -291,25 +310,46 @@ const templates: Record<string, (data: Record<string, string>, orgContact?: { na
         <p style="font-size:12px;color:${BRAND.muted};font-family:'Segoe UI',Tahoma,Geneva,Verdana,Arial,sans-serif;">Cet e-mail est envoy&eacute; automatiquement &agrave; chaque connexion pour garantir la s&eacute;curit&eacute; de votre compte.</p>
         <p style="${P_STYLE}">Cordialement,<br /><strong>L'&eacute;quipe BonoitecPilot</strong></p>
       </div>
-    `, "Une connexion a été détectée sur votre compte", oc),
+    `, "Une connexion a été détectée sur votre compte", oc, false),
   }),
 };
 
+// Templates that are sent to the shop's clients (should use shop identity in from + header + signature).
+// Anything not in this set uses platform identity ("BonoitecPilot").
+const CLIENT_FACING_TEMPLATES = new Set([
+  "quote_ready",
+  "repair_completed",
+  "invoice_sent",
+  "status_update",
+  "client_notification",
+  "repair_created",
+]);
+
 // ─── Resend Send ────────────────────────────────────────────────────
 
-async function sendResend(to: string, subject: string, html: string, attachments?: Array<{ filename: string; content: string }>, replyTo?: string): Promise<void> {
+async function sendResend(to: string, subject: string, html: string, attachments?: Array<{ filename: string; content: string }>, replyTo?: string, fromName?: string): Promise<void> {
   const apiKey = Deno.env.get("RESEND_API_KEY");
   if (!apiKey) throw new Error("RESEND_API_KEY is not configured");
 
   // Reply-to also needs validation against header injection
   const safeReplyTo = isValidEmail(replyTo) ? replyTo : REPLY_TO;
 
+  // Strip characters that could inject extra headers or break the From line,
+  // then clamp length to a reasonable display width. Always ship on the
+  // DKIM-verified domain — only the display name is dynamic.
+  const safeFromName = fromName
+    ? String(fromName).replace(/[<>"\r\n\t]/g, "").trim().slice(0, 60)
+    : "";
+  const fromHeader = safeFromName
+    ? `${safeFromName} <noreply@bonoitecpilot.fr>`
+    : FROM_EMAIL;
+
   // C3-extended: strip CR/LF from subject to prevent header injection via user-controlled
   // fields (e.g. d.reference) that flow into template subject lines.
   const safeSubject = String(subject).replace(/[\r\n\t]/g, " ").slice(0, 998);
 
   const payload: Record<string, unknown> = {
-    from: FROM_EMAIL,
+    from: fromHeader,
     to: [to],
     reply_to: safeReplyTo,
     subject: safeSubject,
@@ -471,9 +511,12 @@ Deno.serve(async (req) => {
     let errorMessage: string | null = null;
 
     try {
-      // Use orgContact.email as reply-to only if it passes validation
+      // Client-facing emails are branded with the shop's identity.
+      // Platform-facing emails (welcome, login alert) keep the BonoitecPilot brand.
+      const clientFacing = CLIENT_FACING_TEMPLATES.has(template);
       const replyTo = orgContact?.email && isValidEmail(orgContact.email) ? orgContact.email : undefined;
-      await sendResend(to, subject, html, attachments, replyTo);
+      const fromName = clientFacing && orgContact?.name ? orgContact.name : undefined;
+      await sendResend(to, subject, html, attachments, replyTo, fromName);
     } catch (sendError) {
       status = "failed";
       errorMessage = sendError instanceof Error ? sendError.message : "Resend error";
