@@ -94,10 +94,9 @@ function emailLayout(
         <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="580" style="max-width:580px;width:100%;background-color:${BRAND.white};border-radius:12px;overflow:hidden;border:1px solid ${BRAND.border};">
           <!-- Header -->
           <tr>
-            <td style="background-color:${BRAND.primary};padding:36px 32px 32px;text-align:center;">
-              <img src="https://bonoitecpilot.fr/logo-bonoitecpilot.png" width="72" height="72" alt="BonoitecPilot" style="display:block;margin:0 auto 14px;border-radius:16px;border:0;outline:none;box-shadow:0 8px 24px rgba(0,0,0,0.25);" />
-              <h1 style="color:${BRAND.white};font-size:24px;font-weight:700;margin:0;letter-spacing:-0.4px;font-family:'Segoe UI',Tahoma,Geneva,Verdana,Arial,sans-serif;">BonoitecPilot</h1>
-              <p style="color:rgba(255,255,255,0.85);font-size:12px;margin:6px 0 0 0;font-family:'Segoe UI',Tahoma,Geneva,Verdana,Arial,sans-serif;letter-spacing:0.3px;">Gestion professionnelle de r&eacute;parations</p>
+            <td style="background-color:${BRAND.primary};padding:44px 32px 36px;text-align:center;">
+              <img src="https://bonoitecpilot.fr/email-wordmark.png" width="280" height="44" alt="BonoitecPilot" style="display:block;margin:0 auto;border:0;outline:none;" />
+              <p style="color:rgba(255,255,255,0.80);font-size:12px;margin:10px 0 0 0;font-family:'Segoe UI',Tahoma,Geneva,Verdana,Arial,sans-serif;letter-spacing:0.4px;">Gestion professionnelle de r&eacute;parations</p>
             </td>
           </tr>
           <!-- Body -->
