@@ -182,13 +182,16 @@ function BlogFormDialog({
     }));
   };
 
-  const canSubmit =
-    reason.trim().length >= 3 &&
-    form.title.trim().length >= 3 &&
-    form.slug.trim().length >= 3 &&
-    form.excerpt.trim().length >= 10 &&
-    form.sections.length >= 1 &&
-    form.sections.every((s) => s.title.trim().length > 0 && s.content.trim().length > 0);
+  const missing: string[] = [];
+  if (form.title.trim().length < 3) missing.push("titre (min. 3 caractères)");
+  if (form.slug.trim().length < 3) missing.push("slug");
+  if (form.excerpt.trim().length < 10) missing.push("résumé (min. 10 caractères)");
+  if (form.sections.length < 1 || form.sections.some((s) => s.title.trim().length === 0))
+    missing.push("titre de section");
+  if (form.sections.some((s) => s.content.trim().length === 0))
+    missing.push("contenu de section");
+  if (reason.trim().length < 3) missing.push("raison (min. 3 caractères)");
+  const canSubmit = missing.length === 0;
 
   const mutation = useMutation({
     mutationFn: async () => {
@@ -232,7 +235,7 @@ function BlogFormDialog({
 
   return (
     <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
-      <DialogContent className="max-w-2xl max-h-[92vh] overflow-y-auto">
+      <DialogContent className="max-w-2xl max-h-[92vh] overflow-y-auto z-[60]">
         <DialogHeader>
           <DialogTitle className="font-display">{post ? "Modifier l'article" : "Créer un article"}</DialogTitle>
           <DialogDescription>
@@ -416,12 +419,19 @@ function BlogFormDialog({
           <ReasonField value={reason} onChange={setReason} />
         </div>
 
-        <DialogFooter>
-          <Button variant="outline" onClick={onClose}>Annuler</Button>
-          <Button onClick={() => mutation.mutate()} disabled={!canSubmit || mutation.isPending || uploading}>
-            {mutation.isPending && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
-            {post ? "Enregistrer" : "Créer l'article"}
-          </Button>
+        <DialogFooter className="flex-col sm:flex-col items-stretch gap-2">
+          {!canSubmit && (
+            <p className="text-[11px] text-warning text-right">
+              Champs manquants : <span className="font-medium">{missing.join(", ")}</span>
+            </p>
+          )}
+          <div className="flex gap-2 justify-end">
+            <Button variant="outline" onClick={onClose}>Annuler</Button>
+            <Button onClick={() => mutation.mutate()} disabled={!canSubmit || mutation.isPending || uploading}>
+              {mutation.isPending && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
+              {post ? "Enregistrer" : "Créer l'article"}
+            </Button>
+          </div>
         </DialogFooter>
       </DialogContent>
     </Dialog>
