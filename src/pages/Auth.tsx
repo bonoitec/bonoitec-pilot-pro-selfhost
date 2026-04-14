@@ -18,6 +18,7 @@ import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import heroDashboard from "@/assets/hero-dashboard.png";
+import { useGoogleSignIn } from "@/hooks/useGoogleSignIn";
 
 const TURNSTILE_SITE_KEY = (import.meta.env.VITE_TURNSTILE_SITE_KEY as string | undefined) ?? "";
 const TURNSTILE_ENABLED = TURNSTILE_SITE_KEY.length > 0;
@@ -402,8 +403,25 @@ const Auth = () => {
     toast.success("Votre compte a été créé ! Vérifiez votre boîte mail pour confirmer votre inscription.", { duration: 6000 });
   };
 
+  const googleSignIn = useGoogleSignIn();
+
   const handleGoogleLogin = async () => {
     localStorage.setItem("auth_intent", activeTab);
+
+    // Primary: GIS popup flow — shows "BonoitecPilot" in consent, not the Supabase URL.
+    if (googleSignIn.enabled && googleSignIn.ready) {
+      setLoading(true);
+      const res = await googleSignIn.signIn();
+      setLoading(false);
+      if (res.ok) {
+        // Session is set by Supabase. AuthContext will pick it up and redirect via the effect below.
+        return;
+      }
+      // Fall through to the old redirect flow if GIS failed (user blocked popup, FedCM off, etc.)
+      toast.message("Connexion Google: bascule sur la méthode de secours…");
+    }
+
+    // Fallback: legacy Supabase OAuth redirect (still shows the Supabase URL but always works).
     setLoading(true);
     const { error } = await supabase.auth.signInWithOAuth({
       provider: "google",
