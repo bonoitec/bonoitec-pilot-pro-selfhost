@@ -56,15 +56,29 @@ function emailLayout(
 ): string {
   const escapedName = orgContact?.name ? esc(orgContact.name) : "";
   const escapedEmail = orgContact?.email ? esc(orgContact.email) : "";
-  // Footer line 2: shop name + shop email (combined).
-  // Shows when either name or email is present; phone is dropped from this line.
-  const atelierLine = (() => {
-    if (!escapedName && !escapedEmail) return "";
-    const parts: string[] = [];
-    if (escapedName) parts.push(`<strong style="color:${BRAND.foreground};">${escapedName}</strong>`);
-    if (escapedEmail) parts.push(`<a href="mailto:${escapedEmail}" style="color:${BRAND.primary};text-decoration:none;">${escapedEmail}</a>`);
-    return parts.join(" &middot; ");
-  })();
+  const escapedPhone = orgContact?.phone ? esc(orgContact.phone) : "";
+  const hasShopContact = Boolean(escapedName || escapedEmail || escapedPhone);
+
+  // Contact line: email · phone (middot-separated)
+  const contactLineItems: string[] = [];
+  if (escapedEmail) {
+    contactLineItems.push(
+      `<a href="mailto:${escapedEmail}" style="color:${BRAND.primary};text-decoration:none;font-weight:600;">${escapedEmail}</a>`,
+    );
+  }
+  if (escapedPhone) {
+    contactLineItems.push(`<span style="color:${BRAND.muted};">${escapedPhone}</span>`);
+  }
+  const contactLine = contactLineItems.join(' <span style="color:#cbd5e1;">&middot;</span> ');
+
+  // Hero shop block: shown in footer so the client knows exactly who repaired their phone
+  const shopHero = hasShopContact
+    ? `
+      ${escapedName ? `<p style="margin:0 0 6px 0;color:${BRAND.foreground};font-size:16px;font-weight:700;letter-spacing:-0.2px;font-family:'Segoe UI',Tahoma,Geneva,Verdana,Arial,sans-serif;">${escapedName}</p>` : ""}
+      ${contactLine ? `<p style="margin:0 0 18px 0;font-size:13px;line-height:1.6;font-family:'Segoe UI',Tahoma,Geneva,Verdana,Arial,sans-serif;">${contactLine}</p>` : ""}
+      <hr style="border:none;border-top:1px solid ${BRAND.border};margin:0 auto 16px;max-width:160px;" />
+    `
+    : "";
 
   return `<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" lang="fr">
@@ -92,11 +106,11 @@ function emailLayout(
     <tr>
       <td align="center">
         <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="580" style="max-width:580px;width:100%;background-color:${BRAND.white};border-radius:12px;overflow:hidden;border:1px solid ${BRAND.border};">
-          <!-- Header -->
+          <!-- Header: wordmark (tight-cropped, aspect 5.265) + accent bar -->
           <tr>
-            <td style="background-color:${BRAND.primary};padding:44px 32px 36px;text-align:center;">
-              <img src="https://bonoitecpilot.fr/email-wordmark.png" width="280" height="44" alt="BonoitecPilot" style="display:block;margin:0 auto;border:0;outline:none;" />
-              <p style="color:rgba(255,255,255,0.80);font-size:12px;margin:10px 0 0 0;font-family:'Segoe UI',Tahoma,Geneva,Verdana,Arial,sans-serif;letter-spacing:0.4px;">Gestion professionnelle de r&eacute;parations</p>
+            <td style="background-color:${BRAND.primary};padding:48px 32px 44px;text-align:center;">
+              <img src="https://bonoitecpilot.fr/email-wordmark.png" width="280" height="53" alt="BonoitecPilot" style="display:block;margin:0 auto 20px;border:0;outline:none;" />
+              <table role="presentation" cellpadding="0" cellspacing="0" border="0" align="center"><tr><td style="width:56px;height:3px;background-color:rgba(255,255,255,0.5);line-height:3px;font-size:0;">&nbsp;</td></tr></table>
             </td>
           </tr>
           <!-- Body -->
@@ -105,16 +119,15 @@ function emailLayout(
               ${content}
             </td>
           </tr>
-          <!-- Footer -->
+          <!-- Footer: shop-hero block, then subtle BonoitecPilot attribution -->
           <tr>
-            <td style="background-color:${BRAND.background};padding:24px 32px;text-align:center;border-top:1px solid ${BRAND.border};">
-              <p style="color:${BRAND.muted};font-size:12px;line-height:1.7;margin:0;font-family:'Segoe UI',Tahoma,Geneva,Verdana,Arial,sans-serif;">
-                BonoitecPilot &mdash; Votre atelier connect&eacute;<br />
-                ${atelierLine ? atelierLine + "<br />" : ""}
-                Support&nbsp;: <a href="mailto:contact@app.bonoitecpilot.fr" style="color:${BRAND.primary};text-decoration:none;">contact@app.bonoitecpilot.fr</a>
+            <td style="background-color:${BRAND.background};padding:32px 32px 24px;text-align:center;border-top:1px solid ${BRAND.border};">
+              ${shopHero}
+              <p style="margin:0;color:#94a3b8;font-size:11px;line-height:1.6;font-family:'Segoe UI',Tahoma,Geneva,Verdana,Arial,sans-serif;">
+                Envoy&eacute; via <a href="https://bonoitecpilot.fr" style="color:${BRAND.muted};text-decoration:none;font-weight:600;">BonoitecPilot</a>
               </p>
-              <p style="margin-top:12px;font-size:11px;color:#94a3b8;font-family:'Segoe UI',Tahoma,Geneva,Verdana,Arial,sans-serif;">
-                Cet email a &eacute;t&eacute; envoy&eacute; automatiquement. Merci de ne pas y r&eacute;pondre directement.
+              <p style="margin:4px 0 0 0;color:#cbd5e1;font-size:10px;font-family:'Segoe UI',Tahoma,Geneva,Verdana,Arial,sans-serif;">
+                Email automatique &mdash; merci de ne pas r&eacute;pondre directement
               </p>
             </td>
           </tr>
