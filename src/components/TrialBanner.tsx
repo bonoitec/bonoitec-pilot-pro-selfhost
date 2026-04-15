@@ -39,7 +39,15 @@ const plans = [
 
 export function TrialBanner() {
   const { isTrialActive, isSubscribed, daysRemaining, trialEndDate, isLoading } = useTrialStatus();
-  const { startCheckout, cancelAtPeriodEnd, subscriptionEnd, planName, openCustomerPortal } = useSubscription();
+  const {
+    startCheckout,
+    cancelAtPeriodEnd,
+    subscriptionEnd,
+    planName,
+    openCustomerPortal,
+    paymentStatus,
+    pastDueGraceMs,
+  } = useSubscription();
   const { user } = useAuth();
   const { isSuperAdmin } = useIsSuperAdmin();
   const [open, setOpen] = useState(false);
@@ -49,7 +57,7 @@ export function TrialBanner() {
   if (isLoading) return null;
   if (isSuperAdmin) return null;
 
-  const planKey = (planName ?? "").replace("_cancelling", "");
+  const planKey = (planName ?? "").replace(/(_cancelling|_past_due)$/, "");
   const planLabel =
     planKey === "monthly"
       ? "Mensuel"
@@ -64,6 +72,34 @@ export function TrialBanner() {
     await startCheckout(selected);
     setLoading(false);
   };
+
+  // PAYMENT FAILED (past_due) — show a red banner urging card update.
+  // Takes precedence over the cancel-at-period-end banner because a failed
+  // renewal is more urgent (user loses access within 72h without action).
+  if (paymentStatus === "past_due") {
+    const hoursLeft = pastDueGraceMs !== null ? Math.max(0, Math.floor(pastDueGraceMs / (60 * 60 * 1000))) : null;
+    return (
+      <div className="flex items-center gap-2 px-4 py-2 bg-destructive/15 border border-destructive/30 rounded-xl text-sm flex-wrap">
+        <AlertTriangle className="h-4 w-4 text-destructive shrink-0" />
+        <span className="text-foreground font-semibold">Paiement échoué</span>
+        <span className="text-muted-foreground">·</span>
+        <span className="text-foreground">
+          {hoursLeft !== null && hoursLeft > 0
+            ? `Mettez à jour votre carte sous ${hoursLeft}h avant suspension`
+            : "Accès sur le point d'être suspendu"}
+        </span>
+        <Button
+          variant="premium"
+          size="sm"
+          className="ml-auto rounded-full text-xs px-4"
+          onClick={() => openCustomerPortal()}
+        >
+          <CreditCard className="h-3 w-3 mr-1" />
+          Mettre à jour le paiement
+        </Button>
+      </div>
+    );
+  }
 
   // Show cancellation warning banner from real Stripe state (even if org cache is stale)
   if (cancelAtPeriodEnd) {

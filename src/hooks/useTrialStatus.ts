@@ -23,7 +23,31 @@ export function useTrialStatus(): TrialStatus & { isLoading: boolean } {
       return data;
     },
     enabled: !!user,
-    staleTime: 5 * 60 * 1000, // 5 min — trial state rarely changes mid-session
+    // Adaptive stale time: 5 min normally, but drop to 1 min when we're within
+    // 24h of the trial ending (so the UI reacts quickly to expiry without
+    // forcing the user to reload).
+    staleTime: (query) => {
+      const d = query.state.data as { trial_end_date?: string | null } | undefined;
+      if (!d?.trial_end_date) return 5 * 60 * 1000;
+      const endMs = new Date(d.trial_end_date).getTime();
+      if (Number.isNaN(endMs)) return 5 * 60 * 1000;
+      const remainingMs = endMs - Date.now();
+      // Within 24h of expiry: refetch every minute. Already expired: refetch
+      // every 30s so the wall appears promptly.
+      if (remainingMs < 0) return 30 * 1000;
+      if (remainingMs < 24 * 60 * 60 * 1000) return 60 * 1000;
+      return 5 * 60 * 1000;
+    },
+    refetchInterval: (query) => {
+      const d = query.state.data as { trial_end_date?: string | null } | undefined;
+      if (!d?.trial_end_date) return false;
+      const endMs = new Date(d.trial_end_date).getTime();
+      if (Number.isNaN(endMs)) return false;
+      const remainingMs = endMs - Date.now();
+      if (remainingMs < 0) return 30 * 1000;
+      if (remainingMs < 24 * 60 * 60 * 1000) return 60 * 1000;
+      return false; // No background polling when far from expiry
+    },
     refetchOnWindowFocus: false, // never retrigger AppLayout's loading gate on focus
   });
 

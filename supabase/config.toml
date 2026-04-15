@@ -54,3 +54,6 @@ verify_jwt = false
 
 [functions.update-repair-stock]
 verify_jwt = false
+
+[functions.stripe-webhook]
+verify_jwt = false
