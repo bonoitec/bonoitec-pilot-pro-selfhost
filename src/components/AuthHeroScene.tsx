@@ -149,11 +149,12 @@ export function AuthHeroScene() {
   return (
     <div className="relative w-full h-full">
       {/* Card stage — anchored tight to the right edge of the panel,
-          leaving the left column clear for headline + features. */}
-      <div className="absolute top-1/2 right-6 -translate-y-1/2 w-[340px] h-[440px]">
+          leaving the left column clear for headline + features. Sized to
+          fit alongside a 260px text column down to xl (1280px). */}
+      <div className="absolute top-1/2 right-6 -translate-y-1/2 w-[290px] h-[400px]">
         {/* STATS CARD — back-left, slight tilt */}
         <FloatingCard
-          className="absolute top-[4%] left-0 w-[200px] z-10"
+          className="absolute top-0 left-0 w-[170px] z-10"
           floatDuration={7.5}
           floatDelay={0}
           entryInitial={{ opacity: 0, y: 20, rotate: -3 }}
@@ -178,7 +179,7 @@ export function AuthHeroScene() {
 
         {/* INVENTORY CARD — back-left, bottom, slight counter-tilt */}
         <FloatingCard
-          className="absolute bottom-[6%] left-[10px] w-[200px] z-10"
+          className="absolute bottom-0 left-[8px] w-[170px] z-10"
           floatDuration={9}
           floatDelay={1.5}
           entryInitial={{ opacity: 0, y: -20, rotate: 2 }}
@@ -204,7 +205,7 @@ export function AuthHeroScene() {
 
         {/* MAIN LIVE TICKET CARD — front, primary focus */}
         <FloatingCard
-          className="absolute top-[10%] right-0 w-[290px] z-20 overflow-hidden"
+          className="absolute top-[8%] right-0 w-[260px] z-20 overflow-hidden"
           floatDuration={8.5}
           floatDelay={0.6}
           entryInitial={{ opacity: 0, y: 30, scale: 0.92 }}
@@ -372,7 +373,7 @@ export function AuthHeroScene() {
           {stage === "email" && (
             <motion.div
               key="email-card"
-              className="absolute top-[56%] right-[-18px] z-30 w-[252px]"
+              className="absolute top-[58%] right-[-14px] z-30 w-[224px]"
               initial={{ opacity: 0, x: 48, scale: 0.9, rotate: -2 }}
               animate={{ opacity: 1, x: 0, scale: 1, rotate: 0 }}
               exit={{ opacity: 0, x: 48, scale: 0.9, rotate: -2 }}
@@ -510,20 +511,20 @@ function FloatingCard({
 function StaticScene() {
   return (
     <div className="relative w-full h-full">
-      <div className="absolute top-1/2 right-6 -translate-y-1/2 w-[340px] h-[440px]">
-        <div className="absolute top-[4%] left-0 w-[200px] rounded-2xl border border-border/60 bg-card/55 backdrop-blur-xl p-4 space-y-2 shadow-premium-lg">
+      <div className="absolute top-1/2 right-6 -translate-y-1/2 w-[290px] h-[400px]">
+        <div className="absolute top-0 left-0 w-[170px] rounded-2xl border border-border/60 bg-card/55 backdrop-blur-xl p-4 space-y-2 shadow-premium-lg">
           <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Aujourd'hui</div>
           <div className="text-2xl font-bold text-foreground">1 840 €</div>
           <div className="text-[11px] text-muted-foreground">12 réparations</div>
         </div>
-        <div className="absolute bottom-[6%] left-[10px] w-[200px] rounded-2xl border border-border/60 bg-card/55 backdrop-blur-xl p-4 space-y-2 shadow-premium-lg">
+        <div className="absolute bottom-0 left-[8px] w-[170px] rounded-2xl border border-border/60 bg-card/55 backdrop-blur-xl p-4 space-y-2 shadow-premium-lg">
           <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Stock</div>
           <div className="text-2xl font-bold text-foreground">142 pièces</div>
           <div className="h-1 w-full rounded-full bg-foreground/10 overflow-hidden">
             <div className="h-full w-[87%] rounded-full gradient-primary" />
           </div>
         </div>
-        <div className="absolute top-[10%] right-0 w-[290px] rounded-2xl border border-primary/25 bg-card/70 backdrop-blur-xl p-5 space-y-3 shadow-premium-lg shadow-primary/25">
+        <div className="absolute top-[8%] right-0 w-[260px] rounded-2xl border border-primary/25 bg-card/70 backdrop-blur-xl p-5 space-y-3 shadow-premium-lg shadow-primary/25">
           <div className="flex items-center justify-between">
             <span className="text-xs font-semibold font-mono text-foreground">REP-2847</span>
             <span className="rounded-full border border-emerald-500/30 bg-emerald-500/15 px-2 py-0.5 text-[10px] font-semibold text-emerald-400">
