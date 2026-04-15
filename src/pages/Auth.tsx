@@ -8,7 +8,6 @@ import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
-  Zap,
   Loader2,
   Eye,
   EyeOff,
@@ -17,7 +16,11 @@ import {
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
 import { ThemeToggle } from "@/components/ThemeToggle";
-import heroDashboard from "@/assets/hero-dashboard.png";
+import { AnimatedLogo } from "@/components/AnimatedLogo";
+import { AnimatedWordmark } from "@/components/AnimatedWordmark";
+import { AuthHeroScene } from "@/components/AuthHeroScene";
+import Lottie from "lottie-react";
+import sparkleBurstAnimation from "@/assets/lottie/sparkle-burst.json";
 import { useGoogleSignIn } from "@/hooks/useGoogleSignIn";
 
 const TURNSTILE_SITE_KEY = (import.meta.env.VITE_TURNSTILE_SITE_KEY as string | undefined) ?? "";
@@ -465,44 +468,94 @@ const Auth = () => {
           <div className="absolute inset-0 bg-dots opacity-20" />
         </div>
 
+        {/* Cinematic product scene — floating glass cards with live ticket
+            lifecycle, stats, and inventory. Hidden on narrow laptops to avoid
+            overlapping text; shows at xl+ where there's horizontal room. */}
+        <div className="absolute inset-0 z-0 pointer-events-none hidden xl:block">
+          <AuthHeroScene />
+        </div>
+
         <div className="relative z-10 flex flex-col justify-between w-full p-12 xl:p-16">
-          <Link to="/" className="inline-flex items-center gap-2.5 w-fit">
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl gradient-primary text-primary-foreground shadow-lg shadow-primary/25">
-              <Zap className="h-4.5 w-4.5" />
+          {/* Cinematic brand lockup — big animated mark + staggered wordmark +
+              Lottie sparkle burst behind it. Plays on page load. */}
+          <Link to="/" className="inline-flex items-center gap-4 w-fit group">
+            <div className="relative">
+              {/* Lottie sparkle burst — sits behind the logo badge, radiates
+                  orbiting particles during the initial reveal. */}
+              <div className="absolute inset-0 -m-8 pointer-events-none text-primary">
+                <Lottie
+                  animationData={sparkleBurstAnimation}
+                  loop
+                  autoplay
+                  className="w-full h-full"
+                  style={{ filter: "drop-shadow(0 0 12px rgba(124, 58, 237, 0.4))" }}
+                />
+              </div>
+              {/* Big logo badge — purple gradient w/ glow shadow */}
+              <div className="relative flex h-16 w-16 items-center justify-center rounded-2xl gradient-primary text-primary-foreground shadow-premium-lg shadow-primary/40">
+                <AnimatedLogo size={40} className="text-primary-foreground" glow sparks />
+              </div>
             </div>
-            <span className="text-lg font-bold tracking-tight font-display text-foreground">BonoitecPilot</span>
+            <AnimatedWordmark
+              text="BonoitecPilot"
+              className="text-2xl font-extrabold tracking-tight font-display text-foreground"
+              delay={0.5}
+              stagger={0.05}
+            />
           </Link>
 
-          <div className="max-w-md space-y-8 -mt-8">
-            <div className="space-y-4">
-              <h1 className="text-[2.5rem] leading-[1.15] font-extrabold tracking-tight text-foreground font-display">
+          <div className="max-w-md space-y-10">
+            <motion.div
+              className="space-y-4"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 1.4, duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
+            >
+              <h1 className="text-[2.75rem] leading-[1.1] font-extrabold tracking-tight text-foreground font-display">
                 Votre atelier,<br />
                 <span className="gradient-text">simplifié.</span>
               </h1>
-              <p className="text-[15px] text-muted-foreground leading-relaxed max-w-sm">
+              <p className="text-base text-muted-foreground leading-relaxed max-w-sm">
                 Gérez vos réparations, devis, clients et stock depuis une seule plateforme intuitive.
               </p>
-            </div>
+            </motion.div>
 
-            <div className="space-y-2.5">
+            {/* Feature list with cascading stagger */}
+            <motion.div
+              className="space-y-3"
+              initial="hidden"
+              animate="visible"
+              variants={{
+                hidden: {},
+                visible: { transition: { delayChildren: 1.8, staggerChildren: 0.1 } },
+              }}
+            >
               {["Devis et factures automatisés", "Suivi des réparations en temps réel", "Gestion de stock intégrée", "Essai gratuit 30 jours"].map((item) => (
-                <div key={item} className="flex items-center gap-2.5">
+                <motion.div
+                  key={item}
+                  className="flex items-center gap-3"
+                  variants={{
+                    hidden: { opacity: 0, x: -14 },
+                    visible: { opacity: 1, x: 0, transition: { duration: 0.5, ease: [0.16, 1, 0.3, 1] } },
+                  }}
+                >
                   <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full gradient-primary-subtle text-primary">
                     <Check className="h-3 w-3" />
                   </div>
                   <span className="text-sm text-foreground/80">{item}</span>
-                </div>
+                </motion.div>
               ))}
-            </div>
-
-            <div className="rounded-2xl border border-border/30 bg-card/40 backdrop-blur-sm shadow-premium-lg overflow-hidden">
-              <img src={heroDashboard} alt="Interface BonoitecPilot" className="w-full h-auto" loading="lazy" />
-            </div>
+            </motion.div>
           </div>
 
-          <p className="text-xs text-muted-foreground/50">
+          <motion.p
+            className="text-xs text-muted-foreground/50"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 2.4, duration: 0.8 }}
+          >
             Accès complet · Sans carte bancaire · Annulation libre
-          </p>
+          </motion.p>
         </div>
       </div>
 
@@ -515,11 +568,16 @@ const Auth = () => {
 
         {/* Mobile header */}
         <div className="lg:hidden flex flex-col items-center gap-1 mb-10">
-          <Link to="/" className="inline-flex items-center gap-2">
-            <div className="flex h-8 w-8 items-center justify-center rounded-xl gradient-primary text-primary-foreground shadow-md shadow-primary/20">
-              <Zap className="h-4 w-4" />
+          <Link to="/" className="inline-flex items-center gap-3">
+            <div className="flex h-11 w-11 items-center justify-center rounded-xl gradient-primary text-primary-foreground shadow-md shadow-primary/20">
+              <AnimatedLogo size={26} className="text-primary-foreground" glow={false} sparks={false} />
             </div>
-            <span className="text-lg font-bold tracking-tight font-display text-foreground">BonoitecPilot</span>
+            <AnimatedWordmark
+              text="BonoitecPilot"
+              className="text-lg font-bold tracking-tight font-display text-foreground"
+              delay={0.3}
+              stagger={0.04}
+            />
           </Link>
         </div>
 
