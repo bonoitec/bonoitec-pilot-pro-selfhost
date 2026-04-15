@@ -62,8 +62,28 @@ export function useSubscription() {
 
   // Adaptive poll cadence: 5 min normally, 1 min when a state transition is
   // imminent (past_due grace ending OR subscription period ending within 24h).
-  // This closes the "5-min stale window" gap without polling constantly.
+  // The timer is held in a ref so a mid-cycle urgency flip can clear it and
+  // reschedule immediately — otherwise the worst-case latency from "flipped
+  // to urgent" to "next poll" would be 5 minutes.
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const isUrgent = useRef(false);
+  const checkRef = useRef(checkSubscription);
+  checkRef.current = checkSubscription;
+
+  const schedule = useCallback(() => {
+    if (timerRef.current) clearTimeout(timerRef.current);
+    const ms = isUrgent.current ? POLL_URGENT_MS : POLL_NORMAL_MS;
+    timerRef.current = setTimeout(async () => {
+      await checkRef.current();
+      schedule();
+    }, ms);
+  }, []);
+
+  // Watch state transitions. When urgency flips from false → true, clear the
+  // in-flight normal-cadence timer and reschedule immediately at the urgent
+  // cadence. Do nothing when urgency flips the other way: let the current
+  // urgent tick finish, then the next schedule() will pick up the normal
+  // cadence naturally.
   useEffect(() => {
     const graceUrgent =
       state.paymentStatus === "past_due" &&
@@ -75,26 +95,22 @@ export function useSubscription() {
       if (Number.isNaN(endMs)) return false;
       return endMs - Date.now() < URGENT_THRESHOLD_MS;
     })();
-    isUrgent.current = graceUrgent || subEndUrgent;
-  }, [state.paymentStatus, state.pastDueGraceMs, state.subscriptionEnd]);
+    const wasUrgent = isUrgent.current;
+    const nextUrgent = graceUrgent || subEndUrgent;
+    isUrgent.current = nextUrgent;
+    if (!wasUrgent && nextUrgent) {
+      schedule(); // cancel normal timer, reschedule urgent immediately
+    }
+  }, [state.paymentStatus, state.pastDueGraceMs, state.subscriptionEnd, schedule]);
 
   useEffect(() => {
     if (!session) return;
     checkSubscription();
-    // Schedule next poll using current urgency. We re-read isUrgent.current on
-    // each tick so the cadence adapts without re-running this effect (which
-    // would cancel the previous timer and risk drift).
-    let timer: ReturnType<typeof setTimeout>;
-    const schedule = () => {
-      const ms = isUrgent.current ? POLL_URGENT_MS : POLL_NORMAL_MS;
-      timer = setTimeout(async () => {
-        await checkSubscription();
-        schedule();
-      }, ms);
-    };
     schedule();
-    return () => clearTimeout(timer);
-  }, [session, checkSubscription]);
+    return () => {
+      if (timerRef.current) clearTimeout(timerRef.current);
+    };
+  }, [session, checkSubscription, schedule]);
 
   const startCheckout = async (plan: "monthly" | "quarterly" | "annual" = "monthly") => {
     if (!session?.access_token) {

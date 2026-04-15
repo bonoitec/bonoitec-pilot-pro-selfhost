@@ -110,24 +110,50 @@ serve(async (req) => {
     const subscription = relevantSubs[0];
     const rawStatus = subscription?.status;
 
-    // Grace period for past_due: user retains access for 72h after first failure,
-    // then access is revoked. Gives Stripe's dunning retries a chance to succeed
-    // without immediately cutting the user off.
+    // Grace period for past_due: user retains access for 72h after the first
+    // failed-payment event, then access is revoked. The anchor timestamp lives
+    // on organizations.past_due_since — set by the stripe-webhook on the first
+    // invoice.payment_failed event. If the webhook hasn't fired yet (first
+    // detection via polling), we set it here as a fallback using the profile
+    // org lookup. Grace counts forward from that anchor, NOT from
+    // current_period_end (which Stripe advances to the next period as soon
+    // as the renewal invoice is generated — making the old formula always
+    // return ~30 days of "grace").
     const GRACE_PERIOD_MS = 3 * 24 * 60 * 60 * 1000;
     let pastDueGraceRemaining: number | null = null;
     let inPastDueGrace = false;
+    let pastDueSinceForDb: string | null = null; // written back to DB when we had to bootstrap
+
     if (subscription && rawStatus === "past_due") {
-      // Use current_period_end as the "last known paid-through" marker; grace
-      // counts from the moment the period ended (i.e. renewal failure moment).
-      const periodEndField = subscription.current_period_end;
-      let periodEndSec: number | null = null;
-      if (typeof periodEndField === "number") periodEndSec = periodEndField;
-      else if (typeof periodEndField === "string") {
-        const ms = new Date(periodEndField).getTime();
-        if (!Number.isNaN(ms)) periodEndSec = Math.floor(ms / 1000);
-      }
-      if (periodEndSec) {
-        const graceDeadlineMs = periodEndSec * 1000 + GRACE_PERIOD_MS;
+      const { data: profile } = await supabaseClient
+        .from("profiles")
+        .select("organization_id")
+        .eq("user_id", userId)
+        .single();
+
+      if (profile?.organization_id) {
+        const { data: orgRow } = await supabaseClient
+          .from("organizations")
+          .select("past_due_since")
+          .eq("id", profile.organization_id)
+          .maybeSingle();
+
+        let anchorMs: number | null = null;
+        const dbAnchor = (orgRow as { past_due_since?: string | null } | null)?.past_due_since;
+        if (dbAnchor) {
+          const parsed = new Date(dbAnchor).getTime();
+          if (!Number.isNaN(parsed)) anchorMs = parsed;
+        }
+
+        // If the DB has no anchor yet (webhook hasn't run), set the anchor to
+        // now() as a conservative bootstrap. The next webhook event will
+        // refine it to the actual event.created if needed.
+        if (anchorMs === null) {
+          anchorMs = Date.now();
+          pastDueSinceForDb = new Date(anchorMs).toISOString();
+        }
+
+        const graceDeadlineMs = anchorMs + GRACE_PERIOD_MS;
         pastDueGraceRemaining = Math.max(0, graceDeadlineMs - Date.now());
         inPastDueGrace = pastDueGraceRemaining > 0;
       }
@@ -187,14 +213,23 @@ serve(async (req) => {
           : paymentStatus === "past_due"
             ? "_past_due"
             : "";
+        const dbUpdate: Record<string, unknown> = {
+          subscription_status: "active",
+          stripe_customer_id: customerId,
+          stripe_subscription_id: stripeSubscriptionId,
+          plan_name: `${planName}${suffix}`,
+        };
+        // Bootstrap past_due_since when we had to compute it locally because
+        // the webhook hadn't yet persisted an anchor (first-detection path).
+        if (pastDueSinceForDb) {
+          dbUpdate.past_due_since = pastDueSinceForDb;
+        } else if (paymentStatus !== "past_due") {
+          // User recovered — clear any stale anchor.
+          dbUpdate.past_due_since = null;
+        }
         await supabaseClient
           .from("organizations")
-          .update({
-            subscription_status: "active",
-            stripe_customer_id: customerId,
-            stripe_subscription_id: stripeSubscriptionId,
-            plan_name: `${planName}${suffix}`,
-          })
+          .update(dbUpdate)
           .eq("id", profile.organization_id);
       }
     } else {
