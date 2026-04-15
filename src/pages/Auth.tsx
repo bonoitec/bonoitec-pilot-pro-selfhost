@@ -469,9 +469,10 @@ const Auth = () => {
         </div>
 
         {/* Cinematic product scene — floating glass cards with live ticket
-            lifecycle, stats, and inventory. Hidden on narrow laptops to avoid
-            overlapping text; shows at xl+ where there's horizontal room. */}
-        <div className="absolute inset-0 z-0 pointer-events-none hidden xl:block">
+            lifecycle, stats, and inventory. Only renders when the panel is
+            wide enough (≥1500px) for the scene and the text column to sit
+            side-by-side without overlap. */}
+        <div className="absolute inset-0 z-0 pointer-events-none hidden min-[1500px]:block">
           <AuthHeroScene />
         </div>
 
@@ -504,7 +505,7 @@ const Auth = () => {
             />
           </Link>
 
-          <div className="max-w-md space-y-10">
+          <div className="max-w-[300px] space-y-10">
             <motion.div
               className="space-y-4"
               initial={{ opacity: 0, y: 20 }}

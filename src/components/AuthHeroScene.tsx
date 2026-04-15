@@ -148,8 +148,9 @@ export function AuthHeroScene() {
 
   return (
     <div className="relative w-full h-full">
-      {/* Card stage — anchored to right side of the panel */}
-      <div className="absolute top-1/2 right-[4%] 2xl:right-[8%] -translate-y-1/2 w-[340px] h-[440px]">
+      {/* Card stage — anchored tight to the right edge of the panel,
+          leaving the left column clear for headline + features. */}
+      <div className="absolute top-1/2 right-6 -translate-y-1/2 w-[340px] h-[440px]">
         {/* STATS CARD — back-left, slight tilt */}
         <FloatingCard
           className="absolute top-[4%] left-0 w-[200px] z-10"
@@ -509,7 +510,7 @@ function FloatingCard({
 function StaticScene() {
   return (
     <div className="relative w-full h-full">
-      <div className="absolute top-1/2 right-[4%] 2xl:right-[8%] -translate-y-1/2 w-[340px] h-[440px]">
+      <div className="absolute top-1/2 right-6 -translate-y-1/2 w-[340px] h-[440px]">
         <div className="absolute top-[4%] left-0 w-[200px] rounded-2xl border border-border/60 bg-card/55 backdrop-blur-xl p-4 space-y-2 shadow-premium-lg">
           <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Aujourd'hui</div>
           <div className="text-2xl font-bold text-foreground">1 840 €</div>
