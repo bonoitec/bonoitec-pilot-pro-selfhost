@@ -9,7 +9,6 @@ import {
   Battery,
   Camera,
   Monitor,
-  Radio,
   Star,
 } from "lucide-react";
 import { clientTimelineSteps } from "@/lib/repairStatuses";
@@ -24,12 +23,11 @@ type StepMeta = {
   tint: string;
   tintBg: string;
   tintRing: string;
-  code?: string;
   badge: string;
 };
 
 const STEP_META: StepMeta[] = [
-  { icon: Inbox, tint: "text-violet-300", tintBg: "bg-violet-500/15", tintRing: "ring-violet-400/30", code: "REP-042", badge: "Nouveau" },
+  { icon: Inbox, tint: "text-violet-300", tintBg: "bg-violet-500/15", tintRing: "ring-violet-400/30", badge: "Nouveau" },
   { icon: ShoppingCart, tint: "text-amber-300", tintBg: "bg-amber-500/15", tintRing: "ring-amber-400/30", badge: "En commande" },
   { icon: Truck, tint: "text-sky-300", tintBg: "bg-sky-500/15", tintRing: "ring-sky-400/30", badge: "En transit" },
   { icon: Wrench, tint: "text-violet-300", tintBg: "bg-violet-500/15", tintRing: "ring-violet-400/30", badge: "En atelier" },
@@ -87,42 +85,6 @@ export function JourneySVGFallback({ index, reducedMotion }: Props) {
         }}
       />
 
-      {/* Top-left floating metric card */}
-      <motion.div
-        initial={{ opacity: 0, x: -12 }}
-        animate={{ opacity: 1, x: 0 }}
-        transition={{ duration: 0.7, delay: 0.15, ease: [0.16, 1, 0.3, 1] }}
-        className="absolute top-6 left-6 hidden sm:flex items-center gap-2.5 rounded-full px-3.5 py-1.5"
-        style={{
-          background: "rgba(20,22,28,0.55)",
-          backdropFilter: "blur(10px)",
-          WebkitBackdropFilter: "blur(10px)",
-          boxShadow: "inset 0 1px 0 rgba(255,255,255,0.12), 0 0 0 1px rgba(255,255,255,0.08)",
-        }}
-      >
-        <span className="relative flex h-2 w-2">
-          <span className={`absolute inset-0 rounded-full bg-emerald-400 ${reducedMotion ? "" : "animate-[journeyPulseRing_1.6s_ease-out_infinite]"}`} />
-          <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-400" style={{ boxShadow: "0 0 10px rgba(52,211,153,0.9)" }} />
-        </span>
-        <span className="text-[10.5px] font-bold tracking-[0.12em] text-white/90 uppercase">En direct</span>
-      </motion.div>
-
-      {/* Top-right badge */}
-      <motion.div
-        initial={{ opacity: 0, x: 12 }}
-        animate={{ opacity: 1, x: 0 }}
-        transition={{ duration: 0.7, delay: 0.25, ease: [0.16, 1, 0.3, 1] }}
-        className="absolute top-6 right-6 hidden sm:flex items-center gap-2 rounded-full px-3.5 py-1.5"
-        style={{
-          background: "rgba(124,58,237,0.18)",
-          backdropFilter: "blur(10px)",
-          WebkitBackdropFilter: "blur(10px)",
-          boxShadow: "inset 0 1px 0 rgba(255,255,255,0.14), 0 0 0 1px rgba(167,139,250,0.25)",
-        }}
-      >
-        <Radio className="w-3 h-3 text-violet-200" />
-        <span className="text-[10.5px] font-mono tabular-nums font-semibold text-white/90" style={{ letterSpacing: "0.04em" }}>{meta.code ?? `REP-042`}</span>
-      </motion.div>
 
       {/* Device frame */}
       <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-[54%]">
