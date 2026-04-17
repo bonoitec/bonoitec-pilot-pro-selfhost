@@ -1,9 +1,10 @@
 import { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Menu, X, Zap } from "lucide-react";
+import { Menu, X } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { NavbarBrand } from "@/components/NavbarBrand";
 
 const navLinks = [
   { label: "Fonctionnalités", href: "/fonctionnalites" },
@@ -35,11 +36,12 @@ const LandingHeader = () => {
       }`}
     >
       <div className="landing-container flex items-center justify-between h-16 lg:h-18">
-        <Link to="/" className="flex items-center gap-2.5 group">
-          <div className="flex h-9 w-9 items-center justify-center rounded-xl gradient-primary text-primary-foreground shadow-lg shadow-primary/25 group-hover:shadow-xl group-hover:shadow-primary/30 transition-all duration-300">
-            <Zap className="h-5 w-5" />
-          </div>
-          <span className="text-xl font-bold tracking-tight font-display text-foreground">BonoitecPilot</span>
+        <Link
+          to="/"
+          className="group inline-flex items-center"
+          aria-label="BonoitecPilot"
+        >
+          <NavbarBrand />
         </Link>
 
         <nav className="hidden md:flex items-center gap-8">

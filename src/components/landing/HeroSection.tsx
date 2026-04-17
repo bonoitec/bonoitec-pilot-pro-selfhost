@@ -2,7 +2,9 @@ import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, CheckCircle2, Play, Sparkles } from "lucide-react";
 import { motion } from "framer-motion";
-import heroDashboard from "@/assets/hero-dashboard.png";
+import { Suspense, lazy } from "react";
+
+const RepairJourneyScene = lazy(() => import("./RepairJourneyScene"));
 
 const trustBadges = [
   "Essai gratuit 30 jours",
@@ -76,18 +78,14 @@ const HeroSection = () => (
           initial={{ opacity: 0, y: 40, scale: 0.95 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
           transition={{ duration: 0.9, delay: 0.3, ease: "easeOut" }}
-          className="relative"
+          className="relative aspect-[16/10]"
         >
-          <div className="relative rounded-2xl overflow-hidden shadow-premium-lg border border-border/40">
-            <div className="absolute inset-0 gradient-border rounded-2xl" />
-            <img
-              src={heroDashboard}
-              alt="Tableau de bord BonoitecPilot — gestion d'atelier de réparation"
-              className="w-full h-auto relative z-10"
-              loading="eager"
-            />
+          <div className="relative rounded-2xl overflow-hidden shadow-premium-lg border border-border/40 h-full">
+            <div className="absolute inset-0 gradient-border rounded-2xl z-20 pointer-events-none" />
+            <Suspense fallback={<div className="absolute inset-0 animate-pulse bg-muted/30" />}>
+              <RepairJourneyScene />
+            </Suspense>
           </div>
-          {/* Glow behind dashboard */}
           <div className="absolute -inset-6 -z-10 bg-gradient-to-r from-primary/15 via-primary-glow/10 to-primary/15 blur-3xl rounded-3xl animate-glow-pulse" />
         </motion.div>
       </div>
