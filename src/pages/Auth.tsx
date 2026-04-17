@@ -16,11 +16,8 @@ import {
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
 import { ThemeToggle } from "@/components/ThemeToggle";
-import { AnimatedLogo } from "@/components/AnimatedLogo";
-import { AnimatedWordmark } from "@/components/AnimatedWordmark";
+import { NavbarBrand } from "@/components/NavbarBrand";
 import { AuthHeroScene } from "@/components/AuthHeroScene";
-import Lottie from "lottie-react";
-import sparkleBurstAnimation from "@/assets/lottie/sparkle-burst.json";
 import { useGoogleSignIn } from "@/hooks/useGoogleSignIn";
 
 const TURNSTILE_SITE_KEY = (import.meta.env.VITE_TURNSTILE_SITE_KEY as string | undefined) ?? "";
@@ -476,32 +473,8 @@ const Auth = () => {
         </div>
 
         <div className="relative z-10 flex flex-col justify-between w-full p-12 xl:p-16">
-          {/* Cinematic brand lockup — big animated mark + staggered wordmark +
-              Lottie sparkle burst behind it. Plays on page load. */}
-          <Link to="/" className="inline-flex items-center gap-4 w-fit group">
-            <div className="relative">
-              {/* Lottie sparkle burst — sits behind the logo badge, radiates
-                  orbiting particles during the initial reveal. */}
-              <div className="absolute inset-0 -m-8 pointer-events-none text-primary">
-                <Lottie
-                  animationData={sparkleBurstAnimation}
-                  loop
-                  autoplay
-                  className="w-full h-full"
-                  style={{ filter: "drop-shadow(0 0 12px rgba(124, 58, 237, 0.4))" }}
-                />
-              </div>
-              {/* Big logo badge — purple gradient w/ glow shadow */}
-              <div className="relative flex h-16 w-16 items-center justify-center rounded-2xl gradient-primary text-primary-foreground shadow-premium-lg shadow-primary/40">
-                <AnimatedLogo size={40} className="text-primary-foreground" glow sparks />
-              </div>
-            </div>
-            <AnimatedWordmark
-              text="BonoitecPilot"
-              className="text-2xl font-extrabold tracking-tight font-display text-foreground"
-              delay={0.5}
-              stagger={0.05}
-            />
+          <Link to="/" className="inline-flex items-center w-fit group" aria-label="BonoitecPilot">
+            <NavbarBrand />
           </Link>
 
           <div className="max-w-[260px] space-y-10">
@@ -568,16 +541,8 @@ const Auth = () => {
 
         {/* Mobile header */}
         <div className="lg:hidden flex flex-col items-center gap-1 mb-10">
-          <Link to="/" className="inline-flex items-center gap-3">
-            <div className="flex h-11 w-11 items-center justify-center rounded-xl gradient-primary text-primary-foreground shadow-md shadow-primary/20">
-              <AnimatedLogo size={26} className="text-primary-foreground" glow={false} sparks={false} />
-            </div>
-            <AnimatedWordmark
-              text="BonoitecPilot"
-              className="text-lg font-bold tracking-tight font-display text-foreground"
-              delay={0.3}
-              stagger={0.04}
-            />
+          <Link to="/" className="inline-flex items-center" aria-label="BonoitecPilot">
+            <NavbarBrand />
           </Link>
         </div>
 
