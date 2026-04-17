@@ -447,7 +447,7 @@ function HeroComposition() {
         const ctaE = Ease.outBack(ctaT);
         const badgeE = Ease.outCubic(Math.min(1, Math.max(0, (localTime - 2.0) / 0.5)));
         const idle = Math.sin(localTime * 0.9), idle2 = Math.cos(localTime * 0.7);
-        const phoneX = lerp(-200, 500, settle);
+        const phoneX = lerp(-80, 560, settle);
         const phoneY = lerp(0, 40, settle) + idle * 6;
         const phoneRot = lerp(0, 4, settle) + idle * 0.5;
         const phoneScale = lerp(1.0, 0.9, settle);
@@ -484,7 +484,7 @@ function HeroComposition() {
               </div>
             </div>
             {/* RIGHT — props settled */}
-            <div style={{ position: "absolute", left: "50%", top: "50%", transform: `translate3d(calc(-50% + 540px), -50%, 0)`, width: 700, height: 700, borderRadius: "50%", background: `radial-gradient(circle, hsl(var(--primary) / 0.22), transparent 65%)`, opacity: settle, pointerEvents: "none", willChange: "opacity" }} />
+            <div style={{ position: "absolute", left: "50%", top: "50%", transform: `translate3d(calc(-50% + 600px), -50%, 0)`, width: 700, height: 700, borderRadius: "50%", background: `radial-gradient(circle, hsl(var(--primary) / 0.22), transparent 65%)`, opacity: settle, pointerEvents: "none", willChange: "opacity" }} />
             <div style={{ position: "absolute", left: "50%", top: "50%", transform: `translate(calc(-50% + ${lerp(180, 760, invSettle)}px), calc(-50% + ${lerp(40, 240, invSettle) + idle2 * 5}px)) rotate(${lerp(5, -6, invSettle) + idle2 * 0.7}deg)`, zIndex: 2, pointerEvents: "none" }}><Invoice w={240} /></div>
             <div style={{ position: "absolute", left: "50%", top: "50%", transform: `translate(calc(-50% + ${phoneX}px), calc(-50% + ${phoneY}px)) rotate(${phoneRot}deg) scale(${phoneScale})`, filter: "drop-shadow(0 40px 60px hsl(var(--primary) / 0.35))", zIndex: 3, pointerEvents: "none" }}><Phone w={320} healProgress={1} state="healed" /></div>
             <div style={{ position: "absolute", left: "50%", top: "50%", transform: `translate(calc(-50% + ${lerp(0, 280, toolSettle)}px), calc(-50% + ${lerp(0, -260, toolSettle) + idle * 4}px)) rotate(${lerp(0, -18, toolSettle)}deg) scale(0.7)`, opacity: toolSettle, zIndex: 4, pointerEvents: "none" }}><Screwdriver w={180} /></div>
