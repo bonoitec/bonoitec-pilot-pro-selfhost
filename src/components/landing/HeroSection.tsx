@@ -2,9 +2,7 @@ import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, CheckCircle2, Play, Sparkles } from "lucide-react";
 import { motion } from "framer-motion";
-import { Suspense, lazy } from "react";
-
-const RepairJourneyScene = lazy(() => import("./RepairJourneyScene"));
+import HeroAnimation from "./HeroAnimation";
 
 const trustBadges = [
   "Essai gratuit 30 jours",
@@ -14,7 +12,7 @@ const trustBadges = [
 ];
 
 const HeroSection = () => (
-  <section className="relative overflow-hidden">
+  <section className="relative overflow-hidden md:min-h-[calc(100dvh-4rem)] flex items-center">
     {/* Premium gradient background */}
     <div className="absolute inset-0">
       <div className="absolute inset-0 bg-gradient-to-b from-accent/50 via-background to-background" />
@@ -23,8 +21,16 @@ const HeroSection = () => (
       <div className="absolute inset-0 bg-dots opacity-30" />
     </div>
 
-    <div className="landing-container relative pt-20 md:pt-28 pb-16 md:pb-24">
-      <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
+    <div className="landing-container relative w-full py-4">
+      {/* Desktop: the animation IS the hero. Sized so 16:9 always fits above the fold. */}
+      <div className="hidden md:flex justify-center">
+        <div style={{ width: "min(100%, calc((100dvh - 6rem) * 16 / 9))" }}>
+          <HeroAnimation loop={false} />
+        </div>
+      </div>
+
+      {/* Mobile: the 16:9 animation would crush the copy, so keep the text-first hero. */}
+      <div className="md:hidden pt-20">
         <motion.div
           initial={{ opacity: 0, y: 24 }}
           animate={{ opacity: 1, y: 0 }}
@@ -41,7 +47,7 @@ const HeroSection = () => (
             Le logiciel de gestion pensé pour les réparateurs
           </motion.div>
 
-          <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight font-display leading-[1.08]">
+          <h1 className="text-4xl sm:text-5xl font-extrabold tracking-tight font-display leading-[1.08]">
             Toute la gestion de votre atelier dans{" "}
             <span className="gradient-text">une seule plateforme</span>
           </h1>
@@ -72,21 +78,6 @@ const HeroSection = () => (
               </div>
             ))}
           </div>
-        </motion.div>
-
-        <motion.div
-          initial={{ opacity: 0, y: 40, scale: 0.95 }}
-          animate={{ opacity: 1, y: 0, scale: 1 }}
-          transition={{ duration: 0.9, delay: 0.3, ease: "easeOut" }}
-          className="relative aspect-[16/10]"
-        >
-          <div className="relative rounded-2xl overflow-hidden shadow-premium-lg border border-border/40 h-full">
-            <div className="absolute inset-0 gradient-border rounded-2xl z-20 pointer-events-none" />
-            <Suspense fallback={<div className="absolute inset-0 animate-pulse bg-muted/30" />}>
-              <RepairJourneyScene />
-            </Suspense>
-          </div>
-          <div className="absolute -inset-6 -z-10 bg-gradient-to-r from-primary/15 via-primary-glow/10 to-primary/15 blur-3xl rounded-3xl animate-glow-pulse" />
         </motion.div>
       </div>
     </div>
