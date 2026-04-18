@@ -29,7 +29,8 @@ const CTASection = () => {
             <p className="text-primary-foreground/80 text-lg leading-relaxed">
               Rejoignez les réparateurs qui gagnent du temps chaque jour avec BonoitecPilot.
             </p>
-            <div className="flex flex-col sm:flex-row flex-wrap justify-center gap-4 pt-2">
+            <div className="flex flex-col sm:flex-row flex-wrap items-center justify-center gap-6 pt-2">
+              {/* Single primary CTA — the decisive action */}
               <Button
                 size="lg"
                 asChild
@@ -39,15 +40,20 @@ const CTASection = () => {
                   Créer mon espace <ArrowRight className="h-5 w-5 ml-2" />
                 </Link>
               </Button>
-              <Button
-                size="lg"
-                asChild
-                className="rounded-full px-10 h-14 text-base font-bold bg-white/15 text-primary-foreground border-2 border-white/30 hover:bg-white/25 hover:border-white/50 backdrop-blur-sm shadow-lg hover:shadow-xl hover:scale-[1.03] active:scale-[0.97] transition-all duration-200"
+              {/* Secondary demoted to a text link with a subtle underline — clear hierarchy */}
+              <Link
+                to="/contact"
+                className="group inline-flex items-center gap-2 text-primary-foreground/85 hover:text-primary-foreground font-semibold text-base transition-colors"
               >
-                <Link to="/contact">
-                  <CalendarDays className="h-5 w-5 mr-2" /> Planifier une démo
-                </Link>
-              </Button>
+                <CalendarDays className="h-5 w-5 opacity-70 group-hover:opacity-100 transition-opacity" />
+                <span className="relative">
+                  Planifier une démo
+                  <span
+                    aria-hidden="true"
+                    className="absolute left-0 right-0 -bottom-1 h-[1.5px] bg-primary-foreground/40 group-hover:bg-primary-foreground origin-left transition-all duration-300"
+                  />
+                </span>
+              </Link>
             </div>
             <p className="text-primary-foreground/50 text-sm pt-2">
               Essai gratuit 30 jours · Sans carte bancaire · Sans engagement

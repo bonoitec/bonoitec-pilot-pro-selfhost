@@ -96,13 +96,28 @@ const PricingSection = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={isInView ? { opacity: 1, y: 0 } : {}}
           transition={{ duration: 0.5 }}
-          className="text-center max-w-2xl mx-auto mb-14"
+          className="text-center max-w-3xl mx-auto mb-14"
         >
-          <div className="inline-flex items-center gap-2 rounded-full gradient-primary-subtle border border-primary/20 px-4 py-1.5 text-xs font-semibold text-primary mb-6">
+          <motion.div
+            aria-hidden="true"
+            initial={{ opacity: 0, scaleX: 0 }}
+            animate={isInView ? { opacity: 1, scaleX: 1 } : {}}
+            transition={{ duration: 0.55, ease: [0.16, 1, 0.3, 1] }}
+            className="mx-auto mb-5 h-[2px] w-[72px] rounded-full"
+            style={{
+              background: "linear-gradient(90deg, transparent, hsl(var(--gradient-start)) 20%, hsl(var(--gradient-end)) 80%, transparent)",
+              boxShadow: "0 0 12px hsl(var(--primary) / 0.35)",
+              transformOrigin: "center",
+            }}
+          />
+          <div
+            className="inline-flex items-center gap-2 text-xs font-bold text-primary uppercase mb-4"
+            style={{ letterSpacing: "0.18em" }}
+          >
             <Sparkles className="h-3.5 w-3.5" />
             Tarif unique
           </div>
-          <h2 className="text-3xl sm:text-4xl font-bold font-display mb-4">
+          <h2 className="text-4xl sm:text-5xl lg:text-6xl font-bold font-display mb-5" style={{ letterSpacing: "-0.025em", lineHeight: 1.05 }}>
             Une seule offre, tout inclus.
           </h2>
           <p className="text-muted-foreground text-lg leading-relaxed">
@@ -131,7 +146,7 @@ const PricingSection = () => {
                 >
                   {opt.label}
                   {opt.discount && selected !== opt.id && (
-                    <span className="absolute -top-2 -right-1 bg-success text-success-foreground text-[10px] font-bold px-1.5 sm:px-2 py-0.5 rounded-full shadow-sm">
+                    <span className="absolute -top-2 right-1 bg-success text-success-foreground text-[10px] font-bold px-1.5 sm:px-2 py-0.5 rounded-full shadow-sm pointer-events-none">
                       {opt.discount}
                     </span>
                   )}
@@ -142,11 +157,17 @@ const PricingSection = () => {
 
           {/* Premium pricing card */}
           <div className="relative rounded-3xl border border-primary/20 bg-card shadow-premium-lg overflow-hidden">
-            {/* Gradient top border */}
-            <div className="absolute top-0 left-0 right-0 h-1 gradient-primary" />
+            {/* Gradient top border — thicker, with soft primary glow */}
+            <div
+              className="absolute top-0 left-0 right-0 h-[3px]"
+              style={{
+                background: "linear-gradient(90deg, hsl(var(--gradient-start)), hsl(var(--gradient-end)))",
+                boxShadow: "0 0 16px hsl(var(--primary) / 0.45)",
+              }}
+            />
             {/* Subtle corner glow */}
             <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-bl from-primary/5 via-transparent to-transparent" />
-            
+
             <div className="p-8 sm:p-12 relative">
               <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-8">
                 <div className="space-y-3">
@@ -154,7 +175,7 @@ const PricingSection = () => {
                     BonoitecPilot — Offre complète
                   </h3>
                   <div className="flex items-baseline gap-2">
-                    <span className="text-6xl font-extrabold font-display gradient-text">
+                    <span className="font-display gradient-text" style={{ fontSize: "4.5rem", lineHeight: 1, fontWeight: 800, letterSpacing: "-0.04em" }}>
                       {current.price}€
                     </span>
                     <div className="text-muted-foreground">

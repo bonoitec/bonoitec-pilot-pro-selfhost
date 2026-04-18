@@ -68,12 +68,27 @@ const HowItWorksSection = ({ expanded = false }: { expanded?: boolean }) => {
           initial={{ opacity: 0, y: 20 }}
           animate={isInView ? { opacity: 1, y: 0 } : {}}
           transition={{ duration: 0.5 }}
-          className="text-center max-w-2xl mx-auto mb-16"
+          className="text-center max-w-3xl mx-auto mb-16"
         >
-          <div className="inline-flex items-center gap-2 rounded-full gradient-primary-subtle border border-primary/20 px-4 py-1.5 text-xs font-semibold text-primary mb-6">
+          <motion.div
+            aria-hidden="true"
+            initial={{ opacity: 0, scaleX: 0 }}
+            animate={isInView ? { opacity: 1, scaleX: 1 } : {}}
+            transition={{ duration: 0.55, ease: [0.16, 1, 0.3, 1] }}
+            className="mx-auto mb-5 h-[2px] w-[72px] rounded-full"
+            style={{
+              background: "linear-gradient(90deg, transparent, hsl(var(--gradient-start)) 20%, hsl(var(--gradient-end)) 80%, transparent)",
+              boxShadow: "0 0 12px hsl(var(--primary) / 0.35)",
+              transformOrigin: "center",
+            }}
+          />
+          <div
+            className="text-xs font-bold text-primary uppercase mb-4"
+            style={{ letterSpacing: "0.18em" }}
+          >
             Comment ça marche
           </div>
-          <h2 className="text-3xl sm:text-4xl font-bold font-display mb-4">
+          <h2 className="text-4xl sm:text-5xl lg:text-6xl font-bold font-display mb-5" style={{ letterSpacing: "-0.025em", lineHeight: 1.05 }}>
             Un parcours simple, du client à la facturation
           </h2>
           <p className="text-muted-foreground text-lg leading-relaxed">
@@ -90,35 +105,37 @@ const HowItWorksSection = ({ expanded = false }: { expanded?: boolean }) => {
               transition={{ duration: 0.5, delay: i * 0.1 }}
               className="landing-card p-8 lg:p-10 hover-lift"
             >
-              <div className="flex flex-col lg:flex-row gap-8">
-                <div className="flex-1 space-y-4">
-                  <div className="flex items-center gap-4">
-                    <span className="text-4xl font-extrabold font-display gradient-text">{step.num}</span>
-                    <div className="flex h-11 w-11 items-center justify-center rounded-xl gradient-primary text-primary-foreground shadow-md shadow-primary/20">
-                      <step.icon className="h-5 w-5" />
-                    </div>
-                    <h3 className="text-xl font-bold font-display">{step.title}</h3>
+              <div className="space-y-5">
+                <div className="flex items-center gap-4">
+                  <span className="text-4xl font-extrabold font-display gradient-text">{step.num}</span>
+                  <div className="flex h-11 w-11 items-center justify-center rounded-xl gradient-primary text-primary-foreground shadow-md shadow-primary/20">
+                    <step.icon className="h-5 w-5" />
                   </div>
-                  <p className="text-muted-foreground leading-relaxed">{step.text}</p>
-                  <ul className="space-y-2">
-                    {step.list.map((item) => (
-                      <li key={item} className="flex items-start gap-2 text-sm">
-                        <ChevronRight className="h-4 w-4 text-primary shrink-0 mt-0.5" />
-                        <span>{item}</span>
-                      </li>
-                    ))}
-                  </ul>
+                  <h3 className="text-xl font-bold font-display">{step.title}</h3>
                 </div>
-                <div className="lg:w-72 shrink-0">
-                  <div className="rounded-2xl gradient-primary-subtle border border-primary/10 p-5 space-y-2">
-                    <p className="text-xs font-semibold text-primary uppercase tracking-wide mb-3">Fonctionnalités</p>
-                    {step.features.map((f) => (
-                      <div key={f} className="flex items-center gap-2 text-sm text-foreground">
-                        <div className="w-1.5 h-1.5 rounded-full gradient-primary" />
-                        {f}
-                      </div>
-                    ))}
-                  </div>
+                <p className="text-muted-foreground leading-relaxed">{step.text}</p>
+                <ul className="space-y-2">
+                  {step.list.map((item) => (
+                    <li key={item} className="flex items-start gap-2 text-sm">
+                      <ChevronRight className="h-4 w-4 text-primary shrink-0 mt-0.5" />
+                      <span>{item}</span>
+                    </li>
+                  ))}
+                </ul>
+                {/* Feature pill-tags: inline chips instead of a sidebar panel */}
+                <div className="flex flex-wrap gap-2 pt-1">
+                  {step.features.map((f) => (
+                    <span
+                      key={f}
+                      className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold text-primary border border-primary/25"
+                      style={{
+                        background: "linear-gradient(135deg, hsl(var(--gradient-start) / 0.10), hsl(var(--gradient-end) / 0.08))",
+                      }}
+                    >
+                      <span className="w-1.5 h-1.5 rounded-full gradient-primary" />
+                      {f}
+                    </span>
+                  ))}
                 </div>
               </div>
             </motion.div>
