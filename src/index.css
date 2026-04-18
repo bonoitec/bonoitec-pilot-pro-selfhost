@@ -236,12 +236,15 @@
     @apply glass-strong shadow-premium-lg;
   }
 
-  /* Hover lift effect */
+  /* Hover lift effect — slightly more generous (-4px) for a more premium feel
+     on landing-card tiles. 300ms transition paired with landing-card's own
+     500ms shadow/border transition for a layered ease-out. */
   .hover-lift {
-    @apply transition-all duration-300;
+    @apply transition-transform duration-300 ease-out;
+    transition-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
   }
   .hover-lift:hover {
-    transform: translateY(-2px);
+    transform: translateY(-4px);
   }
 
   /* Premium card shine effect */
