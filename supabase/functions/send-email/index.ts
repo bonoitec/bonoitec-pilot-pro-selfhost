@@ -106,16 +106,13 @@ function emailLayout(
     <tr>
       <td align="center">
         <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="580" style="max-width:580px;width:100%;background-color:${BRAND.white};border-radius:12px;overflow:hidden;border:1px solid ${BRAND.border};">
-          <!-- Header: navbar-style lockup (Lottie mark + wordmark) + accent bar -->
+          <!-- Header: wordmark-only lockup + accent bar -->
           <tr>
             <td style="background-color:${BRAND.primary};padding:48px 32px 44px;text-align:center;">
               <table role="presentation" cellpadding="0" cellspacing="0" border="0" align="center" style="margin:0 auto 20px;">
                 <tr>
-                  <td style="vertical-align:middle;padding-right:12px;line-height:0;">
-                    <img src="https://bonoitecpilot.fr/email-mark.png" width="56" height="56" alt="" style="display:block;border:0;outline:none;width:56px;height:56px;" />
-                  </td>
                   <td style="vertical-align:middle;line-height:0;">
-                    <img src="https://bonoitecpilot.fr/email-wordmark.png" width="220" height="42" alt="BonoitecPilot" style="display:block;border:0;outline:none;width:220px;height:42px;" />
+                    <img src="https://bonoitecpilot.fr/email-wordmark.png" width="260" height="50" alt="BonoitecPilot" style="display:block;border:0;outline:none;width:260px;height:50px;" />
                   </td>
                 </tr>
               </table>
