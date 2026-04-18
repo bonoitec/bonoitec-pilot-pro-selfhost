@@ -13,13 +13,9 @@ const trustBadges = [
 
 const HeroSection = () => (
   <section className="relative overflow-hidden md:min-h-[calc(100dvh-4rem)] flex items-center">
-    {/* Premium gradient background */}
-    <div className="absolute inset-0">
-      <div className="absolute inset-0 bg-gradient-to-b from-accent/50 via-background to-background" />
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[1000px] h-[600px] bg-gradient-to-b from-primary/8 via-primary-glow/5 to-transparent rounded-full blur-[100px]" />
-      <div className="absolute top-40 right-0 w-[400px] h-[400px] bg-primary-glow/5 rounded-full blur-[80px]" />
-      <div className="absolute inset-0 bg-dots opacity-30" />
-    </div>
+    {/* Hero is intentionally transparent — no gradient, no glow, no dots.
+        The scene content (phone, invoice, chip, text, CTAs) IS the hero;
+        the host page background shows through everywhere else. */}
 
     <div className="landing-container relative w-full py-4">
       {/* Desktop: the animation IS the hero. Sized so 16:9 always fits above the fold. */}
