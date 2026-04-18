@@ -327,8 +327,8 @@ function Scene1() {
         const camScale = 0.92 + enter * 0.15 + progress * 0.08;
         const rot = lerp(-6, 0, enter) + Math.sin(localTime * 1.3) * 0.7;
         return (
-          <div style={{ position: "absolute", left: "50%", top: "50%", transform: `translate(-50%,-50%) translateY(${(1 - enter) * 60}px) scale(${camScale}) rotate(${rot}deg)`, opacity: enter, filter: `drop-shadow(0 40px 60px hsl(var(--primary) / ${0.25 + crack * 0.15}))` }}>
-            <Phone w={340} crackProgress={crack} state="broken" />
+          <div style={{ position: "absolute", left: "50%", top: "50%", transform: `translate(-50%,-50%) translateY(-110px) translateY(${(1 - enter) * 60}px) scale(${camScale}) rotate(${rot}deg)`, opacity: enter, filter: `drop-shadow(0 30px 40px hsl(var(--primary) / ${0.22 + crack * 0.12}))` }}>
+            <Phone w={300} crackProgress={crack} state="broken" />
           </div>
         );
       }}
@@ -350,12 +350,12 @@ function Scene2() {
         const wrX = Math.cos(orbit + Math.PI + 0.3) * r, wrY = Math.sin(orbit + Math.PI + 0.3) * r * 0.55;
         return (
           <div style={{ position: "absolute", inset: 0, transform: `scale(${camScale})` }}>
-            <div style={{ position: "absolute", left: "50%", top: "50%", transform: `translate(calc(-50% + ${phoneX}px), -50%) rotate(${Math.sin(localTime * 1.1) * 0.8}deg)`, opacity: enter }}>
+            <div style={{ position: "absolute", left: "50%", top: "50%", transform: `translate(calc(-50% + ${phoneX}px), calc(-50% - 100px)) rotate(${Math.sin(localTime * 1.1) * 0.8}deg)`, opacity: enter }}>
               <Phone w={300} crackProgress={1} />
             </div>
-            <div style={{ position: "absolute", left: "50%", top: "50%", transform: `translate(calc(-50% + ${phoneX + sdX}px), calc(-50% + ${sdY}px)) rotate(${orbit * 57.2958 + 20}deg)`, opacity: enter }}><Screwdriver w={210} /></div>
-            <div style={{ position: "absolute", left: "50%", top: "50%", transform: `translate(calc(-50% + ${phoneX + wrX}px), calc(-50% + ${wrY}px)) rotate(${orbit * 57.2958 + 200}deg)`, opacity: enter }}><Wrench w={210} /></div>
-            <div style={{ position: "absolute", left: "50%", top: "50%", transform: `translate(${clipX}px, -50%) rotate(${clipRot}deg)`, opacity: enter }}><Clipboard w={240} /></div>
+            <div style={{ position: "absolute", left: "50%", top: "50%", transform: `translate(calc(-50% + ${phoneX + sdX}px), calc(-50% - 100px + ${sdY}px)) rotate(${orbit * 57.2958 + 20}deg)`, opacity: enter }}><Screwdriver w={210} /></div>
+            <div style={{ position: "absolute", left: "50%", top: "50%", transform: `translate(calc(-50% + ${phoneX + wrX}px), calc(-50% - 100px + ${wrY}px)) rotate(${orbit * 57.2958 + 200}deg)`, opacity: enter }}><Wrench w={210} /></div>
+            <div style={{ position: "absolute", left: "50%", top: "50%", transform: `translate(${clipX}px, calc(-50% - 100px)) rotate(${clipRot}deg)`, opacity: enter }}><Clipboard w={240} /></div>
           </div>
         );
       }}
@@ -380,21 +380,21 @@ function Scene3() {
         const screws = [{ d: 0.25, dx: -120, dy: 180, sa: -60 }, { d: 0.4, dx: 140, dy: -160, sa: 40 }, { d: 0.3, dx: -160, dy: -140, sa: 200 }, { d: 0.45, dx: 130, dy: 170, sa: 140 }];
         return (
           <>
-            <div style={{ position: "absolute", left: "50%", top: "50%", transform: `translate(-50%,-50%) scale(${camScale})`, opacity: enter, filter: heal > 0.5 ? `drop-shadow(0 30px 60px hsl(var(--primary) / ${0.35 + heal * 0.2}))` : "drop-shadow(0 20px 40px rgba(0,0,0,0.2))" }}>
-              <Phone w={320} crackProgress={crack} healProgress={heal} state={heal > 0.6 ? "healed" : "broken"} />
+            <div style={{ position: "absolute", left: "50%", top: "50%", transform: `translate(-50%,calc(-50% - 100px)) scale(${camScale})`, opacity: enter, filter: heal > 0.5 ? `drop-shadow(0 24px 40px hsl(var(--primary) / ${0.30 + heal * 0.15}))` : "drop-shadow(0 20px 32px rgba(0,0,0,0.18))" }}>
+              <Phone w={300} crackProgress={crack} healProgress={heal} state={heal > 0.6 ? "healed" : "broken"} />
             </div>
-            <div style={{ position: "absolute", left: "50%", top: "50%", transform: `translate(calc(-50% + ${lerp(-800, -170, screenE)}px), calc(-50% + ${lerp(-200, -30, screenE)}px)) rotate(${lerp(-30, -8, screenE)}deg)`, opacity: screenOp }}><ReplacementScreen w={170} /></div>
-            <div style={{ position: "absolute", left: "50%", top: "50%", transform: `translate(calc(-50% + ${lerp(900, 190, batE)}px), calc(-50% + ${lerp(300, 80, batE)}px)) rotate(${lerp(40, 10, batE)}deg)`, opacity: batOp }}><Battery w={180} /></div>
+            <div style={{ position: "absolute", left: "50%", top: "50%", transform: `translate(calc(-50% + ${lerp(-800, -170, screenE)}px), calc(-50% - 100px + ${lerp(-200, -30, screenE)}px)) rotate(${lerp(-30, -8, screenE)}deg)`, opacity: screenOp }}><ReplacementScreen w={170} /></div>
+            <div style={{ position: "absolute", left: "50%", top: "50%", transform: `translate(calc(-50% + ${lerp(900, 190, batE)}px), calc(-50% - 100px + ${lerp(300, 80, batE)}px)) rotate(${lerp(40, 10, batE)}deg)`, opacity: batOp }}><Battery w={180} /></div>
             {screws.map((s, i) => {
               const t = Math.min(1, Math.max(0, (localTime - s.d) / 0.55));
               const e = Ease.outBack(t);
               const x = lerp(Math.cos((s.sa * Math.PI) / 180) * 800, s.dx, e);
               const y = lerp(Math.sin((s.sa * Math.PI) / 180) * 800, s.dy, e);
               const op = t * (1 - Ease.inCubic(Math.max(0, (localTime - 1.3) / 0.4)));
-              return <div key={i} style={{ position: "absolute", left: "50%", top: "50%", transform: `translate(calc(-50% + ${x}px), calc(-50% + ${y}px)) rotate(${t * 360}deg)`, opacity: op }}><Screw size={28} /></div>;
+              return <div key={i} style={{ position: "absolute", left: "50%", top: "50%", transform: `translate(calc(-50% + ${x}px), calc(-50% - 100px + ${y}px)) rotate(${t * 360}deg)`, opacity: op }}><Screw size={28} /></div>;
             })}
             {heal > 0.3 && heal < 0.95 && (
-              <div style={{ position: "absolute", left: "50%", top: "50%", transform: `translate(-50%,-50%) scale(${0.6 + heal * 1.8})`, width: 400, height: 400, borderRadius: "50%", border: `2px solid hsl(var(--primary) / ${0.6 * (1 - heal)})`, boxShadow: `0 0 80px hsl(var(--primary) / ${0.4 * (1 - heal)})`, pointerEvents: "none" }} />
+              <div style={{ position: "absolute", left: "50%", top: "50%", transform: `translate(-50%,calc(-50% - 100px)) scale(${0.6 + heal * 1.8})`, width: 400, height: 400, borderRadius: "50%", border: `2px solid hsl(var(--primary) / ${0.6 * (1 - heal)})`, boxShadow: `0 0 80px hsl(var(--primary) / ${0.4 * (1 - heal)})`, pointerEvents: "none" }} />
             )}
           </>
         );
