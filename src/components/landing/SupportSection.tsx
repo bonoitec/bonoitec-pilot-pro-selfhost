@@ -3,7 +3,7 @@ import { useRef } from "react";
 import { Link } from "react-router-dom";
 import {
   HelpCircle, Play, Settings, Upload, FileText, UserPlus,
-  Smartphone, Percent, XCircle, GitBranch, Star, ThumbsUp,
+  Smartphone, Percent, XCircle, GitBranch, Star, ThumbsUp, ChevronRight,
 } from "lucide-react";
 
 export const supportCategories = [
@@ -34,12 +34,27 @@ const SupportSection = ({ expanded = false }: { expanded?: boolean }) => {
           initial={{ opacity: 0, y: 20 }}
           animate={isInView ? { opacity: 1, y: 0 } : {}}
           transition={{ duration: 0.5 }}
-          className="text-center max-w-2xl mx-auto mb-16"
+          className="text-center max-w-3xl mx-auto mb-16"
         >
-          <div className="inline-flex items-center gap-2 rounded-full gradient-primary-subtle border border-primary/20 px-4 py-1.5 text-xs font-semibold text-primary mb-6">
+          <motion.div
+            aria-hidden="true"
+            initial={{ opacity: 0, scaleX: 0 }}
+            animate={isInView ? { opacity: 1, scaleX: 1 } : {}}
+            transition={{ duration: 0.55, ease: [0.16, 1, 0.3, 1] }}
+            className="mx-auto mb-5 h-[2px] w-[72px] rounded-full"
+            style={{
+              background: "linear-gradient(90deg, transparent, hsl(var(--gradient-start)) 20%, hsl(var(--gradient-end)) 80%, transparent)",
+              boxShadow: "0 0 12px hsl(var(--primary) / 0.35)",
+              transformOrigin: "center",
+            }}
+          />
+          <div
+            className="text-xs font-bold text-primary uppercase mb-4"
+            style={{ letterSpacing: "0.18em" }}
+          >
             Support
           </div>
-          <h2 className="text-3xl sm:text-4xl font-bold font-display mb-4">
+          <h2 className="text-4xl sm:text-5xl lg:text-6xl font-bold font-display mb-5" style={{ letterSpacing: "-0.025em", lineHeight: 1.05 }}>
             Besoin d'aide ? On vous accompagne.
           </h2>
           <p className="text-muted-foreground text-lg leading-relaxed">
@@ -47,7 +62,7 @@ const SupportSection = ({ expanded = false }: { expanded?: boolean }) => {
           </p>
         </motion.div>
 
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-4xl mx-auto">
           {displayed.map((cat, i) => (
             <motion.div
               key={cat.slug}
@@ -57,12 +72,15 @@ const SupportSection = ({ expanded = false }: { expanded?: boolean }) => {
             >
               <Link
                 to={`/support/${cat.slug}`}
-                className="landing-card p-5 flex items-center gap-4 group block hover-lift"
+                className="landing-card p-6 flex items-center gap-4 group block hover-lift"
               >
-                <div className="flex h-10 w-10 items-center justify-center rounded-xl gradient-primary-subtle text-primary group-hover:gradient-primary group-hover:text-primary-foreground transition-all duration-300 shrink-0 shadow-sm group-hover:shadow-md group-hover:shadow-primary/20">
+                <div className="flex h-12 w-12 items-center justify-center rounded-xl gradient-primary-subtle text-primary group-hover:gradient-primary group-hover:text-primary-foreground transition-all duration-300 shrink-0 shadow-sm group-hover:shadow-md group-hover:shadow-primary/20">
                   <cat.icon className="h-5 w-5" />
                 </div>
-                <span className="font-medium text-sm group-hover:text-primary transition-colors">{cat.title}</span>
+                <span className="font-medium text-[15px] group-hover:text-primary transition-colors flex-1">{cat.title}</span>
+                <ChevronRight
+                  className="h-5 w-5 text-muted-foreground/60 group-hover:text-primary group-hover:translate-x-1 transition-all duration-300 shrink-0"
+                />
               </Link>
             </motion.div>
           ))}

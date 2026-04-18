@@ -31,7 +31,7 @@ const footerSections = [
 ];
 
 const LandingFooter = () => (
-  <footer className="border-t border-border/40 bg-gradient-to-b from-muted/20 to-muted/40">
+  <footer className="border-t border-border/40 bg-gradient-to-b from-muted/20 to-muted/40 mt-12 lg:mt-16">
     <div className="landing-container py-16 lg:py-20">
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-10">
         <div className="col-span-2">

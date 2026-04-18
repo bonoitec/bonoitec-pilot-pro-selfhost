@@ -36,12 +36,27 @@ const FeaturesSection = ({ expanded = false }: { expanded?: boolean }) => {
           initial={{ opacity: 0, y: 20 }}
           animate={isInView ? { opacity: 1, y: 0 } : {}}
           transition={{ duration: 0.5 }}
-          className="text-center max-w-2xl mx-auto mb-16"
+          className="text-center max-w-3xl mx-auto mb-16"
         >
-          <div className="inline-flex items-center gap-2 rounded-full gradient-primary-subtle border border-primary/20 px-4 py-1.5 text-xs font-semibold text-primary mb-6">
+          <motion.div
+            aria-hidden="true"
+            initial={{ opacity: 0, scaleX: 0 }}
+            animate={isInView ? { opacity: 1, scaleX: 1 } : {}}
+            transition={{ duration: 0.55, ease: [0.16, 1, 0.3, 1] }}
+            className="mx-auto mb-5 h-[2px] w-[72px] rounded-full"
+            style={{
+              background: "linear-gradient(90deg, transparent, hsl(var(--gradient-start)) 20%, hsl(var(--gradient-end)) 80%, transparent)",
+              boxShadow: "0 0 12px hsl(var(--primary) / 0.35)",
+              transformOrigin: "center",
+            }}
+          />
+          <div
+            className="text-xs font-bold text-primary uppercase mb-4"
+            style={{ letterSpacing: "0.18em" }}
+          >
             Fonctionnalités
           </div>
-          <h2 className="text-3xl sm:text-4xl font-bold font-display mb-4">
+          <h2 className="text-4xl sm:text-5xl lg:text-6xl font-bold font-display mb-5" style={{ letterSpacing: "-0.025em", lineHeight: 1.05 }}>
             Tout ce dont votre atelier a besoin
           </h2>
           <p className="text-muted-foreground text-lg leading-relaxed">
