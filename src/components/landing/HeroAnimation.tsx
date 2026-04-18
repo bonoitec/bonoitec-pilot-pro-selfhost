@@ -447,7 +447,7 @@ function HeroComposition() {
         const ctaE = Ease.outBack(ctaT);
         const badgeE = Ease.outCubic(Math.min(1, Math.max(0, (localTime - 2.0) / 0.5)));
         const idle = Math.sin(localTime * 0.9), idle2 = Math.cos(localTime * 0.7);
-        const phoneX = lerp(-80, 560, settle);
+        const phoneX = lerp(-80, 640, settle);
         const phoneY = lerp(0, 40, settle) + idle * 6;
         const phoneRot = lerp(0, 4, settle) + idle * 0.5;
         const phoneScale = lerp(1.0, 0.9, settle);
@@ -468,12 +468,8 @@ function HeroComposition() {
                 Gérez vos réparations, vos clients, vos devis, vos factures, votre stock et votre activité depuis une interface simple, rapide et pensée pour le terrain.
               </p>
               <div style={{ display: "flex", gap: 18, opacity: ctaT, transform: `scale(${ctaE})`, transformOrigin: "left center", pointerEvents: ctaT > 0.3 ? "auto" : "none" }}>
-                <Link to="/auth" style={{ display: "inline-flex", alignItems: "center", gap: 14, padding: "28px 48px", borderRadius: 999, background: `linear-gradient(135deg, ${C.gradStart}, ${C.gradEnd})`, color: "#fff", fontWeight: 700, fontSize: 24, boxShadow: "0 18px 50px hsl(var(--primary) / 0.45), inset 0 1px 0 rgba(255,255,255,0.22)", textDecoration: "none" }}>
-                  Commencer gratuitement <ArrowRight className="w-7 h-7" />
-                </Link>
-                <Link to="/demo" style={{ display: "inline-flex", alignItems: "center", gap: 14, padding: "28px 44px", borderRadius: 999, background: "transparent", color: C.primary, border: `2px solid hsl(var(--primary) / 0.4)`, fontWeight: 600, fontSize: 24, textDecoration: "none" }}>
-                  <Play className="w-6 h-6" fill="currentColor" /> Voir la démo
-                </Link>
+                <HeroCtaPrimary to="/auth" />
+                <HeroCtaSecondary to="/demo" />
               </div>
               <div style={{ display: "flex", flexWrap: "wrap", gap: "12px 30px", marginTop: 32, opacity: badgeE }}>
                 {["Essai gratuit 30 jours", "Sans engagement", "Support réactif", "Pensé pour les ateliers"].map((t) => (
@@ -484,12 +480,12 @@ function HeroComposition() {
               </div>
             </div>
             {/* RIGHT — props settled */}
-            <div style={{ position: "absolute", left: "50%", top: "50%", transform: `translate3d(calc(-50% + 600px), -50%, 0)`, width: 700, height: 700, borderRadius: "50%", background: `radial-gradient(circle, hsl(var(--primary) / 0.22), transparent 65%)`, opacity: settle, pointerEvents: "none", willChange: "opacity" }} />
+            <div style={{ position: "absolute", left: "50%", top: "50%", transform: `translate3d(calc(-50% + 680px), -50%, 0)`, width: 700, height: 700, borderRadius: "50%", background: `radial-gradient(circle, hsl(var(--primary) / 0.22), transparent 65%)`, opacity: settle, pointerEvents: "none", willChange: "opacity" }} />
             <div style={{ position: "absolute", left: "50%", top: "50%", transform: `translate(calc(-50% + ${lerp(180, 760, invSettle)}px), calc(-50% + ${lerp(40, 240, invSettle) + idle2 * 5}px)) rotate(${lerp(5, -6, invSettle) + idle2 * 0.7}deg)`, zIndex: 2, pointerEvents: "none" }}><Invoice w={240} /></div>
-            <div style={{ position: "absolute", left: "50%", top: "50%", transform: `translate(calc(-50% + ${phoneX}px), calc(-50% + ${phoneY}px)) rotate(${phoneRot}deg) scale(${phoneScale})`, filter: "drop-shadow(0 40px 60px hsl(var(--primary) / 0.35))", zIndex: 3, pointerEvents: "none" }}><Phone w={320} healProgress={1} state="healed" /></div>
+            <div style={{ position: "absolute", left: "50%", top: "50%", transform: `translate(calc(-50% + ${phoneX}px), calc(-50% + ${phoneY}px)) rotate(${phoneRot}deg) scale(${phoneScale})`, filter: "drop-shadow(0 32px 40px hsl(var(--primary) / 0.28))", zIndex: 3, pointerEvents: "none" }}><Phone w={320} healProgress={1} state="healed" /></div>
             <div style={{ position: "absolute", left: "50%", top: "50%", transform: `translate(calc(-50% + ${lerp(0, 280, toolSettle)}px), calc(-50% + ${lerp(0, -260, toolSettle) + idle * 4}px)) rotate(${lerp(0, -18, toolSettle)}deg) scale(0.7)`, opacity: toolSettle, zIndex: 4, pointerEvents: "none" }}><Screwdriver w={180} /></div>
             <div style={{ position: "absolute", left: "50%", top: "50%", transform: `translate(calc(-50% + ${lerp(0, 760, toolSettle)}px), calc(-50% + ${lerp(0, -80, toolSettle) + idle2 * 4}px)) rotate(${lerp(0, 14, toolSettle)}deg) scale(0.7)`, opacity: toolSettle, zIndex: 4, pointerEvents: "none" }}><Wrench w={180} /></div>
-            <div style={{ position: "absolute", left: "50%", top: "50%", transform: `translate(calc(-50% + ${lerp(360, 820, settle)}px), calc(-50% + ${lerp(-160, -300, settle) + idle * 3}px)) scale(${lerp(1, 0.75, settle)})`, opacity: settle, zIndex: 5, pointerEvents: "none" }}><EuroChip size={76} /></div>
+            <div style={{ position: "absolute", left: "50%", top: "50%", transform: `translate(calc(-50% + ${lerp(360, 920, settle)}px), calc(-50% + ${lerp(-160, -300, settle) + idle * 3}px)) scale(${lerp(1, 0.75, settle)})`, opacity: settle, zIndex: 5, pointerEvents: "none" }}><EuroChip size={76} /></div>
           </>
         );
       }}
@@ -506,6 +502,88 @@ function StaticHero() {
         {() => <HeroComposition />}
       </Sprite>
     </div>
+  );
+}
+
+// ─────────── First-paint poster — faint ghost of the final hero shown before
+// Scene 1 has had time to draw. Fades out completely by t ≈ 0.9 s so it never
+// competes with the scenes. Eliminates the dead blank frame at page load. ───────────
+function HeroPoster() {
+  const t = useTime();
+  const op = Math.max(0, 0.12 - t * 0.14);
+  if (op <= 0.001) return null;
+  return (
+    <div style={{ position: "absolute", inset: 0, opacity: op, pointerEvents: "none" }}>
+      <Sprite start={0} end={999}>
+        {() => <HeroComposition />}
+      </Sprite>
+    </div>
+  );
+}
+
+// ─────────── Hero CTAs — polished hover (lift + shadow deepen + icon shift) ───────────
+function HeroCtaPrimary({ to }: { to: string }) {
+  const [hover, setHover] = useState(false);
+  return (
+    <Link
+      to={to}
+      onMouseEnter={() => setHover(true)}
+      onMouseLeave={() => setHover(false)}
+      style={{
+        display: "inline-flex",
+        alignItems: "center",
+        gap: 14,
+        padding: "28px 48px",
+        borderRadius: 999,
+        background: `linear-gradient(135deg, ${C.gradStart}, ${C.gradEnd})`,
+        color: "#fff",
+        fontWeight: 700,
+        fontSize: 24,
+        boxShadow: hover
+          ? "0 26px 60px hsl(var(--primary) / 0.55), inset 0 1px 0 rgba(255,255,255,0.28)"
+          : "0 18px 50px hsl(var(--primary) / 0.45), inset 0 1px 0 rgba(255,255,255,0.22)",
+        textDecoration: "none",
+        transform: hover ? "translateY(-3px)" : "translateY(0)",
+        transition: "box-shadow 200ms cubic-bezier(0.16,1,0.3,1), transform 200ms cubic-bezier(0.16,1,0.3,1)",
+      }}
+    >
+      Commencer gratuitement{" "}
+      <ArrowRight
+        className="w-7 h-7"
+        style={{
+          transform: hover ? "translateX(4px)" : "translateX(0)",
+          transition: "transform 200ms cubic-bezier(0.16,1,0.3,1)",
+        }}
+      />
+    </Link>
+  );
+}
+
+function HeroCtaSecondary({ to }: { to: string }) {
+  const [hover, setHover] = useState(false);
+  return (
+    <Link
+      to={to}
+      onMouseEnter={() => setHover(true)}
+      onMouseLeave={() => setHover(false)}
+      style={{
+        display: "inline-flex",
+        alignItems: "center",
+        gap: 14,
+        padding: "28px 44px",
+        borderRadius: 999,
+        background: hover ? "hsl(var(--primary) / 0.08)" : "transparent",
+        color: C.primary,
+        border: `2px solid ${hover ? "hsl(var(--primary) / 0.85)" : "hsl(var(--primary) / 0.4)"}`,
+        fontWeight: 600,
+        fontSize: 24,
+        textDecoration: "none",
+        transform: hover ? "translateY(-3px)" : "translateY(0)",
+        transition: "background 200ms cubic-bezier(0.16,1,0.3,1), border-color 200ms cubic-bezier(0.16,1,0.3,1), transform 200ms cubic-bezier(0.16,1,0.3,1)",
+      }}
+    >
+      <Play className="w-6 h-6" fill="currentColor" /> Voir la démo
+    </Link>
   );
 }
 
@@ -556,6 +634,7 @@ export default function HeroAnimation({ duration = 12.5, loop = true, className 
             <StaticHero />
           ) : (
             <>
+              <HeroPoster />
               <AmbientBG />
               <Scene1 />
               <Scene2 />
