@@ -485,7 +485,7 @@ const Auth = () => {
               transition={{ delay: 1.4, duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
             >
               <h1 className="text-[2.75rem] leading-[1.1] font-extrabold tracking-tight text-foreground font-display">
-                Votre atelier,<br />
+                Votre atelier, <br />
                 <span className="gradient-text">simplifié.</span>
               </h1>
               <p className="text-base text-muted-foreground leading-relaxed max-w-sm">
