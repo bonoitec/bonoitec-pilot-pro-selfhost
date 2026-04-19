@@ -13,12 +13,13 @@ import { createClient } from "@supabase/supabase-js";
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
 const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
 
-// All tables that MUST be isolated by organization_id
+// All tables that MUST be isolated by organization_id.
+// device_catalog is intentionally excluded — it is a global, super-admin-curated
+// catalog shared by every workshop (see migration 20260419200000).
 const TENANT_SCOPED_TABLES = [
   "articles",
   "clients",
   "deposit_codes",
-  "device_catalog",
   "devices",
   "inventory",
   "inventory_price_history",
@@ -40,7 +41,6 @@ const TABLES_WITH_ORG_COLUMN = [
   "articles",
   "clients",
   "deposit_codes",
-  "device_catalog",
   "devices",
   "inventory",
   "inventory_price_history",
@@ -56,6 +56,9 @@ const TABLES_WITH_ORG_COLUMN = [
   "technicians",
   "user_roles",
 ] as const;
+
+// Global tables (NOT per-org, but writes still locked behind super-admin)
+const GLOBAL_ADMIN_MANAGED_TABLES = ["device_catalog"] as const;
 
 // Security-critical functions that must exist and be SECURITY DEFINER
 const CRITICAL_FUNCTIONS = [
@@ -130,6 +133,48 @@ describe("Multi-Tenant Isolation — Anonymous Access Prevention", () => {
 
       // Must be rejected — either RLS or missing required fields
       expect(error).not.toBeNull();
+    });
+  });
+});
+
+describe("Global admin-managed tables — write lockdown", () => {
+  const anonClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+  GLOBAL_ADMIN_MANAGED_TABLES.forEach((table) => {
+    it(`anonymous INSERT on "${table}" must be denied (super-admin only)`, async () => {
+      const { error } = await anonClient
+        .from(table)
+        .insert({ brand: "ISOLATION_PROBE", model: "X" } as any);
+      expect(error).not.toBeNull();
+    });
+
+    it(`anonymous UPDATE on "${table}" must be denied`, async () => {
+      const { error } = await anonClient
+        .from(table)
+        .update({ is_active: false } as any)
+        .eq("id", "00000000-0000-0000-0000-000000000000");
+      // Either an error OR an empty result-set (RLS filtered) is acceptable;
+      // the key is that no row is mutated.
+      if (!error) {
+        // If no error, the operation hit zero rows — confirm by re-reading.
+        const { data } = await anonClient
+          .from(table)
+          .select("id")
+          .eq("id", "00000000-0000-0000-0000-000000000000");
+        expect(data ?? []).toEqual([]);
+      }
+    });
+
+    it(`anonymous DELETE on "${table}" must be denied`, async () => {
+      const { error } = await anonClient
+        .from(table)
+        .delete()
+        .eq("id", "00000000-0000-0000-0000-000000000000");
+      if (!error) {
+        const { data } = await anonClient.from(table).select("id").limit(1);
+        // Anonymous SELECT is also denied (TO authenticated), so data should be empty/null.
+        expect(data ?? []).toEqual([]);
+      }
     });
   });
 });

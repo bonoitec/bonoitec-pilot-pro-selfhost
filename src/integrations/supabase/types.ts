@@ -10,10 +10,68 @@ export type Database = {
   // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
-    PostgrestVersion: "14.1"
+    PostgrestVersion: "14.5"
+  }
+  graphql_public: {
+    Tables: {
+      [_ in never]: never
+    }
+    Views: {
+      [_ in never]: never
+    }
+    Functions: {
+      graphql: {
+        Args: {
+          extensions?: Json
+          operationName?: string
+          query?: string
+          variables?: Json
+        }
+        Returns: Json
+      }
+    }
+    Enums: {
+      [_ in never]: never
+    }
+    CompositeTypes: {
+      [_ in never]: never
+    }
   }
   public: {
     Tables: {
+      admin_audit_log: {
+        Row: {
+          action: string
+          actor_id: string
+          created_at: string
+          details: Json
+          id: string
+          target_description: string | null
+          target_id: string | null
+          target_type: string
+        }
+        Insert: {
+          action: string
+          actor_id: string
+          created_at?: string
+          details?: Json
+          id?: string
+          target_description?: string | null
+          target_id?: string | null
+          target_type: string
+        }
+        Update: {
+          action?: string
+          actor_id?: string
+          created_at?: string
+          details?: Json
+          id?: string
+          target_description?: string | null
+          target_id?: string | null
+          target_type?: string
+        }
+        Relationships: []
+      }
       articles: {
         Row: {
           category: string
@@ -66,6 +124,57 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      blog_posts: {
+        Row: {
+          author: string
+          category: string
+          cover_image_url: string | null
+          created_at: string
+          created_by: string | null
+          excerpt: string
+          id: string
+          published: boolean
+          published_at: string | null
+          read_time_minutes: number | null
+          sections: Json
+          slug: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          author?: string
+          category: string
+          cover_image_url?: string | null
+          created_at?: string
+          created_by?: string | null
+          excerpt: string
+          id?: string
+          published?: boolean
+          published_at?: string | null
+          read_time_minutes?: number | null
+          sections?: Json
+          slug: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          author?: string
+          category?: string
+          cover_image_url?: string | null
+          created_at?: string
+          created_by?: string | null
+          excerpt?: string
+          id?: string
+          published?: boolean
+          published_at?: string | null
+          read_time_minutes?: number | null
+          sections?: Json
+          slug?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
       }
       clients: {
         Row: {
@@ -160,7 +269,6 @@ export type Database = {
           is_active: boolean
           model: string
           model_number: string | null
-          organization_id: string
           release_year: number | null
           storage_variants: Json | null
           updated_at: string
@@ -175,7 +283,6 @@ export type Database = {
           is_active?: boolean
           model: string
           model_number?: string | null
-          organization_id: string
           release_year?: number | null
           storage_variants?: Json | null
           updated_at?: string
@@ -190,20 +297,11 @@ export type Database = {
           is_active?: boolean
           model?: string
           model_number?: string | null
-          organization_id?: string
           release_year?: number | null
           storage_variants?: Json | null
           updated_at?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "device_catalog_organization_id_fkey"
-            columns: ["organization_id"]
-            isOneToOne: false
-            referencedRelation: "organizations"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       devices: {
         Row: {
@@ -574,6 +672,7 @@ export type Database = {
           legal_status: string | null
           logo_url: string | null
           name: string
+          past_due_since: string | null
           phone: string | null
           plan_name: string | null
           postal_code: string | null
@@ -607,6 +706,7 @@ export type Database = {
           legal_status?: string | null
           logo_url?: string | null
           name: string
+          past_due_since?: string | null
           phone?: string | null
           plan_name?: string | null
           postal_code?: string | null
@@ -640,6 +740,7 @@ export type Database = {
           legal_status?: string | null
           logo_url?: string | null
           name?: string
+          past_due_since?: string | null
           phone?: string | null
           plan_name?: string | null
           postal_code?: string | null
@@ -1263,6 +1364,220 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      _admin_log_action: {
+        Args: {
+          _action: string
+          _details: Json
+          _target_description: string
+          _target_id: string
+          _target_type: string
+        }
+        Returns: undefined
+      }
+      _require_reason: { Args: { _reason: string }; Returns: undefined }
+      _require_super_admin: { Args: never; Returns: undefined }
+      admin_bulk_seed_device_catalog: {
+        Args: { _devices: Json; _reason: string }
+        Returns: number
+      }
+      admin_change_user_role: {
+        Args: {
+          _new_role: string
+          _org_id: string
+          _reason: string
+          _user_id: string
+        }
+        Returns: undefined
+      }
+      admin_create_blog_post: {
+        Args: {
+          _author: string
+          _category: string
+          _cover_image_url: string
+          _excerpt: string
+          _read_time: number
+          _reason: string
+          _sections: Json
+          _slug: string
+          _title: string
+        }
+        Returns: string
+      }
+      admin_delete_blog_post: {
+        Args: { _confirm_title: string; _id: string; _reason: string }
+        Returns: undefined
+      }
+      admin_delete_device_catalog: {
+        Args: { _id: string; _reason: string }
+        Returns: undefined
+      }
+      admin_delete_organization: {
+        Args: { _confirm_name: string; _org_id: string; _reason: string }
+        Returns: undefined
+      }
+      admin_delete_user: {
+        Args: { _confirm_email: string; _reason: string; _user_id: string }
+        Returns: undefined
+      }
+      admin_extend_trial: {
+        Args: { _days: number; _org_id: string; _reason: string }
+        Returns: undefined
+      }
+      admin_get_audit_log: {
+        Args: { _action_filter?: string; _limit?: number; _offset?: number }
+        Returns: Json
+      }
+      admin_get_organization_detail: {
+        Args: { _org_id: string }
+        Returns: Json
+      }
+      admin_get_organizations: {
+        Args: { _limit?: number; _offset?: number; _search?: string }
+        Returns: {
+          client_count: number
+          created_at: string
+          email: string
+          id: string
+          invoice_count: number
+          last_repair_at: string
+          name: string
+          phone: string
+          plan_name: string
+          repair_count: number
+          siret: string
+          stripe_customer_id: string
+          stripe_subscription_id: string
+          subscription_status: string
+          total_count: number
+          total_paid_ttc: number
+          trial_end_date: string
+          trial_start_date: string
+          user_count: number
+        }[]
+      }
+      admin_get_platform_stats: { Args: never; Returns: Json }
+      admin_get_rate_limit_hits: {
+        Args: { _limit?: number }
+        Returns: {
+          hits_1h: number
+          key: string
+          last_hit_at: string
+        }[]
+      }
+      admin_get_recent_activity: { Args: { _limit?: number }; Returns: Json }
+      admin_get_users: {
+        Args: { _limit?: number; _offset?: number; _search?: string }
+        Returns: {
+          created_at: string
+          email: string
+          email_confirmed_at: string
+          full_name: string
+          last_sign_in_at: string
+          organization_id: string
+          organization_name: string
+          role: string
+          total_count: number
+          user_id: string
+        }[]
+      }
+      admin_grant_subscription: {
+        Args: {
+          _months: number
+          _org_id: string
+          _plan: string
+          _reason: string
+        }
+        Returns: undefined
+      }
+      admin_list_blog_posts: {
+        Args: { _include_drafts?: boolean; _limit?: number; _offset?: number }
+        Returns: {
+          author: string
+          category: string
+          cover_image_url: string
+          created_at: string
+          excerpt: string
+          id: string
+          published: boolean
+          published_at: string
+          read_time_minutes: number
+          sections: Json
+          slug: string
+          title: string
+          total_count: number
+          updated_at: string
+        }[]
+      }
+      admin_log_password_reset: {
+        Args: {
+          _actor_id: string
+          _reason: string
+          _target_email: string
+          _target_user_id: string
+        }
+        Returns: undefined
+      }
+      admin_promote_super_admin: {
+        Args: { _org_id: string; _reason: string; _user_id: string }
+        Returns: undefined
+      }
+      admin_set_blog_published: {
+        Args: { _id: string; _published: boolean; _reason: string }
+        Returns: undefined
+      }
+      admin_set_subscription_active: {
+        Args: { _active: boolean; _org_id: string; _reason: string }
+        Returns: undefined
+      }
+      admin_update_blog_post: {
+        Args: {
+          _author: string
+          _category: string
+          _cover_image_url: string
+          _excerpt: string
+          _id: string
+          _read_time: number
+          _reason: string
+          _sections: Json
+          _slug: string
+          _title: string
+        }
+        Returns: undefined
+      }
+      admin_update_organization: {
+        Args: {
+          _email: string
+          _name: string
+          _org_id: string
+          _phone: string
+          _reason: string
+          _siret: string
+        }
+        Returns: undefined
+      }
+      admin_update_user: {
+        Args: { _full_name: string; _reason: string; _user_id: string }
+        Returns: undefined
+      }
+      admin_upsert_device_catalog: {
+        Args: {
+          _brand: string
+          _category: string
+          _color_variants: Json
+          _id: string
+          _is_active: boolean
+          _model: string
+          _model_number: string
+          _reason: string
+          _release_year: number
+          _storage_variants: Json
+        }
+        Returns: string
+      }
+      admin_verify_user_email: {
+        Args: { _reason: string; _user_id: string }
+        Returns: undefined
+      }
       check_rate_limit: {
         Args: { _key: string; _max_requests?: number; _window_seconds?: number }
         Returns: boolean
@@ -1314,6 +1629,21 @@ export type Database = {
           website: string
         }[]
       }
+      get_published_blog_posts: {
+        Args: never
+        Returns: {
+          author: string
+          category: string
+          cover_image_url: string
+          excerpt: string
+          id: string
+          published_at: string
+          read_time_minutes: number
+          sections: Json
+          slug: string
+          title: string
+        }[]
+      }
       get_repair_by_tracking_code: { Args: { _code: string }; Returns: Json }
       get_repair_messages_by_tracking: {
         Args: { _tracking_code: string }
@@ -1327,10 +1657,12 @@ export type Database = {
         }
         Returns: boolean
       }
+      is_super_admin: { Args: never; Returns: boolean }
       mark_messages_read_by_tracking: {
         Args: { _sender_type?: string; _tracking_code: string }
         Returns: Json
       }
+      org_has_write_access: { Args: { _org_id: string }; Returns: boolean }
       send_customer_message: {
         Args: {
           _content: string
@@ -1342,7 +1674,7 @@ export type Database = {
       validate_deposit_code: { Args: { _code: string }; Returns: boolean }
     }
     Enums: {
-      app_role: "admin" | "technician"
+      app_role: "admin" | "technician" | "super_admin"
       invoice_status: "brouillon" | "envoyee" | "payee" | "partiel" | "annulee"
       payment_method: "cb" | "especes" | "virement" | "cheque" | "autre"
       quote_status: "brouillon" | "envoye" | "accepte" | "refuse"
@@ -1482,9 +1814,12 @@ export type CompositeTypes<
     : never
 
 export const Constants = {
+  graphql_public: {
+    Enums: {},
+  },
   public: {
     Enums: {
-      app_role: ["admin", "technician"],
+      app_role: ["admin", "technician", "super_admin"],
       invoice_status: ["brouillon", "envoyee", "payee", "partiel", "annulee"],
       payment_method: ["cb", "especes", "virement", "cheque", "autre"],
       quote_status: ["brouillon", "envoye", "accepte", "refuse"],

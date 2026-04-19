@@ -5,16 +5,19 @@ import { ShopGrid } from "./components/ShopGrid";
 import { ShopDetailDialog } from "./components/ShopDetailDialog";
 import { AuditLogSheet } from "./components/AuditLogSheet";
 import { BlogManagementSheet } from "./components/BlogManagementSheet";
+import { CatalogManagementSheet } from "./components/CatalogManagementSheet";
 
 export default function SuperAdmin() {
   const [selectedOrgId, setSelectedOrgId] = useState<string | null>(null);
   const [auditOpen, setAuditOpen] = useState(false);
   const [blogOpen, setBlogOpen] = useState(false);
+  const [catalogOpen, setCatalogOpen] = useState(false);
 
   return (
     <AdminShell
       onOpenAudit={() => setAuditOpen(true)}
       onOpenBlogManagement={() => setBlogOpen(true)}
+      onOpenCatalog={() => setCatalogOpen(true)}
     >
       <div className="space-y-6 animate-fade-in">
         {/* Page header */}
@@ -37,6 +40,7 @@ export default function SuperAdmin() {
 
         <AuditLogSheet open={auditOpen} onClose={() => setAuditOpen(false)} />
         <BlogManagementSheet open={blogOpen} onClose={() => setBlogOpen(false)} />
+        <CatalogManagementSheet open={catalogOpen} onClose={() => setCatalogOpen(false)} />
       </div>
     </AdminShell>
   );

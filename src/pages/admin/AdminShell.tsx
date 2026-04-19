@@ -3,19 +3,21 @@ import { useNavigate } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
-import { Shield, LogOut, ClipboardList, MailWarning, RefreshCw, FileText } from "lucide-react";
+import { Shield, LogOut, ClipboardList, MailWarning, RefreshCw, FileText, BookOpen } from "lucide-react";
 
 export function AdminShell({
   children,
   onOpenAudit,
   onOpenFailedEmails,
   onOpenBlogManagement,
+  onOpenCatalog,
   failedEmailsBadge,
 }: {
   children: ReactNode;
   onOpenAudit?: () => void;
   onOpenFailedEmails?: () => void;
   onOpenBlogManagement?: () => void;
+  onOpenCatalog?: () => void;
   failedEmailsBadge?: number;
 }) {
   const { signOut } = useAuth();
@@ -89,6 +91,18 @@ export function AdminShell({
             >
               <FileText className="h-4 w-4" />
               <span className="hidden sm:inline text-xs">Articles</span>
+            </Button>
+          )}
+          {onOpenCatalog && (
+            <Button
+              variant="ghost"
+              size="sm"
+              className="gap-1.5 h-8"
+              onClick={onOpenCatalog}
+              title="Catalogue d'appareils partagé"
+            >
+              <BookOpen className="h-4 w-4" />
+              <span className="hidden sm:inline text-xs">Catalogue</span>
             </Button>
           )}
           {onOpenAudit && (

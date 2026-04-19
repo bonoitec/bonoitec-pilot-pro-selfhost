@@ -39,6 +39,10 @@ const actionLabel: Record<string, string> = {
   delete_blog: "Supprimer un article",
   publish_blog: "Publier un article",
   unpublish_blog: "Dépublier un article",
+  create_device_catalog: "Ajouter un appareil au catalogue",
+  update_device_catalog: "Modifier un appareil du catalogue",
+  delete_device_catalog: "Retirer un appareil du catalogue",
+  bulk_seed_device_catalog: "Pré-remplir le catalogue d'appareils",
 };
 
 function targetIcon(type: string) {
