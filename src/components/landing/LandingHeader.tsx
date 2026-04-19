@@ -44,7 +44,7 @@ const LandingHeader = () => {
           <NavbarBrand />
         </Link>
 
-        <nav className="hidden md:flex items-center gap-8">
+        <nav className="hidden lg:flex items-center gap-8">
           {navLinks.map((link) => (
             <Link
               key={link.href}
@@ -67,7 +67,7 @@ const LandingHeader = () => {
           ))}
         </nav>
 
-        <div className="hidden md:flex items-center gap-2">
+        <div className="hidden lg:flex items-center gap-2">
           <ThemeToggle />
           <Button variant="ghost" asChild className="text-sm font-semibold text-foreground hover:text-primary rounded-xl">
             <Link to="/login">Se connecter</Link>
@@ -77,7 +77,7 @@ const LandingHeader = () => {
           </Button>
         </div>
 
-        <div className="flex md:hidden items-center gap-1">
+        <div className="flex lg:hidden items-center gap-1">
           <ThemeToggle />
           <button
             className="p-2 rounded-xl hover:bg-muted transition-colors"
@@ -94,7 +94,7 @@ const LandingHeader = () => {
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: "auto" }}
             exit={{ opacity: 0, height: 0 }}
-            className="md:hidden border-t border-border/40 bg-background/95 backdrop-blur-2xl"
+            className="lg:hidden border-t border-border/40 bg-background/95 backdrop-blur-2xl"
           >
             <div className="landing-container py-6 flex flex-col gap-1">
               {navLinks.map((link) => (

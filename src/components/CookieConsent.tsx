@@ -46,36 +46,40 @@ export function CookieConsent() {
           animate={{ y: 0, opacity: 1 }}
           exit={{ y: 100, opacity: 0 }}
           transition={{ type: "spring", damping: 25, stiffness: 300 }}
-          className="fixed bottom-0 left-0 right-0 z-[100] p-4 sm:p-6"
+          className="fixed bottom-0 left-0 right-0 z-[100] p-2 sm:p-4 md:p-6"
         >
           <div className="max-w-2xl mx-auto rounded-2xl border border-border/60 bg-card shadow-2xl shadow-black/10 backdrop-blur-sm overflow-hidden">
             {!showCustomize ? (
-              <div className="p-5 sm:p-6">
-                <div className="flex items-start gap-4">
-                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10">
+              <div className="p-3.5 sm:p-5 md:p-6">
+                <div className="flex items-start gap-3 sm:gap-4">
+                  <div className="hidden sm:flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10">
                     <Cookie className="h-5 w-5 text-primary" />
                   </div>
-                  <div className="flex-1 space-y-3">
+                  <div className="flex-1 min-w-0 space-y-2.5 sm:space-y-3">
                     <div>
-                      <h3 className="font-semibold font-display text-sm">Nous utilisons des cookies</h3>
-                      <p className="text-xs text-muted-foreground mt-1 leading-relaxed">
-                        Ce site utilise des cookies pour améliorer votre expérience de navigation, analyser le trafic et personnaliser le contenu.
-                        Consultez notre <Link to="/confidentialite" className="text-primary hover:underline font-medium">politique de confidentialité</Link>.
+                      <h3 className="font-semibold font-display text-sm flex items-center gap-2">
+                        <Cookie className="h-4 w-4 text-primary sm:hidden" />
+                        Nous utilisons des cookies
+                      </h3>
+                      <p className="text-xs text-muted-foreground mt-1 leading-relaxed line-clamp-3 sm:line-clamp-none">
+                        Ce site utilise des cookies pour améliorer votre expérience.
+                        <span className="hidden sm:inline"> Analyser le trafic et personnaliser le contenu.</span>
+                        {" "}<Link to="/confidentialite" className="text-primary hover:underline font-medium">En savoir plus</Link>.
                       </p>
                     </div>
-                    <div className="flex flex-wrap gap-2">
-                      <Button size="sm" onClick={acceptAll} className="text-xs h-8 px-4">
+                    <div className="grid grid-cols-2 sm:flex sm:flex-wrap gap-2">
+                      <Button size="sm" onClick={acceptAll} className="text-xs h-8 px-4 w-full sm:w-auto">
                         Accepter tout
                       </Button>
-                      <Button size="sm" variant="outline" onClick={refuseAll} className="text-xs h-8 px-4">
+                      <Button size="sm" variant="outline" onClick={refuseAll} className="text-xs h-8 px-4 w-full sm:w-auto">
                         Refuser tout
                       </Button>
-                      <Button size="sm" variant="ghost" onClick={() => setShowCustomize(true)} className="text-xs h-8 px-4">
+                      <Button size="sm" variant="ghost" onClick={() => setShowCustomize(true)} className="text-xs h-8 px-4 col-span-2 sm:col-span-1 sm:w-auto">
                         Personnaliser
                       </Button>
                     </div>
                   </div>
-                  <button onClick={refuseAll} className="text-muted-foreground hover:text-foreground transition-colors shrink-0">
+                  <button onClick={refuseAll} aria-label="Fermer" className="hidden sm:block text-muted-foreground hover:text-foreground transition-colors shrink-0">
                     <X className="h-4 w-4" />
                   </button>
                 </div>
