@@ -365,6 +365,7 @@ function ShareButtons({ title }: { title: string }) {
 export default function BlogArticle() {
   const { slug } = useParams<{ slug: string }>();
   const [activeId, setActiveId] = useState("");
+  const [progress, setProgress] = useState(0);
 
   // Try hardcoded first, then fall through to DB
   const hardcoded = articles.find((a) => a.slug === slug);
@@ -411,6 +412,24 @@ export default function BlogArticle() {
     return () => observer.disconnect();
   }, [article]);
 
+  // Reading progress bar — driven by scroll position
+  useEffect(() => {
+    if (!article) return;
+    const update = () => {
+      const h = document.documentElement;
+      const scrollable = h.scrollHeight - h.clientHeight;
+      const p = scrollable <= 0 ? 0 : Math.max(0, Math.min(1, h.scrollTop / scrollable));
+      setProgress(p);
+    };
+    update();
+    window.addEventListener("scroll", update, { passive: true });
+    window.addEventListener("resize", update);
+    return () => {
+      window.removeEventListener("scroll", update);
+      window.removeEventListener("resize", update);
+    };
+  }, [article]);
+
   if (!hardcoded && dbLoading) {
     return (
       <div className="min-h-[60vh] flex items-center justify-center">
@@ -430,6 +449,21 @@ export default function BlogArticle() {
 
   return (
     <div className="min-h-screen">
+      {/* Reading progress bar — fixed to the very top of the viewport */}
+      <div
+        className="fixed top-0 left-0 right-0 z-[60] h-[3px] pointer-events-none"
+        style={{ background: "hsl(var(--border) / 0.3)" }}
+      >
+        <div
+          className="h-full origin-left transition-transform duration-75 ease-out"
+          style={{
+            background: "linear-gradient(90deg, hsl(var(--gradient-start)), hsl(var(--gradient-end)))",
+            transform: `scaleX(${progress})`,
+            boxShadow: progress > 0 ? "0 0 8px hsl(var(--primary) / 0.55)" : "none",
+          }}
+        />
+      </div>
+
       {/* Hero */}
       <div className="relative">
         <div className="h-64 sm:h-80 lg:h-96 overflow-hidden">
@@ -462,13 +496,13 @@ export default function BlogArticle() {
       {/* Content with sidebar */}
       <div className="max-w-5xl mx-auto px-6 py-12 lg:py-16">
         <div className="flex gap-12">
-          {/* Main content */}
-          <article className="flex-1 min-w-0">
-            <div className="space-y-10">
+          {/* Main content — bumped typography for editorial-grade readability */}
+          <article className="flex-1 min-w-0 max-w-[65ch]">
+            <div className="space-y-12">
               {article.sections.map((section) => (
                 <section key={section.id} id={section.id} className="scroll-mt-24">
-                  <h2 className="text-xl sm:text-2xl font-bold font-display mb-4">{section.title}</h2>
-                  <div className="text-muted-foreground leading-relaxed space-y-4">
+                  <h2 className="text-2xl sm:text-3xl font-bold font-display mb-5 text-foreground" style={{ letterSpacing: "-0.015em", lineHeight: 1.2 }}>{section.title}</h2>
+                  <div className="text-[17px] text-foreground/85 space-y-5" style={{ lineHeight: 1.75 }}>
                     {section.content.split("\n\n").map((p, i) => (
                       <p key={i}>{p}</p>
                     ))}

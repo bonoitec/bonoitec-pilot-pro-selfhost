@@ -257,7 +257,7 @@ const templates: Record<string, (data: Record<string, string>, orgContact?: { na
         <p style="${P_STYLE}">Votre inscription a bien &eacute;t&eacute; prise en compte. Nous sommes ravis de vous accueillir sur notre plateforme de gestion professionnelle pour ateliers de r&eacute;paration.</p>
         <div style="${INFO_BOX_STYLE}">
           <p style="${INFO_P_STYLE}"><strong style="color:${BRAND.primary};">&#9989; Votre compte est actif</strong></p>
-          <p style="${INFO_P_STYLE}">Vous b&eacute;n&eacute;ficiez d'un essai gratuit de 30 jours avec acc&egrave;s complet &agrave; toutes les fonctionnalit&eacute;s.</p>
+          <p style="${INFO_P_STYLE}">Vous b&eacute;n&eacute;ficiez d'un essai gratuit de 14 jours avec acc&egrave;s complet &agrave; toutes les fonctionnalit&eacute;s.</p>
         </div>
         <p style="${P_STYLE}">Vous pouvez d&egrave;s &agrave; pr&eacute;sent :</p>
         <p style="${P_STYLE}">&bull; Cr&eacute;er vos premiers clients et appareils<br />&bull; Enregistrer des r&eacute;parations<br />&bull; G&eacute;n&eacute;rer des devis et factures<br />&bull; G&eacute;rer votre stock de pi&egrave;ces</p>

@@ -56,7 +56,7 @@ const CTASection = () => {
               </Link>
             </div>
             <p className="text-primary-foreground/50 text-sm pt-2">
-              Essai gratuit 30 jours · Sans carte bancaire · Sans engagement
+              Essai gratuit 14 jours · Sans carte bancaire · Sans engagement
             </p>
           </div>
         </motion.div>

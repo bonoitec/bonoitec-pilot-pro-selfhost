@@ -55,7 +55,7 @@ const billingOptions = [
 ];
 
 const reassurance = [
-  { icon: Shield, text: "Essai gratuit 30 jours" },
+  { icon: Shield, text: "Essai gratuit 14 jours" },
   { icon: Zap, text: "Sans carte bancaire" },
   { icon: Headphones, text: "Support réactif inclus" },
 ];
@@ -216,7 +216,7 @@ const PricingSection = () => {
                     </Button>
                   )}
                   <p className="text-xs text-muted-foreground text-center lg:text-right">
-                    {user ? "Paiement sécurisé via Stripe" : "30 jours gratuits · Sans carte bancaire"}
+                    {user ? "Paiement sécurisé via Stripe" : "14 jours gratuits · Sans carte bancaire"}
                   </p>
                 </div>
               </div>

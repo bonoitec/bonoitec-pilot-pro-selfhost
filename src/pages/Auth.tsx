@@ -503,7 +503,7 @@ const Auth = () => {
                 visible: { transition: { delayChildren: 1.8, staggerChildren: 0.1 } },
               }}
             >
-              {["Devis et factures automatisés", "Suivi des réparations en temps réel", "Gestion de stock intégrée", "Essai gratuit 30 jours"].map((item) => (
+              {["Devis et factures automatisés", "Suivi des réparations en temps réel", "Gestion de stock intégrée", "Essai gratuit 14 jours"].map((item) => (
                 <motion.div
                   key={item}
                   className="flex items-center gap-3"
@@ -533,9 +533,23 @@ const Auth = () => {
       </div>
 
       {/* RIGHT — Auth form */}
-      <div className="flex-1 flex flex-col items-center justify-center px-5 py-8 sm:px-8 lg:px-16">
+      <div className="flex-1 flex flex-col items-center justify-center px-5 py-8 sm:px-8 lg:px-16 relative">
+        {/* Ambient primary glow backdrop — subtle, ties the form column
+            to the brand language of the marketing left side */}
+        <div
+          aria-hidden="true"
+          className="absolute inset-0 pointer-events-none overflow-hidden"
+        >
+          <div
+            className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[720px] h-[520px]"
+            style={{
+              background:
+                "radial-gradient(ellipse at center, hsl(var(--primary) / 0.06), transparent 65%)",
+            }}
+          />
+        </div>
         {/* Theme toggle */}
-        <div className="absolute top-4 right-4">
+        <div className="absolute top-4 right-4 z-20">
           <ThemeToggle />
         </div>
 
@@ -546,14 +560,24 @@ const Auth = () => {
           </Link>
         </div>
 
-        <div className="w-full max-w-[400px]">
+        <div className="w-full max-w-[400px] relative z-10">
           <div className="mb-8">
+            {/* Gradient accent line — shared chapter-marker device */}
+            <div
+              aria-hidden="true"
+              className="mb-4 h-[2px] w-[56px] rounded-full"
+              style={{
+                background:
+                  "linear-gradient(90deg, hsl(var(--gradient-start)), hsl(var(--gradient-end)))",
+                boxShadow: "0 0 10px hsl(var(--primary) / 0.35)",
+              }}
+            />
             <h2 className="text-2xl font-bold tracking-tight text-foreground font-display">
               {activeTab === "signup" ? "Créez votre espace" : "Bon retour"}
             </h2>
             <p className="text-sm text-muted-foreground mt-1.5">
               {activeTab === "signup"
-                ? "30 jours gratuits, sans engagement."
+                ? "14 jours gratuits, sans engagement."
                 : "Connectez-vous à votre tableau de bord."}
             </p>
           </div>

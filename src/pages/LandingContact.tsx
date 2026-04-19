@@ -144,12 +144,24 @@ const LandingContact = () => {
         className="landing-container py-16 md:py-24"
       >
         <div className="max-w-4xl mx-auto">
-          {/* Header */}
+          {/* Header — unified gradient-line + uppercase eyebrow */}
           <div className="text-center mb-12">
-            <div className="inline-flex items-center gap-2 rounded-full bg-primary/10 border border-primary/20 px-4 py-1.5 text-xs font-semibold text-primary mb-6">
+            <div
+              aria-hidden="true"
+              className="mx-auto mb-5 h-[2px] w-[72px] rounded-full"
+              style={{
+                background:
+                  "linear-gradient(90deg, transparent, hsl(var(--gradient-start)) 20%, hsl(var(--gradient-end)) 80%, transparent)",
+                boxShadow: "0 0 12px hsl(var(--primary) / 0.35)",
+              }}
+            />
+            <div
+              className="inline-flex items-center text-xs font-bold text-primary uppercase mb-4"
+              style={{ letterSpacing: "0.18em" }}
+            >
               Contact
             </div>
-            <h1 className="text-3xl sm:text-4xl font-bold font-display mb-4">
+            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold font-display mb-5" style={{ letterSpacing: "-0.025em", lineHeight: 1.05 }}>
               Contactez-nous
             </h1>
             <p className="text-muted-foreground text-lg leading-relaxed max-w-xl mx-auto">
@@ -158,8 +170,8 @@ const LandingContact = () => {
           </div>
 
           <div className="grid lg:grid-cols-3 gap-10">
-            {/* Sidebar info */}
-            <div className="lg:col-span-1 space-y-6">
+            {/* Sidebar info — merged into one card with divider between sections */}
+            <div className="lg:col-span-1">
               <div className="landing-card p-6 space-y-5">
                 <h3 className="font-semibold font-display text-sm">Nos coordonnées</h3>
                 <a
@@ -180,9 +192,7 @@ const LandingContact = () => {
                   </div>
                   <span className="font-medium">04 65 96 95 85</span>
                 </a>
-              </div>
-
-              <div className="landing-card p-6 space-y-3">
+                <div className="h-px bg-border/60 my-1" />
                 <h3 className="font-semibold font-display text-sm">Horaires</h3>
                 <p className="text-sm text-muted-foreground leading-relaxed">
                   Du lundi au vendredi<br />

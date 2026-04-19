@@ -5,7 +5,7 @@ import { motion } from "framer-motion";
 import HeroAnimation from "./HeroAnimation";
 
 const trustBadges = [
-  "Essai gratuit 30 jours",
+  "Essai gratuit 14 jours",
   "Sans engagement",
   "Support réactif",
   "Pensé pour les ateliers",

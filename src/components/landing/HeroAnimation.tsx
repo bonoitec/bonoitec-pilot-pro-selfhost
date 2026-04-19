@@ -472,7 +472,7 @@ function HeroComposition() {
                 <HeroCtaSecondary to="/demo" />
               </div>
               <div style={{ display: "flex", flexWrap: "wrap", gap: "12px 30px", marginTop: 32, opacity: badgeE }}>
-                {["Essai gratuit 30 jours", "Sans engagement", "Support réactif", "Pensé pour les ateliers"].map((t) => (
+                {["Essai gratuit 14 jours", "Sans engagement", "Support réactif", "Pensé pour les ateliers"].map((t) => (
                   <div key={t} style={{ display: "flex", alignItems: "center", gap: 10, fontSize: 18, color: C.muted, fontWeight: 500 }}>
                     <CheckCircle2 className="w-5 h-5" style={{ color: C.success }} /> {t}
                   </div>
