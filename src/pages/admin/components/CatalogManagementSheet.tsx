@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -84,25 +84,24 @@ function DeviceFormDialog({
   const [form, setForm] = useState(EMPTY_FORM);
   const [reason, setReason] = useState("");
 
-  // Reset form whenever the dialog opens
-  useMemo(() => {
-    if (open) {
-      if (editing) {
-        setForm({
-          category: editing.category,
-          brand: editing.brand,
-          model: editing.model,
-          model_number: editing.model_number ?? "",
-          release_year: editing.release_year?.toString() ?? "",
-          storage_variants: Array.isArray(editing.storage_variants) ? editing.storage_variants.join(", ") : "",
-          color_variants: Array.isArray(editing.color_variants) ? editing.color_variants.join(", ") : "",
-          is_active: editing.is_active,
-        });
-      } else {
-        setForm(EMPTY_FORM);
-      }
-      setReason("");
+  // Reset form whenever the dialog opens.
+  useEffect(() => {
+    if (!open) return;
+    if (editing) {
+      setForm({
+        category: editing.category,
+        brand: editing.brand,
+        model: editing.model,
+        model_number: editing.model_number ?? "",
+        release_year: editing.release_year?.toString() ?? "",
+        storage_variants: Array.isArray(editing.storage_variants) ? editing.storage_variants.join(", ") : "",
+        color_variants: Array.isArray(editing.color_variants) ? editing.color_variants.join(", ") : "",
+        is_active: editing.is_active,
+      });
+    } else {
+      setForm(EMPTY_FORM);
     }
+    setReason("");
   }, [open, editing]);
 
   const save = useMutation({
@@ -185,12 +184,19 @@ function DeviceFormDialog({
           </div>
           <ReasonField value={reason} onChange={setReason} />
         </div>
-        <DialogFooter>
-          <Button variant="outline" onClick={onClose} disabled={save.isPending}>Annuler</Button>
-          <Button onClick={() => save.mutate()} disabled={!canSave || save.isPending}>
-            {save.isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-            {editing ? "Enregistrer" : "Ajouter"}
-          </Button>
+        <DialogFooter className="flex-col sm:flex-row sm:items-center gap-2">
+          {!canSave && (
+            <p className="text-[11px] text-muted-foreground sm:mr-auto">
+              Marque, modèle et raison (≥3 caractères) requis.
+            </p>
+          )}
+          <div className="flex gap-2 w-full sm:w-auto justify-end">
+            <Button variant="outline" onClick={onClose} disabled={save.isPending}>Annuler</Button>
+            <Button onClick={() => save.mutate()} disabled={!canSave || save.isPending}>
+              {save.isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+              {editing ? "Enregistrer" : "Ajouter"}
+            </Button>
+          </div>
         </DialogFooter>
       </DialogContent>
     </Dialog>
@@ -206,7 +212,7 @@ function DeleteDeviceDialog({
   const qc = useQueryClient();
   const [reason, setReason] = useState("");
 
-  useMemo(() => { if (open) setReason(""); }, [open]);
+  useEffect(() => { if (open) setReason(""); }, [open]);
 
   const remove = useMutation({
     mutationFn: async () => {
