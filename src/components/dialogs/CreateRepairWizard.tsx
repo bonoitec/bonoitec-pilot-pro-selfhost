@@ -2,6 +2,7 @@ import { useState, useMemo } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { uploadFile } from "@/lib/storage";
+import { readFunctionError } from "@/lib/supabaseFunctionError";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -842,7 +843,10 @@ export function CreateRepairWizard({ open, onOpenChange }: Props) {
                                   messages: [{ role: "user", content: fullContext }],
                                 },
                               });
-                              if (error) throw error;
+                              if (error) {
+                                const msg = await readFunctionError(error, "Impossible d'analyser");
+                                throw new Error(msg);
+                              }
                               const content = data?.choices?.[0]?.message?.content;
                               if (!content) throw new Error("Pas de réponse");
                               const parsed: DiagnosticResult = JSON.parse(content);
