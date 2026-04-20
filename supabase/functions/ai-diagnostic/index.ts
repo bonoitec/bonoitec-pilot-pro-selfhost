@@ -47,9 +47,22 @@ serve(async (req) => {
 
     const parsed = await readJsonWithLimit<{ messages?: Array<{ role: string; content: string }>; mode?: string }>(req, 200_000);
     const { messages, mode } = parsed;
+
+    // Provider auto-detect: Groq > OpenRouter. Groq has a generous free tier
+    // (14 400 req/day on small Llama/Gemma, 1 000 on 70B) with no credit card.
+    const GROQ_API_KEY = Deno.env.get("GROQ_API_KEY");
     const OPENROUTER_API_KEY = Deno.env.get("OPENROUTER_API_KEY");
-    if (!OPENROUTER_API_KEY) throw new Error("OPENROUTER_API_KEY is not configured");
-    const AI_MODEL = Deno.env.get("OPENROUTER_MODEL") ?? "google/gemini-2.5-flash";
+    const useGroq = !!GROQ_API_KEY;
+    if (!useGroq && !OPENROUTER_API_KEY) {
+      throw new Error("No AI provider configured (GROQ_API_KEY or OPENROUTER_API_KEY).");
+    }
+    const AI_MODEL = useGroq
+      ? (Deno.env.get("GROQ_MODEL") ?? "llama-3.3-70b-versatile")
+      : (Deno.env.get("OPENROUTER_MODEL") ?? "google/gemini-2.5-flash");
+    const AI_ENDPOINT = useGroq
+      ? "https://api.groq.com/openai/v1/chat/completions"
+      : "https://openrouter.ai/api/v1/chat/completions";
+    const AI_AUTH = useGroq ? GROQ_API_KEY : OPENROUTER_API_KEY;
 
     // Validate message content length
     const safeMessages = (messages || []).slice(-10);
@@ -113,11 +126,12 @@ Tu aides les techniciens avec les diagnostics, les prix, les pièces et les cons
 Réponds en français, de manière claire et concise. Utilise le format markdown pour la mise en forme.`;
     }
 
-    const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+    const response = await fetch(AI_ENDPOINT, {
       method: "POST",
       headers: {
-        Authorization: `Bearer ${OPENROUTER_API_KEY}`,
+        Authorization: `Bearer ${AI_AUTH}`,
         "Content-Type": "application/json",
+        // OpenRouter-specific, harmless for Groq:
         "HTTP-Referer": Deno.env.get("APP_URL") ?? "https://bonoitecpilot.fr",
         "X-Title": "BonoitecPilot",
       },
@@ -128,6 +142,10 @@ Réponds en français, de manière claire et concise. Utilise le format markdown
           ...safeMessages,
         ],
         stream: mode === "chat",
+        // Ask for strict JSON only for modes whose prompts require it.
+        ...(mode === "diagnostic" || mode === "imei" || mode === "business-insights"
+          ? { response_format: { type: "json_object" } }
+          : {}),
       }),
     });
 

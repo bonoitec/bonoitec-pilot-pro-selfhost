@@ -3,6 +3,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { uploadFile } from "@/lib/storage";
 import { readFunctionError } from "@/lib/supabaseFunctionError";
+import { AiDiagnosticPanel } from "./AiDiagnosticPanel";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -868,56 +869,11 @@ export function CreateRepairWizard({ open, onOpenChange }: Props) {
                     )}
 
                     {diagnosticResult && (
-                      <div className="space-y-4">
-                        <div className="grid grid-cols-2 gap-3">
-                          <div className="flex items-center gap-2 rounded-md bg-background p-2.5 border border-border/50">
-                            <Clock className="h-4 w-4 text-primary shrink-0" />
-                            <div>
-                              <p className="text-[10px] text-muted-foreground uppercase tracking-wide">Temps estimé</p>
-                              <p className="text-sm font-semibold">{diagnosticResult.temps_estime}</p>
-                            </div>
-                          </div>
-                          <div className="flex items-center gap-2 rounded-md bg-background p-2.5 border border-border/50">
-                            <Gauge className="h-4 w-4 text-warning shrink-0" />
-                            <div>
-                              <p className="text-[10px] text-muted-foreground uppercase tracking-wide">Difficulté</p>
-                              <p className="text-sm font-semibold capitalize">{diagnosticResult.difficulte}</p>
-                            </div>
-                          </div>
-                        </div>
-
-                        <div>
-                          <h4 className="text-xs font-semibold text-foreground mb-1.5 flex items-center gap-1.5">
-                            <Search className="h-3.5 w-3.5 text-primary" />Causes probables
-                          </h4>
-                          <ul className="space-y-1 pl-1">
-                            {diagnosticResult.causes_possibles.map((c, i) => (
-                              <li key={i} className="text-xs text-muted-foreground flex items-start gap-1.5">
-                                <span className="text-primary mt-0.5">•</span>{c}
-                              </li>
-                            ))}
-                          </ul>
-                        </div>
-
-                        <div>
-                          <h4 className="text-xs font-semibold text-foreground mb-1.5 flex items-center gap-1.5">
-                            <Wrench className="h-3.5 w-3.5 text-primary" />Pièces à vérifier
-                          </h4>
-                          <div className="flex flex-wrap gap-1.5">
-                            {diagnosticResult.pieces_a_verifier.map((p, i) => (
-                              <span key={i} className="text-xs bg-background border border-border/50 rounded-md px-2 py-0.5">{p}</span>
-                            ))}
-                          </div>
-                        </div>
-
-                        <div>
-                          <h4 className="text-xs font-semibold text-foreground mb-1.5 flex items-center gap-1.5">
-                            <CheckCircle2 className="h-3.5 w-3.5 text-primary" />Solution recommandée
-                          </h4>
-                          <p className="text-xs text-muted-foreground leading-relaxed">{diagnosticResult.solution_probable}</p>
-                        </div>
-
-                      </div>
+                      <AiDiagnosticPanel
+                        result={diagnosticResult}
+                        busy={diagnosticLoading}
+                        onClear={() => setDiagnosticResult(null)}
+                      />
                     )}
                   </div>
                 )}
