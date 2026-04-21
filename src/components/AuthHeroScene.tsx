@@ -148,17 +148,20 @@ export function AuthHeroScene() {
 
   return (
     <div className="relative w-full h-full">
-      {/* Card stage — anchored tight to the right edge of the panel,
-          leaving the left column clear for headline + features. Sized to
-          fit alongside a 260px text column down to xl (1280px). */}
-      <div className="absolute top-1/2 right-6 -translate-y-1/2 w-[290px] h-[400px]">
-        {/* STATS CARD — back-left, slight tilt */}
+      {/* Card stage — pushed hard against the right edge (with a tiny outward
+          bleed so the scene reads as "coming from off-screen") so the text
+          column on the left breathes. Narrowed from 290 → 260 to give a
+          comfortable visual gutter between the headline/features and the
+          floating product scene. */}
+      <div className="absolute top-1/2 right-6 -translate-y-1/2 w-[260px] h-[400px]">
+        {/* STATS CARD — back-left, peek from behind the main ticket with a wider
+            left offset so its "AUJOURD'HUI / 1 840 €" is visible, not buried. */}
         <FloatingCard
-          className="absolute top-0 left-0 w-[170px] z-10"
+          className="absolute top-[-4%] -left-8 w-[168px] z-10"
           floatDuration={7.5}
           floatDelay={0}
-          entryInitial={{ opacity: 0, y: 20, rotate: -3 }}
-          entryAnimate={{ opacity: 1, y: 0, rotate: -3 }}
+          entryInitial={{ opacity: 0, y: 20, rotate: -4 }}
+          entryAnimate={{ opacity: 1, y: 0, rotate: -4 }}
           entryTransition={{ delay: 0.9, duration: 0.7, ease: SMOOTH_EASE }}
         >
           <div className="p-4 space-y-2">
@@ -177,9 +180,9 @@ export function AuthHeroScene() {
           </div>
         </FloatingCard>
 
-        {/* INVENTORY CARD — back-left, bottom, slight counter-tilt */}
+        {/* INVENTORY CARD — bottom accent */}
         <FloatingCard
-          className="absolute bottom-0 left-[8px] w-[170px] z-10"
+          className="absolute bottom-0 -left-4 w-[168px] z-10"
           floatDuration={9}
           floatDelay={1.5}
           entryInitial={{ opacity: 0, y: -20, rotate: 2 }}
@@ -494,13 +497,21 @@ function FloatingCard({
       transition={entryTransition}
     >
       <motion.div
-        animate={{ y: [0, -10, 0] }}
-        transition={{
-          duration: floatDuration,
-          delay: floatDelay,
-          repeat: Infinity,
-          ease: [0.45, 0, 0.55, 1],
+        // Organic 4-axis drift — each axis has a DIFFERENT duration so the
+        // card's motion never perfectly repeats and always looks alive.
+        animate={{
+          x: [0, 3, 0, -2.5, 0],
+          y: [0, -10, -6, -12, 0],
+          rotate: [0, 0.6, 0, -0.45, 0],
+          scale: [1, 1.012, 1, 1.008, 1],
         }}
+        transition={{
+          x:      { duration: floatDuration * 1.35, delay: floatDelay,       repeat: Infinity, ease: [0.45, 0, 0.55, 1] },
+          y:      { duration: floatDuration,         delay: floatDelay,       repeat: Infinity, ease: [0.45, 0, 0.55, 1] },
+          rotate: { duration: floatDuration * 0.9,  delay: floatDelay + 0.3, repeat: Infinity, ease: [0.45, 0, 0.55, 1] },
+          scale:  { duration: floatDuration * 1.7,  delay: floatDelay,       repeat: Infinity, ease: "easeInOut" },
+        }}
+        style={{ willChange: "transform" }}
       >
         {children}
       </motion.div>
@@ -511,7 +522,7 @@ function FloatingCard({
 function StaticScene() {
   return (
     <div className="relative w-full h-full">
-      <div className="absolute top-1/2 right-6 -translate-y-1/2 w-[290px] h-[400px]">
+      <div className="absolute top-1/2 right-6 -translate-y-1/2 w-[260px] h-[400px]">
         <div className="absolute top-0 left-0 w-[170px] rounded-2xl border border-border/60 bg-card/55 backdrop-blur-xl p-4 space-y-2 shadow-premium-lg">
           <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Aujourd'hui</div>
           <div className="text-2xl font-bold text-foreground">1 840 €</div>

@@ -455,15 +455,10 @@ const Auth = () => {
   return (
     <div className="min-h-screen bg-background flex justify-center">
       <div className="flex w-full max-w-[1200px]">
-      {/* LEFT — Visual panel */}
-      <div className="hidden lg:flex lg:w-[50%] relative overflow-hidden">
-        {/* Premium gradient background */}
-        <div className="absolute inset-0 gradient-primary opacity-[0.04]" />
-        <div className="absolute inset-0">
-          <div className="absolute top-[-20%] left-[-10%] w-[600px] h-[600px] bg-primary/8 rounded-full blur-[100px]" />
-          <div className="absolute bottom-[-15%] right-[-5%] w-[500px] h-[500px] bg-primary-glow/8 rounded-full blur-[100px]" />
-          <div className="absolute inset-0 bg-dots opacity-20" />
-        </div>
+      {/* LEFT — Visual panel (transparent). No overflow-hidden so the text
+          column can use negative margin to slide past the left edge toward the
+          viewport edge for a more confident left-alignment. */}
+      <div className="hidden lg:flex lg:w-[50%] relative">
 
         {/* Cinematic product scene — floating glass cards with live ticket
             lifecycle, stats, and inventory. Shows from xl (1280px) and up;
@@ -472,7 +467,7 @@ const Auth = () => {
           <AuthHeroScene />
         </div>
 
-        <div className="relative z-10 flex flex-col justify-between w-full p-12 xl:p-16">
+        <div className="relative z-10 flex flex-col justify-between w-full pl-0 pr-12 py-12 xl:pr-16 xl:py-16 -ml-3 xl:-ml-5">
           <Link to="/" className="inline-flex items-center w-fit group" aria-label="BonoitecPilot">
             <NavbarBrand />
           </Link>
