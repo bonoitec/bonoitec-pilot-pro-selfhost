@@ -3,6 +3,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { uploadFile } from "@/lib/storage";
 import { readFunctionError } from "@/lib/supabaseFunctionError";
+import { dataUrlToBlob } from "@/lib/dataUrl";
 import { AiDiagnosticPanel } from "./AiDiagnosticPanel";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -131,15 +132,16 @@ export function CreateRepairDialog({ open, onOpenChange }: Props) {
         .filter(([, v]) => v)
         .map(([k]) => k === "Diagnostic impossible" ? `${k}: ${diagnosticImpossibleReason}` : k);
 
-      // Upload signature if present
+      // Upload signature if present — fully guarded so a CSP block or
+      // network hiccup on the data-URL conversion can never kill the repair.
       let signatureUrl: string | null = null;
       if (signatureDataUrl) {
-        const blob = await (await fetch(signatureDataUrl)).blob();
-        const path = `signatures/${orgId}/${ref}-${Date.now()}.png`;
         try {
+          const blob = dataUrlToBlob(signatureDataUrl);
+          const path = `signatures/${orgId}/${ref}-${Date.now()}.png`;
           signatureUrl = await uploadFile(path, blob, { contentType: "image/png" });
-        } catch {
-          // Signature upload failed, continue without it
+        } catch (e) {
+          console.warn("Signature upload failed, continuing without it:", e);
         }
       }
 

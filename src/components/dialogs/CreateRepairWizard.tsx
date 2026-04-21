@@ -2,6 +2,7 @@ import { useState, useMemo } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { uploadFile } from "@/lib/storage";
+import { dataUrlToBlob } from "@/lib/dataUrl";
 import { readFunctionError } from "@/lib/supabaseFunctionError";
 import { AiDiagnosticPanel } from "./AiDiagnosticPanel";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
@@ -285,14 +286,17 @@ export function CreateRepairWizard({ open, onOpenChange }: Props) {
         } catch { /* skip failed upload */ }
       }
 
-      // 4. Upload signature
+      // 4. Upload signature — every step wrapped so a network hiccup can
+      // never block the repair insert (the signature is nice-to-have).
       let signatureUrl: string | null = null;
       if (signatureDataUrl) {
-        const blob = await (await fetch(signatureDataUrl)).blob();
-        const path = `signatures/${orgId}/${Date.now()}.png`;
         try {
+          const blob = dataUrlToBlob(signatureDataUrl);
+          const path = `signatures/${orgId}/${Date.now()}.png`;
           signatureUrl = await uploadFile(path, blob, { contentType: "image/png" });
-        } catch { /* skip failed upload */ }
+        } catch (e) {
+          console.warn("Signature upload failed, continuing without it:", e);
+        }
       }
 
       // 5. Build intake checklist
