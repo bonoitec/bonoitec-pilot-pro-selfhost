@@ -1,22 +1,16 @@
-import { motion, useReducedMotion } from "framer-motion";
-import Lottie from "lottie-react";
 import { useState } from "react";
+import Lottie from "lottie-react";
+import { useReducedMotion } from "framer-motion";
+import brandLight from "@/assets/brand-logo-light.png";
+import brandLight2x from "@/assets/brand-logo-light@2x.png";
+import brandDark from "@/assets/brand-logo-dark.png";
+import brandDark2x from "@/assets/brand-logo-dark@2x.png";
 import brandLottie from "@/assets/lottie/apps-brand.json";
 
-const BRAND = "bonoitecpilot";
-
-/**
- * BonoitecPilot brand lockup — Stripe-style lowercase wordmark with
- * a purple-tinted Lottie icon to the LEFT. The Lottie plays once on
- * mount and once on every hover, synced with the letters rewriting
- * themselves. No infinite loop — quiet at rest, active on interaction.
- */
 export function NavbarBrand() {
   const reduce = useReducedMotion();
-  // One key drives BOTH the Lottie and the letter rewrite. Bumping
-  // it remounts both so they replay in lockstep.
-  const [rewriteKey, setRewriteKey] = useState(0);
-  const retrigger = () => setRewriteKey((k) => k + 1);
+  const [playKey, setPlayKey] = useState(0);
+  const retrigger = () => setPlayKey((k) => k + 1);
 
   return (
     <span
@@ -24,23 +18,19 @@ export function NavbarBrand() {
       style={{
         display: "inline-flex",
         alignItems: "center",
-        gap: "0.4rem",
+        gap: "0.55rem",
+        lineHeight: 0,
+        userSelect: "none",
       }}
     >
-      {/* Lottie icon — LEFT of the wordmark, purple-tinted, plays on trigger */}
       {!reduce && (
         <span
           aria-hidden="true"
-          style={{
-            display: "inline-block",
-            width: 38,
-            height: 38,
-            lineHeight: 0,
-            flexShrink: 0,
-          }}
+          className="shrink-0 h-14 w-14 md:h-16 md:w-16 lg:h-20 lg:w-20 inline-block"
+          style={{ lineHeight: 0, transform: "translateY(-15%)" }}
         >
           <Lottie
-            key={rewriteKey}
+            key={playKey}
             animationData={brandLottie}
             loop={false}
             autoplay
@@ -48,52 +38,27 @@ export function NavbarBrand() {
               preserveAspectRatio: "xMidYMid meet",
               progressiveLoad: false,
             }}
-            style={{
-              width: "100%",
-              height: "100%",
-              display: "block",
-            }}
+            style={{ width: "100%", height: "100%", display: "block" }}
           />
         </span>
       )}
 
-      {/* Wordmark — letters rewrite in on mount and on every hover */}
-      <span
-        style={{
-          fontFamily: "'Switzer', 'Inter', system-ui, sans-serif",
-          fontWeight: 500,
-          fontSize: "1.5rem",
-          letterSpacing: "-0.03em",
-          lineHeight: 1,
-          userSelect: "none",
-          color: "hsl(var(--foreground))",
-          display: "inline-flex",
-        }}
-      >
-        {BRAND.split("").map((char, i) => (
-          <motion.span
-            key={`${rewriteKey}-${i}`}
-            initial={
-              reduce
-                ? { opacity: 1 }
-                : { opacity: 0, y: 6, clipPath: "inset(0 100% 0 0)" }
-            }
-            animate={
-              reduce
-                ? { opacity: 1 }
-                : { opacity: 1, y: 0, clipPath: "inset(0 0% 0 0)" }
-            }
-            transition={{
-              delay: i * 0.04,
-              duration: 0.4,
-              ease: [0.16, 1, 0.3, 1],
-            }}
-            style={{ display: "inline-block" }}
-          >
-            {char}
-          </motion.span>
-        ))}
-      </span>
+      <img
+        src={brandLight}
+        srcSet={`${brandLight} 1x, ${brandLight2x} 2x`}
+        alt="BonoitecPilot"
+        draggable={false}
+        className="block dark:hidden h-14 md:h-16 lg:h-20 w-auto"
+        style={{ imageRendering: "auto" }}
+      />
+      <img
+        src={brandDark}
+        srcSet={`${brandDark} 1x, ${brandDark2x} 2x`}
+        alt="BonoitecPilot"
+        draggable={false}
+        className="hidden dark:block h-14 md:h-16 lg:h-20 w-auto"
+        style={{ imageRendering: "auto" }}
+      />
     </span>
   );
 }

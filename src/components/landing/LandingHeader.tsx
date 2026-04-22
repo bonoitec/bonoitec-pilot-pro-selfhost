@@ -35,7 +35,7 @@ const LandingHeader = () => {
           : "bg-transparent"
       }`}
     >
-      <div className="landing-container flex items-center justify-between h-16 lg:h-18">
+      <div className="landing-container flex items-center justify-between h-20 lg:h-24">
         <Link
           to="/"
           className="group inline-flex items-center"
