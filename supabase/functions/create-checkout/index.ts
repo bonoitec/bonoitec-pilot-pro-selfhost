@@ -156,6 +156,35 @@ serve(async (req) => {
       // even when it arrives BEFORE `checkout.session.completed` (which is
       // the typical Stripe ordering — sub.created fires first).
       subscription_data: { metadata: { user_id: userId, plan } },
+
+      // ── Per-session UX + compliance options ─────────────────────────
+      // French-only product → force locale (no auto-detect surprises).
+      locale: "fr",
+      // B2B repair shops in FR — VAT capture is legally required on
+      // invoices >€25. This adds an optional "VAT number" field.
+      tax_id_collection: { enabled: true },
+      // Required for compliant invoicing + chargeback protection.
+      billing_address_collection: "required",
+      // Persist collected name/address back onto the Stripe Customer so
+      // they show up on future invoices automatically.
+      customer_update: customerId
+        ? { name: "auto", address: "auto" }
+        : undefined, // not allowed when creating a new customer
+      // Discount code field (off by default in Stripe Checkout).
+      allow_promotion_codes: true,
+      // Custom text near the pay button — link to legal pages so the
+      // customer doesn't have to leave checkout to find them.
+      custom_text: {
+        terms_of_service_acceptance: {
+          message: `J'accepte les [Conditions générales](${origin}/cgu-cgv) et la [Politique de confidentialité](${origin}/confidentialite) de BonoitecPilot.`,
+        },
+        submit: {
+          message: "Vous serez débité immédiatement et pourrez annuler à tout moment depuis votre espace client.",
+        },
+      },
+      // Required when terms_of_service_acceptance custom_text is set —
+      // forces the user to tick a "I accept the ToS" checkbox.
+      consent_collection: { terms_of_service: "required" },
     });
 
     return new Response(JSON.stringify({ url: session.url }), {
