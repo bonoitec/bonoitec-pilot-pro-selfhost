@@ -270,26 +270,44 @@ const templates: Record<string, (data: Record<string, string>, orgContact?: { na
   }),
 
   // Client-facing
-  repair_created: (d, oc) => ({
-    subject: `Réparation enregistrée — ${esc(d.reference)}`,
-    html: emailLayout(`
-      <div style="${BODY_STYLE}">
-        <h2 style="${H2_STYLE}">&#128241; Votre r&eacute;paration a &eacute;t&eacute; enregistr&eacute;e</h2>
-        <p style="${P_STYLE}">Bonjour ${esc(d.clientName) || ""},</p>
-        <p style="${P_STYLE}">Nous avons bien enregistr&eacute; votre demande de r&eacute;paration. Voici les d&eacute;tails :</p>
-        <div style="${INFO_BOX_STYLE}">
-          <p style="${INFO_P_STYLE}"><strong style="color:${BRAND.primary};">R&eacute;f&eacute;rence :</strong> ${esc(d.reference)}</p>
-          <p style="${INFO_P_STYLE}"><strong style="color:${BRAND.primary};">Appareil :</strong> ${esc(d.device) || "&mdash;"}</p>
-          <p style="${INFO_P_STYLE}"><strong style="color:${BRAND.primary};">Probl&egrave;me :</strong> ${esc(d.issue) || "&mdash;"}</p>
-          ${d.estimatedDelay ? `<p style="${INFO_P_STYLE}"><strong style="color:${BRAND.primary};">&#9201; ${esc(d.estimatedDelay)}</strong></p>` : ""}
+  repair_created: (d, oc) => {
+    const url = safeUrl(d.trackingUrl);
+    // QR code generated via qrserver.com — opens the link in the phone's
+    // native browser (Safari/Chrome) when scanned, bypassing Gmail/Outlook
+    // in-app webviews that can break React + Supabase realtime apps.
+    const qr = url
+      ? `https://api.qrserver.com/v1/create-qr-code/?size=220x220&margin=8&data=${encodeURIComponent(url)}`
+      : "";
+    return {
+      subject: `Réparation enregistrée — ${esc(d.reference)}`,
+      html: emailLayout(`
+        <div style="${BODY_STYLE}">
+          <h2 style="${H2_STYLE}">&#128241; Votre r&eacute;paration a &eacute;t&eacute; enregistr&eacute;e</h2>
+          <p style="${P_STYLE}">Bonjour ${esc(d.clientName) || ""},</p>
+          <p style="${P_STYLE}">Nous avons bien enregistr&eacute; votre demande de r&eacute;paration. Voici les d&eacute;tails :</p>
+          <div style="${INFO_BOX_STYLE}">
+            <p style="${INFO_P_STYLE}"><strong style="color:${BRAND.primary};">R&eacute;f&eacute;rence :</strong> ${esc(d.reference)}</p>
+            <p style="${INFO_P_STYLE}"><strong style="color:${BRAND.primary};">Appareil :</strong> ${esc(d.device) || "&mdash;"}</p>
+            <p style="${INFO_P_STYLE}"><strong style="color:${BRAND.primary};">Probl&egrave;me :</strong> ${esc(d.issue) || "&mdash;"}</p>
+            ${d.estimatedDelay ? `<p style="${INFO_P_STYLE}"><strong style="color:${BRAND.primary};">&#9201; ${esc(d.estimatedDelay)}</strong></p>` : ""}
+          </div>
+          ${url ? `
+            <p style="${P_STYLE}">Suivez l&#39;avancement de votre r&eacute;paration en temps r&eacute;el :</p>
+            <div style="text-align:center;margin:24px 0;padding:20px;background:#f8f9fc;border-radius:12px;border:1px solid #e5e7ef;">
+              <p style="margin:0 0 6px;font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;color:${BRAND.muted};">Scannez avec votre t&eacute;l&eacute;phone</p>
+              <p style="margin:0 0 16px;font-size:11px;color:${BRAND.muted};">(ou cliquez sur le bouton ci-dessous)</p>
+              <img src="${esc(qr)}" alt="QR code de suivi" width="180" height="180" style="display:inline-block;border-radius:8px;background:#fff;padding:8px;" />
+              <p style="margin:14px 0 0;font-size:11px;color:${BRAND.muted};">Code de suivi&nbsp;: <strong style="color:${BRAND.primary};font-family:ui-monospace,SFMono-Regular,Menlo,monospace;letter-spacing:0.05em;">${esc(d.trackingCode) || ""}</strong></p>
+            </div>
+            <a href="${url}" style="${BTN_STYLE}">Suivre ma r&eacute;paration</a>
+            <p style="margin:12px 0 0;font-size:12px;color:${BRAND.muted};text-align:center;">Si le bouton ne fonctionne pas, copiez ce lien dans votre navigateur&nbsp;:<br /><a href="${url}" style="color:${BRAND.primary};word-break:break-all;">${url}</a></p>
+          ` : ""}
+          <p style="${P_STYLE}">Nous vous tiendrons inform&eacute;(e) &agrave; chaque &eacute;tape.</p>
+          <p style="${P_STYLE}">Cordialement,<br /><strong>L&rsquo;&eacute;quipe BonoitecPilot</strong></p>
         </div>
-        <p style="${P_STYLE}">Vous pouvez suivre l'avancement de votre r&eacute;paration en temps r&eacute;el gr&acirc;ce au lien ci-dessous :</p>
-        ${safeUrl(d.trackingUrl) ? `<a href="${safeUrl(d.trackingUrl)}" style="${BTN_STYLE}">Suivre ma r&eacute;paration</a>` : ""}
-        <p style="${P_STYLE}">Nous vous tiendrons inform&eacute;(e) &agrave; chaque &eacute;tape.</p>
-        <p style="${P_STYLE}">Cordialement,<br /><strong>L&rsquo;&eacute;quipe BonoitecPilot</strong></p>
-      </div>
-    `, `Réparation ${d.reference} enregistrée — suivez son avancement`, oc, true),
-  }),
+      `, `Réparation ${d.reference} enregistrée — suivez son avancement`, oc, true),
+    };
+  },
 
   // Platform-facing
   login_alert: (d, oc) => ({

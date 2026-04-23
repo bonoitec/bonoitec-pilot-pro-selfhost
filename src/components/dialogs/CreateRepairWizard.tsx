@@ -379,6 +379,7 @@ export function CreateRepairWizard({ open, onOpenChange }: Props) {
                 device: deviceLabel,
                 issue: repair.issue,
                 trackingUrl,
+                trackingCode: repair.tracking_code ?? "",
                 estimatedDelay: (() => {
                   const etm = repair.estimated_time_minutes as number | null;
                   if (!etm || etm <= 0) return "";
