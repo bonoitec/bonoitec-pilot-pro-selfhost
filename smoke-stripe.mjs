@@ -147,26 +147,32 @@ async function callWebhook(body, sigHeader) {
     const jwt = await signIn(email, password);
     log("signed in temp user", true, "");
 
-    // === End-to-end checkout for all 3 plans (embedded UI) ===
-    // create-checkout returns { client_secret, session_id }. We pull the
-    // session back via Stripe API and verify all session config:
-    // ui_mode=embedded, locale=fr, tax_id_collection, ToS consent,
-    // billing address required, correct line item.
+    // === End-to-end checkout for all 3 plans (hosted UI) ===
+    // create-checkout returns { url } pointing at checkout.stripe.com. We
+    // pull the session back via Stripe API and verify session config:
+    // hosted UI, locale=fr, tax_id_collection, ToS consent, billing
+    // address required, correct line item.
     for (const plan of ["monthly", "quarterly", "annual"]) {
       const r = await callCreateCheckout(jwt, plan);
-      const cs = r.body?.client_secret;
-      const sid = r.body?.session_id;
-      const ok = r.status === 200 && typeof cs === "string" && cs.length > 20
-        && typeof sid === "string" && sid.startsWith("cs_");
-      results.push(log(`create-checkout plan=${plan} returns embedded client_secret`, ok,
-        `status=${r.status} session=${sid || r.body?.error || ""}`));
+      const url = r.body?.url;
+      const ok = r.status === 200 && typeof url === "string"
+        && /^https:\/\/checkout\.stripe\.com\//.test(url);
+      results.push(log(`create-checkout plan=${plan} returns hosted url`, ok,
+        `status=${r.status} url=${(url || r.body?.error || "").slice(0, 60)}`));
       if (!ok) continue;
 
+      // Extract session id from the hosted URL (cs_live_... after /pay/)
+      const sidMatch = url.match(/\/pay\/(cs_\w+)/);
+      const sid = sidMatch?.[1];
+      if (!sid) {
+        results.push(log(`  could not parse session id from url`, false, url.slice(0, 80)));
+        continue;
+      }
       const sresp = await fetch(`https://api.stripe.com/v1/checkout/sessions/${sid}?expand[]=line_items`,
         { headers: { Authorization: `Basic ${Buffer.from(SK + ":").toString("base64")}` } });
       const session = await sresp.json();
       const planPrice = session.line_items?.data?.[0]?.price?.id;
-      const cfgOk = session.ui_mode === "embedded"
+      const cfgOk = (session.ui_mode === "hosted" || !session.ui_mode)
         && session.locale === "fr"
         && session.tax_id_collection?.enabled === true
         && session.allow_promotion_codes === true

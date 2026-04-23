@@ -1,7 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-import { useCheckoutDialog } from "@/contexts/CheckoutDialogContext";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
@@ -113,16 +112,22 @@ export function useSubscription() {
     };
   }, [session, checkSubscription, schedule]);
 
-  const checkout = useCheckoutDialog();
-  const startCheckout = (plan: "monthly" | "quarterly" | "annual" = "monthly") => {
+  const startCheckout = async (plan: "monthly" | "quarterly" | "annual" = "monthly") => {
     if (!session?.access_token) {
       toast.error("Vous devez être connecté pour souscrire.");
       return;
     }
-    // Embedded checkout: opens an in-page dialog. The dialog itself calls
-    // create-checkout once mounted (so we don't fire-and-forget the request
-    // before the user even sees the modal).
-    checkout.open(plan);
+    try {
+      const { data, error } = await supabase.functions.invoke("create-checkout", {
+        body: { plan },
+        headers: { Authorization: `Bearer ${session.access_token}` },
+      });
+      if (error) throw error;
+      if (data?.url) window.open(data.url, "_blank");
+    } catch (err) {
+      toast.error("Erreur lors de la création de la session de paiement.");
+      console.error(err);
+    }
   };
 
   const openCustomerPortal = async () => {

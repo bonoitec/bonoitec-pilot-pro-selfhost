@@ -4,7 +4,6 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider } from "@/contexts/AuthContext";
-import { CheckoutDialogProvider } from "@/contexts/CheckoutDialogContext";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { AppLayout } from "@/components/AppLayout";
 import { ScrollToTop } from "@/components/ScrollToTop";
@@ -64,7 +63,6 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <AuthProvider>
-          <CheckoutDialogProvider>
           <ScrollToTop />
           <Routes>
             {/* Public landing pages */}
@@ -121,7 +119,6 @@ const App = () => (
 
             <Route path="*" element={<NotFound />} />
           </Routes>
-          </CheckoutDialogProvider>
         </AuthProvider>
       </BrowserRouter>
     </TooltipProvider>

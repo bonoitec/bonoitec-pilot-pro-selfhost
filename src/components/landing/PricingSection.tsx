@@ -5,7 +5,8 @@ import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Check, Shield, Headphones, Zap, Sparkles, Loader2 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
-import { useCheckoutDialog } from "@/contexts/CheckoutDialogContext";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 const features = [
   "Gestion complète des réparations",
@@ -60,23 +61,32 @@ const reassurance = [
 ];
 
 const PricingSection = () => {
-  const [selected, setSelected] = useState<"monthly" | "quarterly" | "annual">("annual");
+  const [selected, setSelected] = useState("annual");
+  const [checkoutLoading, setCheckoutLoading] = useState(false);
   const ref = useRef(null);
   const isInView = useInView(ref, { once: true, margin: "-80px" });
   const current = billingOptions.find((b) => b.id === selected)!;
   const { user, session } = useAuth();
   const navigate = useNavigate();
-  const checkout = useCheckoutDialog();
-  // Spinner driven by the dialog's load state — keep local for backwards
-  // compat with the JSX that consumes `checkoutLoading`.
-  const checkoutLoading = checkout.isOpen && checkout.plan === selected;
 
-  const handleSubscribe = () => {
+  const handleSubscribe = async () => {
     if (!user || !session) {
       navigate("/auth");
       return;
     }
-    checkout.open(selected);
+    setCheckoutLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("create-checkout", {
+        body: { plan: selected },
+        headers: { Authorization: `Bearer ${session.access_token}` },
+      });
+      if (error) throw error;
+      if (data?.url) window.location.href = data.url;
+    } catch {
+      toast.error("Erreur lors de la création de la session de paiement.");
+    } finally {
+      setCheckoutLoading(false);
+    }
   };
 
   return (

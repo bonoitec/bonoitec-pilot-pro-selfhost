@@ -148,14 +148,10 @@ serve(async (req) => {
       customer_email: customerId ? undefined : userEmail,
       line_items: [{ price: priceId, quantity: 1 }],
       mode: "subscription",
-      // Embedded UI: customer pays inside an iframe on bonoitecpilot.fr
-      // instead of being redirected to checkout.stripe.com. The session
-      // returns a client_secret instead of a URL.
-      ui_mode: "embedded",
-      // Stripe redirects the iframe here on success. The dialog also has
-      // an `onComplete` JS hook that navigates the parent immediately —
-      // return_url is the fallback if JS is blocked or onComplete fails.
-      return_url: `${origin}/dashboard?checkout=success&session_id={CHECKOUT_SESSION_ID}`,
+      // Hosted UI: Stripe-rendered checkout page on checkout.stripe.com.
+      // Returns a session.url that the frontend redirects to.
+      success_url: `${origin}/dashboard?checkout=success`,
+      cancel_url: `${origin}/tarifs?checkout=cancel`,
       metadata: { user_id: userId, plan },
       // Propagate the same metadata onto the resulting subscription so the
       // `customer.subscription.created` webhook can self-resolve the org
@@ -193,10 +189,10 @@ serve(async (req) => {
       consent_collection: { terms_of_service: "required" },
     });
 
-    return new Response(
-      JSON.stringify({ client_secret: session.client_secret, session_id: session.id }),
-      { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 200 },
-    );
+    return new Response(JSON.stringify({ url: session.url }), {
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+      status: 200,
+    });
   } catch (error) {
     if (error instanceof Response) return error; // from readJsonWithLimit
     const errorId = crypto.randomUUID();
