@@ -151,6 +151,11 @@ serve(async (req) => {
       success_url: `${origin}/dashboard?checkout=success`,
       cancel_url: `${origin}/tarifs?checkout=cancel`,
       metadata: { user_id: userId, plan },
+      // Propagate the same metadata onto the resulting subscription so the
+      // `customer.subscription.created` webhook can self-resolve the org
+      // even when it arrives BEFORE `checkout.session.completed` (which is
+      // the typical Stripe ordering — sub.created fires first).
+      subscription_data: { metadata: { user_id: userId, plan } },
     });
 
     return new Response(JSON.stringify({ url: session.url }), {

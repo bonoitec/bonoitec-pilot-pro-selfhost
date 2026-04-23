@@ -281,17 +281,20 @@ Deno.serve(async (req) => {
       }
 
       case "customer.subscription.created": {
-        // Alt entrypoint when Stripe emits subscription.created before
-        // checkout.session.completed (rare but documented race).
+        // subscription.created typically fires BEFORE checkout.session.completed.
+        // We resolve via either path: stored stripe_customer_id OR the
+        // user_id propagated through subscription_data.metadata in
+        // create-checkout. Self-contained — does not depend on the session
+        // event landing.
         const sub = event.data.object as Stripe.Subscription;
         const customerId = typeof sub.customer === "string" ? sub.customer : sub.customer.id;
-        const orgInfo = await findOrgByCustomerId(supabase, customerId, null);
+        const userIdFromMetadata = (sub.metadata?.user_id as string | undefined) ?? null;
+        const orgInfo = await findOrgByCustomerId(supabase, customerId, userIdFromMetadata);
         if (!orgInfo) {
-          // Metadata lookup not available on subscription events — rely on
-          // the checkout.session.completed event to land first. This event
-          // gets retried by Stripe until we 200, so we ACK to avoid retry
-          // storm when the corresponding session event is on its way.
-          console.warn(`[STRIPE-WEBHOOK] subscription.created for unknown customer=${customerId} — will rely on subsequent session event`);
+          // Truly unknown — most likely a subscription created via Dashboard
+          // (manual admin action) without our metadata. ACK to avoid retry
+          // storm; admin must reconcile manually.
+          console.warn(`[STRIPE-WEBHOOK] subscription.created for unknown customer=${customerId} metadata_user=${userIdFromMetadata} — manual reconciliation needed`);
           break;
         }
         const plan = planNameFromSubscription(sub);
