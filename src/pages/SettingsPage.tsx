@@ -387,6 +387,11 @@ function SubscriptionCard() {
     monthly_cancelling: "Mensuel — 19,99 €/mois",
     quarterly_cancelling: "Trimestriel — 17,99 €/mois",
     annual_cancelling: "Annuel — 14,99 €/mois",
+    // Past_due grace window (72h after a failed payment). Webhook writes
+    // these; show a readable label rather than the raw suffix.
+    monthly_past_due: "Mensuel — 19,99 €/mois",
+    quarterly_past_due: "Trimestriel — 17,99 €/mois",
+    annual_past_due: "Annuel — 14,99 €/mois",
     active: "Abonnement actif",
   };
 
