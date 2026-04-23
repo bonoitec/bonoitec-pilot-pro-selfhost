@@ -193,7 +193,8 @@ serve(async (req) => {
 
       const priceId = subscription.items.data[0]?.price?.id;
       if (priceId === "price_1T9nqPHmh4WVTxBvFDvkWtdP") planName = "monthly";
-      else if (priceId === "price_1T9nrsHmh4WVTxBv9mcT2zp1") planName = "quarterly";
+      else if (priceId === "price_1TPKJmHmh4WVTxBvy6IPbNSG") planName = "quarterly";
+      else if (priceId === "price_1T9nrsHmh4WVTxBv9mcT2zp1") planName = "quarterly"; // legacy archived price
       else if (priceId === "price_1T9nslHmh4WVTxBvmPNLhhz2") planName = "annual";
       else planName = "active";
 

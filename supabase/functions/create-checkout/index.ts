@@ -6,7 +6,9 @@ import { readJsonWithLimit, extractBearerToken } from "../_shared/limits.ts";
 
 const PLANS: Record<string, string> = {
   monthly: "price_1T9nqPHmh4WVTxBvFDvkWtdP",
-  quarterly: "price_1T9nrsHmh4WVTxBv9mcT2zp1",
+  // €53.97 every 3 months. Old price (price_1T9nrsHmh4WVTxBv9mcT2zp1) was
+  // misconfigured as monthly interval — archived in Stripe.
+  quarterly: "price_1TPKJmHmh4WVTxBvy6IPbNSG",
   annual: "price_1T9nslHmh4WVTxBvmPNLhhz2",
 };
 

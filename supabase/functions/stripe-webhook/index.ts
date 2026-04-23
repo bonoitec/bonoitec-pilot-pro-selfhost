@@ -18,6 +18,9 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.99.0";
 
 const PLAN_BY_PRICE: Record<string, string> = {
   price_1T9nqPHmh4WVTxBvFDvkWtdP: "monthly",
+  price_1TPKJmHmh4WVTxBvy6IPbNSG: "quarterly",
+  // Legacy quarterly price (archived in Stripe — billed monthly by mistake).
+  // Kept here so any historical webhook event still resolves to "quarterly".
   price_1T9nrsHmh4WVTxBv9mcT2zp1: "quarterly",
   price_1T9nslHmh4WVTxBvmPNLhhz2: "annual",
 };
