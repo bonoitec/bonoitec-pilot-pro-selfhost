@@ -69,17 +69,42 @@ serve(async (req) => {
       );
     }
 
-    const stripe = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });
-    const customers = await stripe.customers.list({ email: userEmail, limit: 1 });
+    // ── Resolve org + Stripe customer from DB, NOT email ────────────
+    // Looking up Stripe customer by email is brittle: if the user changes
+    // their Supabase email after subscribing, the lookup misses and we
+    // either 404 or silently bootstrap a duplicate Stripe customer.
+    // Source-of-truth is organizations.stripe_customer_id, populated by
+    // the webhook on first checkout.session.completed.
+    const { data: profile } = await supabaseClient
+      .from("profiles")
+      .select("organization_id")
+      .eq("user_id", userId)
+      .maybeSingle();
+    const organizationId = (profile as { organization_id?: string } | null)?.organization_id ?? null;
 
-    if (customers.data.length === 0) {
+    let storedCustomerId: string | null = null;
+    let storedSubscriptionStatus: string | null = null;
+    if (organizationId) {
+      const { data: orgRow } = await supabaseClient
+        .from("organizations")
+        .select("stripe_customer_id, subscription_status")
+        .eq("id", organizationId)
+        .maybeSingle();
+      storedCustomerId = (orgRow as { stripe_customer_id?: string | null } | null)?.stripe_customer_id ?? null;
+      storedSubscriptionStatus = (orgRow as { subscription_status?: string | null } | null)?.subscription_status ?? null;
+    }
+
+    if (!storedCustomerId) {
+      // User has never completed checkout. Don't fall back to email lookup
+      // here — that's the bootstrap path and lives in create-checkout.
       return new Response(JSON.stringify({ subscribed: false }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
         status: 200,
       });
     }
 
-    const customerId = customers.data[0].id;
+    const stripe = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });
+    const customerId = storedCustomerId;
 
     // Fetch ALL subscriptions (any status), then pick the most relevant one.
     // Previously we only queried status='active', which silently hid `past_due`
@@ -125,17 +150,11 @@ serve(async (req) => {
     let pastDueSinceForDb: string | null = null; // written back to DB when we had to bootstrap
 
     if (subscription && rawStatus === "past_due") {
-      const { data: profile } = await supabaseClient
-        .from("profiles")
-        .select("organization_id")
-        .eq("user_id", userId)
-        .single();
-
-      if (profile?.organization_id) {
+      if (organizationId) {
         const { data: orgRow } = await supabaseClient
           .from("organizations")
           .select("past_due_since")
-          .eq("id", profile.organization_id)
+          .eq("id", organizationId)
           .maybeSingle();
 
         let anchorMs: number | null = null;
@@ -199,13 +218,7 @@ serve(async (req) => {
       else planName = "active";
 
       // Update organization in DB
-      const { data: profile } = await supabaseClient
-        .from("profiles")
-        .select("organization_id")
-        .eq("user_id", userId)
-        .single();
-
-      if (profile?.organization_id) {
+      if (organizationId) {
         // Build plan_name suffix: _cancelling > _past_due > none.
         // Cancelling takes precedence because user's explicit choice overrides
         // a transient payment retry state.
@@ -231,32 +244,31 @@ serve(async (req) => {
         await supabaseClient
           .from("organizations")
           .update(dbUpdate)
-          .eq("id", profile.organization_id);
+          .eq("id", organizationId);
       }
-    } else {
-      // Update org to reflect cancelled/expired subscription
-      const { data: profile } = await supabaseClient
-        .from("profiles")
-        .select("organization_id")
-        .eq("user_id", userId)
-        .single();
-
-      if (profile?.organization_id) {
-        const { data: org } = await supabaseClient
+    } else if (organizationId && storedSubscriptionStatus === "active") {
+      // Self-healing downgrade — only triggered if:
+      //   • DB says user is "active" (paid sub)
+      //   • Stripe returned NO subs OR all subs are TERMINAL (canceled,
+      //     incomplete_expired, unpaid). NOT "incomplete" (transient
+      //     during 3DS card auth) — those would falsely revoke access.
+      // The webhook is the primary source of truth; this branch only
+      // catches missed events. Trial users are skipped automatically by
+      // the storedSubscriptionStatus === "active" guard above.
+      const TERMINAL = new Set(["canceled", "incomplete_expired", "unpaid"]);
+      const allTerminal =
+        subscriptions.data.length === 0 ||
+        subscriptions.data.every((s) => TERMINAL.has(s.status));
+      if (allTerminal) {
+        await supabaseClient
           .from("organizations")
-          .select("subscription_status")
-          .eq("id", profile.organization_id)
-          .single();
-
-        if (org?.subscription_status === "active") {
-          await supabaseClient
-            .from("organizations")
-            .update({
-              subscription_status: "trial_expired",
-              plan_name: null,
-            })
-            .eq("id", profile.organization_id);
-        }
+          .update({
+            subscription_status: "trial_expired",
+            plan_name: null,
+          })
+          .eq("id", organizationId);
+      } else {
+        console.warn(`[CHECK-SUBSCRIPTION] org=${organizationId} has no usable sub but non-terminal states present — skipping downgrade. statuses=${subscriptions.data.map((s) => s.status).join(",")}`);
       }
     }
 

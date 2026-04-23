@@ -47,14 +47,7 @@ serve(async (req) => {
       );
     }
 
-    const userEmail = claimsData.claims.email as string;
     const userId = claimsData.claims.sub as string;
-    if (!userEmail) {
-      return new Response(
-        JSON.stringify({ error: "User email not available" }),
-        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } },
-      );
-    }
 
     // ── DB-backed rate limiting per user: 5 req/min ────────────────
     const supabaseAdmin = createClient(supabaseUrl, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
@@ -72,17 +65,35 @@ serve(async (req) => {
       );
     }
 
-    const stripe = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });
-    const customers = await stripe.customers.list({ email: userEmail, limit: 1 });
-    if (customers.data.length === 0) {
+    // ── Resolve Stripe customer from DB, NOT email ─────────────────
+    // Source-of-truth is organizations.stripe_customer_id (set by the
+    // webhook on first checkout). Email lookup would silently break if
+    // the user changed their Supabase email after subscribing.
+    const { data: profile } = await supabaseAdmin
+      .from("profiles")
+      .select("organization_id")
+      .eq("user_id", userId)
+      .maybeSingle();
+    const organizationId = (profile as { organization_id?: string } | null)?.organization_id ?? null;
+    let storedCustomerId: string | null = null;
+    if (organizationId) {
+      const { data: orgRow } = await supabaseAdmin
+        .from("organizations")
+        .select("stripe_customer_id")
+        .eq("id", organizationId)
+        .maybeSingle();
+      storedCustomerId = (orgRow as { stripe_customer_id?: string | null } | null)?.stripe_customer_id ?? null;
+    }
+    if (!storedCustomerId) {
       return new Response(
         JSON.stringify({ error: "No Stripe customer found" }),
         { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } },
       );
     }
 
+    const stripe = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });
     const portalSession = await stripe.billingPortal.sessions.create({
-      customer: customers.data[0].id,
+      customer: storedCustomerId,
       return_url: `${origin}/dashboard`,
     });
 

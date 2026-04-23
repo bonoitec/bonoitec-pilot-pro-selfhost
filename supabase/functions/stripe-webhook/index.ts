@@ -223,6 +223,30 @@ Deno.serve(async (req) => {
 
   console.log(`[STRIPE-WEBHOOK] event=${event.type} id=${event.id}`);
 
+  // ── Idempotency: dedupe by event.id ──────────────────────────────
+  // Stripe retries on 5xx and may also redeliver successful events. The
+  // unique constraint on stripe_webhook_events.event_id makes the second
+  // insert fail with code 23505; we treat that as "already processed" and
+  // ACK without re-running side effects (DB writes, customer emails).
+  {
+    const { error: dupErr } = await supabase
+      .from("stripe_webhook_events")
+      .insert({ event_id: event.id, event_type: event.type });
+    if (dupErr) {
+      if (dupErr.code === "23505") {
+        console.log(`[STRIPE-WEBHOOK] duplicate event ignored id=${event.id}`);
+        return new Response(JSON.stringify({ received: true, duplicate: true }), {
+          status: 200,
+          headers: { "Content-Type": "application/json" },
+        });
+      }
+      // Any other DB error — log and continue. Returning 5xx would loop
+      // Stripe forever on a bad migration. Better to process and risk a
+      // duplicate side-effect than to drop the event entirely.
+      console.error(`[STRIPE-WEBHOOK] idempotency insert failed (continuing): ${dupErr.message}`);
+    }
+  }
+
   try {
     switch (event.type) {
       case "checkout.session.completed": {
@@ -408,7 +432,11 @@ Deno.serve(async (req) => {
         const existingPastDueSince =
           (currentOrg as { past_due_since?: string | null } | null)?.past_due_since ?? null;
         const existingPlan = (currentOrg as { plan_name?: string | null } | null)?.plan_name ?? "monthly";
-        const basePlan = existingPlan.replace(/(_cancelling|_past_due)$/, "");
+        // Strip ALL trailing state suffixes — a user may already be in
+        // `monthly_cancelling` when payment fails, which would otherwise
+        // produce the bogus `monthly_cancelling_past_due` after one
+        // application of the regex. The `+$` anchors a greedy run.
+        const basePlan = existingPlan.replace(/(?:_cancelling|_past_due)+$/, "");
 
         const updates: Record<string, unknown> = {
           plan_name: `${basePlan}_past_due`,

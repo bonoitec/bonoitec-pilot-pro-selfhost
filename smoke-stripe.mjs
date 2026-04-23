@@ -195,7 +195,30 @@ async function callWebhook(body, sigHeader) {
       results.push(log("invalid plan returns 400", r.status === 400, `got ${r.status} ${r.body?.error || ""}`));
     }
 
-    // === Webhook signature verification ===
+    // === check-subscription: temp user has no stripe_customer_id → false ===
+    {
+      const r = await fetch(`${SUPABASE_URL}/functions/v1/check-subscription`, {
+        method: "POST",
+        headers: { apikey: ANON, Authorization: `Bearer ${jwt}`, Origin: ORIGIN },
+      });
+      const j = await r.json().catch(() => ({}));
+      results.push(log("check-subscription returns false for non-subscriber (no Stripe call needed)",
+        r.status === 200 && j.subscribed === false, `got ${r.status} ${JSON.stringify(j).slice(0, 80)}`));
+    }
+
+    // === customer-portal: temp user has no stripe_customer_id → 404 ===
+    {
+      const r = await fetch(`${SUPABASE_URL}/functions/v1/customer-portal`, {
+        method: "POST",
+        headers: { apikey: ANON, Authorization: `Bearer ${jwt}`, Origin: ORIGIN, "Content-Type": "application/json" },
+        body: "{}",
+      });
+      const j = await r.json().catch(() => ({}));
+      results.push(log("customer-portal returns 404 for non-subscriber (no email lookup)",
+        r.status === 404, `got ${r.status} ${j.error || ""}`));
+    }
+
+    // === Webhook signature verification + idempotency ===
     // Use a benign event type (default-case in handler → no Stripe API calls)
     // so we can test signature verification without depending on real Stripe IDs.
     {
@@ -213,6 +236,14 @@ async function callWebhook(body, sigHeader) {
       const { json, header } = makeStripeSignedPayload(benignEvent, WEBHOOK_SECRET);
       const good = await callWebhook(json, header);
       results.push(log("webhook accepts valid signature (benign event → 200)", good.status === 200, `got ${good.status} body=${good.body.slice(0, 100)}`));
+
+      // Idempotency: replaying the SAME event with a fresh signature should
+      // be deduped server-side via stripe_webhook_events table.
+      const replay = makeStripeSignedPayload(benignEvent, WEBHOOK_SECRET);
+      const dup = await callWebhook(replay.json, replay.header);
+      results.push(log("webhook dedupes duplicate event id",
+        dup.status === 200 && /duplicate/i.test(dup.body),
+        `got ${dup.status} body=${dup.body.slice(0, 100)}`));
 
       // Replay protection: stale timestamp (>5 min old) → Stripe library rejects
       const stale = makeStripeSignedPayload(benignEvent, WEBHOOK_SECRET, Math.floor(Date.now() / 1000) - 600);

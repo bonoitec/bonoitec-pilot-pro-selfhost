@@ -116,8 +116,32 @@ serve(async (req) => {
       );
     }
 
-    const customers = await stripe.customers.list({ email: userEmail, limit: 1 });
-    const customerId = customers.data.length > 0 ? customers.data[0].id : undefined;
+    // ── Prefer DB-stored customer ID over email lookup ──────────────
+    // Email lookup is brittle: a user who changed their Supabase email
+    // would silently get a NEW Stripe customer, orphaning their old sub.
+    // Read organizations.stripe_customer_id first; only fall back to the
+    // email lookup for first-time bootstrap (no DB record yet).
+    const { data: profile } = await supabaseAdmin
+      .from("profiles")
+      .select("organization_id")
+      .eq("user_id", userId)
+      .maybeSingle();
+    const organizationId = (profile as { organization_id?: string } | null)?.organization_id ?? null;
+    let customerId: string | undefined;
+    if (organizationId) {
+      const { data: orgRow } = await supabaseAdmin
+        .from("organizations")
+        .select("stripe_customer_id")
+        .eq("id", organizationId)
+        .maybeSingle();
+      customerId = (orgRow as { stripe_customer_id?: string | null } | null)?.stripe_customer_id ?? undefined;
+    }
+    if (!customerId) {
+      // Bootstrap: first-time subscriber. Avoid creating a duplicate
+      // Stripe customer if one already exists for this email.
+      const customers = await stripe.customers.list({ email: userEmail, limit: 1 });
+      customerId = customers.data.length > 0 ? customers.data[0].id : undefined;
+    }
 
     const session = await stripe.checkout.sessions.create({
       customer: customerId,
