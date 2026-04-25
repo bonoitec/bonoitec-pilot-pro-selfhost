@@ -7,13 +7,16 @@ const REPLY_TO = "contact@app.bonoitecpilot.fr";
 const APP_URL = Deno.env.get("APP_URL") ?? "https://bonoitecpilot.fr";
 
 const BRAND = {
-  primary: "#4338ca",
-  primaryLight: "#eef2ff",
-  foreground: "#1e293b",
-  muted: "#64748b",
-  background: "#f8fafc",
-  white: "#ffffff",
-  border: "#e2e8f0",
+  primary: "#5B4BE9",       // brand violet (matches PDFs + website)
+  primaryDark: "#4A3CD8",   // for the gradient bottom on the banner
+  primaryLight: "#EDE9FE",
+  foreground: "#0F172A",
+  foregroundSoft: "#151B2E",
+  inkElevated: "#1E1B4B",
+  muted: "#64748B",
+  background: "#F8FAFC",
+  white: "#FFFFFF",
+  border: "#E2E8F0",
 };
 
 // ── Security helpers ────────────────────────────────────────────────────
@@ -106,17 +109,35 @@ function emailLayout(
     <tr>
       <td align="center">
         <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="580" style="max-width:580px;width:100%;background-color:${BRAND.white};border-radius:12px;overflow:hidden;border:1px solid ${BRAND.border};">
-          <!-- Header: BonoitecPilot wordmark on brand bar (product banner — same on every email) -->
+          <!-- Header: premium brand banner, dark surface keeps the transparent wordmark crisp -->
           <tr>
-            <td style="background-color:${BRAND.primary};padding:40px 32px 36px;text-align:center;">
-              <table role="presentation" cellpadding="0" cellspacing="0" border="0" align="center" style="margin:0 auto 18px;">
+            <td bgcolor="${BRAND.foreground}" style="background-color:${BRAND.foreground};background-image:linear-gradient(135deg, ${BRAND.foreground} 0%, ${BRAND.inkElevated} 58%, ${BRAND.primaryDark} 100%);padding:0;text-align:center;">
+              <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
                 <tr>
-                  <td style="vertical-align:middle;line-height:0;">
-                    <img src="https://bonoitecpilot.fr/email-logo.png?v=3" width="220" alt="BonoitecPilot" style="display:block;border:0;outline:none;width:220px;height:auto;" />
+                  <td height="6" bgcolor="${BRAND.primary}" style="height:6px;background-color:${BRAND.primary};line-height:6px;font-size:0;">&nbsp;</td>
+                </tr>
+              </table>
+              <table role="presentation" cellpadding="0" cellspacing="0" border="0" align="center" style="margin:0 auto;width:100%;max-width:460px;">
+                <tr>
+                  <td align="center" style="padding:36px 28px 10px;line-height:0;">
+                    <img src="https://bonoitecpilot.fr/email-logo-dark.png?v=7" width="276" alt="BonoitecPilot" style="display:block;border:0;outline:none;text-decoration:none;width:276px;max-width:100%;height:auto;margin:0 auto;" />
+                  </td>
+                </tr>
+                <tr>
+                  <td align="center" style="padding:16px 28px 0;">
+                    <table role="presentation" cellpadding="0" cellspacing="0" border="0" align="center" style="margin:0 auto;">
+                      <tr>
+                        <td bgcolor="${BRAND.primary}" style="width:92px;height:3px;background-color:${BRAND.primary};line-height:3px;font-size:0;border-radius:3px;">&nbsp;</td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+                <tr>
+                  <td align="center" style="padding:14px 28px 34px;">
+                    <p style="margin:0;color:#E2E8F0;font-size:12px;line-height:1.6;letter-spacing:0.9px;text-transform:uppercase;font-weight:600;font-family:'Segoe UI',Tahoma,Geneva,Verdana,Arial,sans-serif;">Gestion professionnelle de r&eacute;parations</p>
                   </td>
                 </tr>
               </table>
-              <table role="presentation" cellpadding="0" cellspacing="0" border="0" align="center"><tr><td style="width:56px;height:3px;background-color:rgba(255,255,255,0.5);line-height:3px;font-size:0;">&nbsp;</td></tr></table>
             </td>
           </tr>
           <!-- Body -->
