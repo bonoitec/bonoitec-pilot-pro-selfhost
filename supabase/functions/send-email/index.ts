@@ -106,7 +106,7 @@ function emailLayout(
     <tr>
       <td align="center">
         <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="580" style="max-width:580px;width:100%;background-color:${BRAND.white};border-radius:12px;overflow:hidden;border:1px solid ${BRAND.border};">
-          <!-- Header: wordmark-only lockup + accent bar -->
+          <!-- Header: BonoitecPilot wordmark on brand bar (product banner — same on every email) -->
           <tr>
             <td style="background-color:${BRAND.primary};padding:48px 32px 44px;text-align:center;">
               <table role="presentation" cellpadding="0" cellspacing="0" border="0" align="center" style="margin:0 auto 20px;">

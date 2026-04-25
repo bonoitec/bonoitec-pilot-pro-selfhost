@@ -11,8 +11,12 @@ import { Zap, CheckCircle2, AlertCircle } from "lucide-react";
 import { z } from "zod";
 
 const depositSchema = z.object({
-  name: z.string().trim().min(2, "Nom requis (min 2 caractères)").max(100),
+  first_name: z.string().trim().min(1, "Prénom requis").max(60),
+  last_name: z.string().trim().min(1, "Nom requis").max(60),
   phone: z.string().trim().min(6, "Téléphone requis (min 6 caractères)").max(20),
+  email: z.string().trim().email("Email invalide").max(120).optional().or(z.literal("")),
+  postal_code: z.string().trim().max(10).optional().or(z.literal("")),
+  city: z.string().trim().max(60).optional().or(z.literal("")),
   deviceType: z.string().min(1, "Type requis"),
   brand: z.string().trim().min(1, "Marque requise").max(50),
   model: z.string().trim().min(1, "Modèle requis").max(100),
@@ -27,7 +31,9 @@ export default function DepositForm() {
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [form, setForm] = useState({
-    name: "", phone: "", deviceType: "Smartphone", brand: "", model: "", issue: "",
+    first_name: "", last_name: "", phone: "", email: "",
+    postal_code: "", city: "",
+    deviceType: "Smartphone", brand: "", model: "", issue: "",
   });
 
   useEffect(() => {
@@ -51,14 +57,20 @@ export default function DepositForm() {
     }
 
     setLoading(true);
+    const fullName = `${form.first_name.trim()} ${form.last_name.trim()}`.trim();
     const { data, error } = await supabase.rpc("create_deposit_repair", {
       _deposit_code: code!,
-      _client_name: form.name,
+      _client_name: fullName,
       _client_phone: form.phone,
       _device_type: form.deviceType,
       _device_brand: form.brand,
       _device_model: form.model,
       _issue: form.issue,
+      _client_first_name: form.first_name.trim() || undefined,
+      _client_last_name: form.last_name.trim() || undefined,
+      _client_email: form.email.trim() || undefined,
+      _client_postal_code: form.postal_code.trim() || undefined,
+      _client_city: form.city.trim() || undefined,
     });
 
     setLoading(false);
@@ -151,14 +163,38 @@ export default function DepositForm() {
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-1.5">
-                  <Label>Nom complet *</Label>
-                  <Input value={form.name} onChange={e => updateField("name", e.target.value)} maxLength={100} placeholder="Jean Dupont" />
-                  {errors.name && <p className="text-xs text-destructive">{errors.name}</p>}
+                  <Label>Prénom *</Label>
+                  <Input value={form.first_name} onChange={e => updateField("first_name", e.target.value)} maxLength={60} placeholder="Jean" autoComplete="given-name" />
+                  {errors.first_name && <p className="text-xs text-destructive">{errors.first_name}</p>}
                 </div>
                 <div className="space-y-1.5">
+                  <Label>Nom *</Label>
+                  <Input value={form.last_name} onChange={e => updateField("last_name", e.target.value)} maxLength={60} placeholder="Dupont" autoComplete="family-name" />
+                  {errors.last_name && <p className="text-xs text-destructive">{errors.last_name}</p>}
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="space-y-1.5">
                   <Label>Téléphone *</Label>
-                  <Input value={form.phone} onChange={e => updateField("phone", e.target.value)} maxLength={20} placeholder="06 12 34 56 78" />
+                  <Input type="tel" value={form.phone} onChange={e => updateField("phone", e.target.value)} maxLength={20} placeholder="06 12 34 56 78" autoComplete="tel" inputMode="tel" />
                   {errors.phone && <p className="text-xs text-destructive">{errors.phone}</p>}
+                </div>
+                <div className="space-y-1.5">
+                  <Label>Email <span className="text-muted-foreground text-xs">(optionnel)</span></Label>
+                  <Input type="email" value={form.email} onChange={e => updateField("email", e.target.value)} maxLength={120} placeholder="vous@exemple.fr" autoComplete="email" inputMode="email" />
+                  {errors.email && <p className="text-xs text-destructive">{errors.email}</p>}
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div className="space-y-1.5">
+                  <Label>Code postal <span className="text-muted-foreground text-xs">(optionnel)</span></Label>
+                  <Input value={form.postal_code} onChange={e => updateField("postal_code", e.target.value)} maxLength={10} placeholder="75011" autoComplete="postal-code" inputMode="numeric" />
+                </div>
+                <div className="space-y-1.5 sm:col-span-2">
+                  <Label>Ville <span className="text-muted-foreground text-xs">(optionnel)</span></Label>
+                  <Input value={form.city} onChange={e => updateField("city", e.target.value)} maxLength={60} placeholder="Paris" autoComplete="address-level2" />
                 </div>
               </div>
 

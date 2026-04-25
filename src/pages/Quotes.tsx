@@ -47,7 +47,7 @@ const Quotes = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("quotes")
-        .select("*, clients(name, address, email, phone), devices(brand, model, serial_number, type), repairs(screen_condition, frame_condition, back_condition, intake_checklist, photos, customer_signature_url, diagnostic, internal_notes)")
+        .select("*, clients(name, first_name, last_name, address, postal_code, city, email, phone), devices(brand, model, serial_number, type), repairs(screen_condition, frame_condition, back_condition, intake_checklist, photos, customer_signature_url, diagnostic, internal_notes)")
         .order("created_at", { ascending: false });
       if (error) throw error;
       return data;
@@ -126,7 +126,11 @@ const Quotes = () => {
       reference: quote.reference,
       date: format(new Date(quote.created_at), "dd/MM/yyyy"),
       clientName: quote.clients?.name,
+      clientFirstName: quote.clients?.first_name ?? undefined,
+      clientLastName: quote.clients?.last_name ?? undefined,
       clientAddress: quote.clients?.address,
+      clientPostalCode: quote.clients?.postal_code ?? undefined,
+      clientCity: quote.clients?.city ?? undefined,
       clientPhone: quote.clients?.phone,
       clientEmail: quote.clients?.email,
       lines,

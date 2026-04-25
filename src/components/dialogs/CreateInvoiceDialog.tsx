@@ -11,7 +11,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { Plus, Trash2, User, FileText, CreditCard } from "lucide-react";
 
-interface Line { description: string; quantity: number; unit_price: number; }
+interface Line { description: string; quantity: number; unit_price: number; note?: string; }
 
 interface Props {
   open: boolean;
@@ -123,11 +123,19 @@ export function CreateInvoiceDialog({ open, onOpenChange }: Props) {
             </CardHeader>
             <CardContent className="px-4 pb-4 space-y-2">
               {lines.map((line, i) => (
-                <div key={i} className="flex gap-2 items-end">
-                  <div className="flex-1"><Input placeholder="Description" value={line.description} onChange={e => updateLine(i, "description", e.target.value)} /></div>
-                  <div className="w-20"><Input type="number" min="1" value={line.quantity} onChange={e => updateLine(i, "quantity", parseInt(e.target.value) || 1)} /></div>
-                  <div className="w-24"><Input type="number" step="0.01" placeholder="Prix" value={line.unit_price || ""} onChange={e => updateLine(i, "unit_price", parseFloat(e.target.value) || 0)} /></div>
-                  <Button variant="ghost" size="icon" onClick={() => removeLine(i)} disabled={lines.length === 1}><Trash2 className="h-4 w-4" /></Button>
+                <div key={i} className="space-y-1.5 pb-2 border-b border-border/40 last:border-b-0">
+                  <div className="flex gap-2 items-end">
+                    <div className="flex-1"><Input placeholder="Description (ex. Remplacement écran)" value={line.description} onChange={e => updateLine(i, "description", e.target.value)} /></div>
+                    <div className="w-20"><Input type="number" min="1" value={line.quantity} onChange={e => updateLine(i, "quantity", parseInt(e.target.value) || 1)} /></div>
+                    <div className="w-24"><Input type="number" step="0.01" placeholder="Prix" value={line.unit_price || ""} onChange={e => updateLine(i, "unit_price", parseFloat(e.target.value) || 0)} /></div>
+                    <Button variant="ghost" size="icon" onClick={() => removeLine(i)} disabled={lines.length === 1}><Trash2 className="h-4 w-4" /></Button>
+                  </div>
+                  <Input
+                    placeholder="Note / garantie (optionnel — ex. Garantie 12 mois sur la pièce et la main-d'œuvre)"
+                    value={line.note ?? ""}
+                    onChange={e => updateLine(i, "note", e.target.value)}
+                    className="h-8 text-xs text-muted-foreground"
+                  />
                 </div>
               ))}
               <Button variant="outline" size="sm" onClick={addLine}><Plus className="h-3 w-3 mr-1" />Ajouter une ligne</Button>

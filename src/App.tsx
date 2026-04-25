@@ -53,6 +53,7 @@ import ResetPassword from "./pages/ResetPassword";
 import SuperAdmin from "./pages/admin/SuperAdmin";
 import { SuperAdminRoute } from "@/components/SuperAdminRoute";
 import NotFound from "./pages/NotFound";
+import DevPdfPreview from "./pages/DevPdfPreview";
 
 const queryClient = new QueryClient();
 
@@ -88,6 +89,7 @@ const App = () => (
             <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="/repair/:code" element={<RepairTracking />} />
             <Route path="/deposit/:code" element={<DepositForm />} />
+            <Route path="/dev/pdf-preview" element={<DevPdfPreview />} />
 
             {/* Protected app pages */}
             <Route element={<ProtectedRoute><AppLayout /></ProtectedRoute>}>

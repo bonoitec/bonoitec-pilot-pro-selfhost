@@ -43,7 +43,7 @@ const Invoices = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("invoices")
-        .select("*, clients(name, address, email, phone)")
+        .select("*, clients(name, first_name, last_name, address, postal_code, city, email, phone)")
         .order("created_at", { ascending: false });
       if (error) throw error;
       return data;
@@ -71,7 +71,11 @@ const Invoices = () => {
       reference: inv.reference,
       date: format(new Date(inv.created_at), "dd/MM/yyyy"),
       clientName: inv.clients?.name,
+      clientFirstName: inv.clients?.first_name ?? undefined,
+      clientLastName: inv.clients?.last_name ?? undefined,
       clientAddress: inv.clients?.address,
+      clientPostalCode: inv.clients?.postal_code ?? undefined,
+      clientCity: inv.clients?.city ?? undefined,
       clientPhone: inv.clients?.phone,
       clientEmail: inv.clients?.email,
       lines,

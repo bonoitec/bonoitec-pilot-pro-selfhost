@@ -182,7 +182,9 @@ export type Database = {
           city: string | null
           created_at: string
           email: string | null
+          first_name: string | null
           id: string
+          last_name: string | null
           name: string
           notes: string | null
           organization_id: string
@@ -195,7 +197,9 @@ export type Database = {
           city?: string | null
           created_at?: string
           email?: string | null
+          first_name?: string | null
           id?: string
+          last_name?: string | null
           name: string
           notes?: string | null
           organization_id: string
@@ -208,7 +212,9 @@ export type Database = {
           city?: string | null
           created_at?: string
           email?: string | null
+          first_name?: string | null
           id?: string
+          last_name?: string | null
           name?: string
           notes?: string | null
           organization_id?: string
@@ -1252,6 +1258,24 @@ export type Database = {
           },
         ]
       }
+      stripe_webhook_events: {
+        Row: {
+          event_id: string
+          event_type: string
+          received_at: string
+        }
+        Insert: {
+          event_id: string
+          event_type: string
+          received_at?: string
+        }
+        Update: {
+          event_id?: string
+          event_type?: string
+          received_at?: string
+        }
+        Relationships: []
+      }
       technicians: {
         Row: {
           active: boolean
@@ -1583,18 +1607,36 @@ export type Database = {
         Returns: boolean
       }
       cleanup_rate_limit_hits: { Args: never; Returns: undefined }
-      create_deposit_repair: {
-        Args: {
-          _client_name: string
-          _client_phone: string
-          _deposit_code: string
-          _device_brand: string
-          _device_model: string
-          _device_type: string
-          _issue: string
-        }
-        Returns: Json
-      }
+      create_deposit_repair:
+        | {
+            Args: {
+              _client_name: string
+              _client_phone: string
+              _deposit_code: string
+              _device_brand: string
+              _device_model: string
+              _device_type: string
+              _issue: string
+            }
+            Returns: Json
+          }
+        | {
+            Args: {
+              _client_city?: string
+              _client_email?: string
+              _client_first_name?: string
+              _client_last_name?: string
+              _client_name: string
+              _client_phone: string
+              _client_postal_code?: string
+              _deposit_code: string
+              _device_brand: string
+              _device_model: string
+              _device_type: string
+              _issue: string
+            }
+            Returns: Json
+          }
       get_org_safe_data: {
         Args: never
         Returns: {

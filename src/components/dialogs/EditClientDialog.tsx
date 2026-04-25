@@ -11,6 +11,8 @@ import { useToast } from "@/hooks/use-toast";
 interface Client {
   id: string;
   name: string;
+  first_name: string | null;
+  last_name: string | null;
   phone: string | null;
   email: string | null;
   address: string | null;
@@ -28,12 +30,22 @@ interface Props {
 export function EditClientDialog({ open, onOpenChange, client }: Props) {
   const { toast } = useToast();
   const qc = useQueryClient();
-  const [form, setForm] = useState({ name: "", phone: "", email: "", address: "", city: "", postal_code: "", notes: "" });
+  const [form, setForm] = useState({ first_name: "", last_name: "", phone: "", email: "", address: "", city: "", postal_code: "", notes: "" });
+  const fullName = `${form.first_name.trim()} ${form.last_name.trim()}`.trim();
 
   useEffect(() => {
     if (client) {
+      // Prefer explicit first/last columns; fall back to splitting legacy name on first space.
+      let first = client.first_name || "";
+      let last = client.last_name || "";
+      if (!first && !last && client.name) {
+        const parts = client.name.trim().split(/\s+/);
+        first = parts.shift() || "";
+        last = parts.join(" ");
+      }
       setForm({
-        name: client.name || "",
+        first_name: first,
+        last_name: last,
         phone: client.phone || "",
         email: client.email || "",
         address: client.address || "",
@@ -48,7 +60,9 @@ export function EditClientDialog({ open, onOpenChange, client }: Props) {
     mutationFn: async () => {
       if (!client) return;
       const { error } = await supabase.from("clients").update({
-        name: form.name.trim(),
+        first_name: form.first_name.trim() || null,
+        last_name: form.last_name.trim() || null,
+        name: fullName,
         phone: form.phone.trim() || null,
         email: form.email.trim() || null,
         address: form.address.trim() || null,
@@ -74,7 +88,10 @@ export function EditClientDialog({ open, onOpenChange, client }: Props) {
           <DialogDescription>Modifiez les informations du client.</DialogDescription>
         </DialogHeader>
         <div className="space-y-3">
-          <div><Label>Nom *</Label><Input value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} placeholder="Nom complet" /></div>
+          <div className="grid grid-cols-2 gap-3">
+            <div><Label>Prénom *</Label><Input value={form.first_name} onChange={e => setForm({ ...form, first_name: e.target.value })} placeholder="Julien" /></div>
+            <div><Label>Nom *</Label><Input value={form.last_name} onChange={e => setForm({ ...form, last_name: e.target.value })} placeholder="Moreau" /></div>
+          </div>
           <div className="grid grid-cols-2 gap-3">
             <div><Label>Téléphone</Label><Input value={form.phone} onChange={e => setForm({ ...form, phone: e.target.value })} placeholder="06 XX XX XX XX" /></div>
             <div><Label>Email</Label><Input type="email" value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} placeholder="client@email.com" /></div>
@@ -88,7 +105,7 @@ export function EditClientDialog({ open, onOpenChange, client }: Props) {
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>Annuler</Button>
-          <Button onClick={() => mutation.mutate()} disabled={!form.name.trim() || mutation.isPending}>
+          <Button onClick={() => mutation.mutate()} disabled={!fullName || mutation.isPending}>
             {mutation.isPending ? "Enregistrement..." : "Enregistrer"}
           </Button>
         </DialogFooter>

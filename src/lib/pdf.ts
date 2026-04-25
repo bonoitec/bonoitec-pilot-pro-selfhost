@@ -25,6 +25,7 @@ interface Line {
   description: string;
   quantity: number;
   unit_price: number;
+  note?: string | null;
 }
 
 interface IntakeInfo {
@@ -71,10 +72,14 @@ interface DocData {
   reference: string;
   date: string;
   clientName?: string;
+  clientFirstName?: string;
+  clientLastName?: string;
   clientAddress?: string;
+  clientPostalCode?: string;
+  clientCity?: string;
   clientPhone?: string;
   clientEmail?: string;
-  
+
   diagnosticAnalysis?: DiagnosticAnalysis;
   lines: Line[];
   totalHT: number;
@@ -167,18 +172,18 @@ function drawConditionLine(doc: jsPDF, label: string, rating: number | undefined
   doc.text(` (${rating}/5)`, afterStars, y);
 }
 
-// Colors
-const PRIMARY = [30, 64, 175] as const;     // deep blue
-const PRIMARY_LIGHT = [239, 242, 255] as const; // very light blue bg
-const GRAY_700 = [55, 65, 81] as const;
-const GRAY_500 = [107, 114, 128] as const;
-const GRAY_400 = [156, 163, 175] as const;
-const GRAY_200 = [229, 231, 235] as const;
-const GRAY_50 = [249, 250, 251] as const;
+// Colors — brand-aligned violet (matches product + Stripe)
+const PRIMARY = [91, 75, 233] as const;       // brand violet #5B4BE9
+const PRIMARY_LIGHT = [237, 233, 254] as const; // soft violet tint
+const GRAY_700 = [15, 23, 42] as const;       // ink / slate-900
+const GRAY_500 = [71, 85, 105] as const;      // slate-600
+const GRAY_400 = [148, 163, 184] as const;    // slate-400
+const GRAY_200 = [226, 232, 240] as const;    // slate-200
+const GRAY_50 = [248, 250, 252] as const;     // slate-50
 const WHITE = [255, 255, 255] as const;
 
-const PAGE_LEFT = 20;
-const PAGE_RIGHT = 190;
+const PAGE_LEFT = 18;
+const PAGE_RIGHT = 192;
 const CONTENT_WIDTH = PAGE_RIGHT - PAGE_LEFT;
 const FOOTER_ZONE = 40; // reserved space at bottom for footer elements
 const PAGE_BOTTOM = 297 - FOOTER_ZONE; // max Y for content before footer
@@ -192,551 +197,456 @@ function drawLine(doc: jsPDF, y: number, color = GRAY_200) {
 export async function generatePDF(org: OrgInfo, data: DocData, options?: { preview?: boolean; base64?: boolean }): Promise<string | void> {
   const doc = new jsPDF();
   const isInvoice = data.type === "invoice";
-  const title = isInvoice ? "FACTURE" : "DEVIS";
+  const title = isInvoice ? "Facture" : "Devis";
   const vatEnabled = org.vat_enabled ?? true;
   const fullAddress = [org.address, [org.postal_code, org.city].filter(Boolean).join(" ")].filter(Boolean).join(", ");
+  const fmtEur = (n: number) => `${n.toFixed(2).replace(".", ",")} €`;
+  const fmtQty = (n: number) => n.toString().replace(".", ",");
 
   // ═══════════════════════════════════════════
-  // HEADER — Accent bar + logo + company info
+  // HEADER — logo + atelier info stacked left · doc title + pill top right
   // ═══════════════════════════════════════════
-  
-  // Top accent bar
-  doc.setFillColor(...PRIMARY);
-  doc.rect(0, 0, 210, 4, "F");
 
-  let headerY = 14;
+  const headerTop = 18;
+  let leftY = headerTop;
 
-  // Logo — preserve aspect ratio
+  // Logo top-left
   if (org.logo_url) {
     const resolvedLogoUrl = await getSignedFileUrl(org.logo_url);
     const logoImg = await loadImageWithDimensions(resolvedLogoUrl);
     if (logoImg) {
-      const maxW = 38;
-      const maxH = 28;
+      const maxW = 56, maxH = 30;
       const ratio = Math.min(maxW / logoImg.width, maxH / logoImg.height);
       const w = logoImg.width * ratio;
       const h = logoImg.height * ratio;
       try {
-        doc.addImage(logoImg.data, detectImageFormat(logoImg.data), PAGE_LEFT, headerY, w, h);
+        doc.addImage(logoImg.data, detectImageFormat(logoImg.data), PAGE_LEFT, leftY, w, h);
+        leftY += h + 5;
       } catch (e) {
         console.warn("Logo image could not be added to PDF:", e);
       }
-      headerY += 2;
     }
   }
 
-  // Company name + info — right side
-  const companyX = 120;
-  doc.setFontSize(14);
+  // Atelier info stacked beneath the logo
   doc.setFont("helvetica", "bold");
+  doc.setFontSize(9.5);
   doc.setTextColor(...GRAY_700);
-  doc.text(org.name, PAGE_RIGHT, headerY, { align: "right" });
+  const nameLine = org.legal_status ? `${org.name} — ${org.legal_status}` : org.name;
+  doc.text(nameLine, PAGE_LEFT, leftY);
+  leftY += 4;
 
-  doc.setFontSize(7.5);
   doc.setFont("helvetica", "normal");
-  doc.setTextColor(...GRAY_500);
-  let infoY = headerY + 5;
-  if (org.legal_status) { doc.text(org.legal_status, PAGE_RIGHT, infoY, { align: "right" }); infoY += 3.5; }
-  if (fullAddress) { doc.text(fullAddress, PAGE_RIGHT, infoY, { align: "right" }); infoY += 3.5; }
-  if (org.phone) { doc.text(`Tél : ${org.phone}`, PAGE_RIGHT, infoY, { align: "right" }); infoY += 3.5; }
-  if (org.email) { doc.text(org.email, PAGE_RIGHT, infoY, { align: "right" }); infoY += 3.5; }
-  if (org.website) { doc.text(org.website, PAGE_RIGHT, infoY, { align: "right" }); infoY += 3.5; }
-  const legalParts: string[] = [];
-  if (org.siret) legalParts.push(`SIRET : ${org.siret}`);
-  if (org.vat_number) legalParts.push(`TVA : ${org.vat_number}`);
-  if (org.ape_code) legalParts.push(`APE : ${org.ape_code}`);
-  if (legalParts.length) {
-    doc.text(legalParts.join("  •  "), PAGE_RIGHT, infoY, { align: "right" });
-    infoY += 3.5;
-  }
-
-  // ═══════════════════════════════════════════
-  // DOCUMENT TITLE BLOCK
-  // ═══════════════════════════════════════════
-  
-  let currentY = Math.max(infoY + 6, 52);
-  drawLine(doc, currentY - 2);
-  
-  // Title badge
-  doc.setFillColor(...PRIMARY);
-  const titleWidth = doc.getStringUnitWidth(title) * 14 / doc.internal.scaleFactor + 16;
-  doc.roundedRect(PAGE_LEFT, currentY, titleWidth, 10, 2, 2, "F");
-  doc.setFontSize(14);
-  doc.setFont("helvetica", "bold");
-  doc.setTextColor(...WHITE);
-  doc.text(title, PAGE_LEFT + titleWidth / 2, currentY + 7.2, { align: "center" });
-
-  // Reference + date — aligned right of title
-  doc.setTextColor(...GRAY_700);
-  doc.setFontSize(9);
-  doc.setFont("helvetica", "normal");
-  doc.text(`N° ${data.reference}`, PAGE_RIGHT, currentY + 4, { align: "right" });
-  doc.setTextColor(...GRAY_500);
   doc.setFontSize(8);
-  doc.text(`Date : ${data.date}`, PAGE_RIGHT, currentY + 9, { align: "right" });
+  doc.setTextColor(...GRAY_500);
+  if (fullAddress) {
+    const addrLines = doc.splitTextToSize(fullAddress, 90);
+    doc.text(addrLines, PAGE_LEFT, leftY);
+    leftY += addrLines.length * 3.6;
+  }
+  const contactLine = [org.phone, org.email].filter(Boolean).join("  ·  ");
+  if (contactLine) { doc.text(contactLine, PAGE_LEFT, leftY); leftY += 3.6; }
+  const legalBits = [
+    org.siret ? `SIRET ${org.siret}` : null,
+    org.vat_number ? `TVA ${org.vat_number}` : null,
+    org.ape_code ? `APE ${org.ape_code}` : null,
+  ].filter(Boolean);
+  if (legalBits.length) { doc.text(legalBits.join("  ·  "), PAGE_LEFT, leftY); leftY += 3.6; }
 
-  currentY += 18;
+  // Right column — big doc title, N°, date, status pill
+  const rightX = PAGE_RIGHT;
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(26);
+  doc.setTextColor(...PRIMARY);
+  doc.text(title, rightX, headerTop + 8, { align: "right" });
 
-  // ═══════════════════════════════════════════
-  // CLIENT BLOCK + DEVICE BLOCK (side by side)
-  // ═══════════════════════════════════════════
-  
-  const intake = data.intake;
-  const hasDevice = intake && (intake.deviceBrand || intake.deviceModel);
-  const blockWidth = hasDevice ? 80 : CONTENT_WIDTH;
-  const deviceBlockX = PAGE_LEFT + blockWidth + 10;
-  const deviceBlockW = CONTENT_WIDTH - blockWidth - 10;
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(10);
+  doc.setTextColor(...GRAY_700);
+  doc.text(`N° ${data.reference}`, rightX, headerTop + 15, { align: "right" });
 
-  // Client block
-  doc.setFillColor(...GRAY_50);
-  doc.roundedRect(PAGE_LEFT, currentY, blockWidth, 34, 2, 2, "F");
-  
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(8.5);
+  doc.setTextColor(...GRAY_500);
+  doc.text(`Émise le ${data.date}`, rightX, headerTop + 20, { align: "right" });
+
+  // Status pill beneath the meta
+  const statusText = isInvoice ? "À RÉGLER" : "EN ATTENTE D'ACCORD";
   doc.setFontSize(7);
   doc.setFont("helvetica", "bold");
+  const pillW = doc.getTextWidth(statusText) + 10;
+  const pillH = 6.5;
+  doc.setFillColor(...PRIMARY_LIGHT);
+  doc.roundedRect(rightX - pillW, headerTop + 23, pillW, pillH, 3.25, 3.25, "F");
   doc.setTextColor(...PRIMARY);
-  doc.text("CLIENT", PAGE_LEFT + 6, currentY + 5.5);
-  
-  doc.setDrawColor(...PRIMARY);
-  doc.setLineWidth(0.4);
-  doc.line(PAGE_LEFT + 6, currentY + 7, PAGE_LEFT + 6 + 18, currentY + 7);
-  
-  doc.setTextColor(...GRAY_700);
-  doc.setFontSize(9);
+  doc.text(statusText, rightX - pillW / 2, headerTop + 27.3, { align: "center" });
+
+  const rightY = headerTop + 32;
+
+  // Hairline below the header (below the taller of the two columns)
+  let currentY = Math.max(leftY, rightY) + 4;
+  doc.setDrawColor(...GRAY_200);
+  doc.setLineWidth(0.3);
+  doc.line(PAGE_LEFT, currentY, PAGE_RIGHT, currentY);
+  currentY += 8;
+
+  // ═══════════════════════════════════════════
+  // CLIENT BLOCK — single column (issuer already in header)
+  // ═══════════════════════════════════════════
+
+  const clientLabel = isInvoice ? "FACTURÉ À" : "DEVIS POUR";
+  doc.setFontSize(6.5);
   doc.setFont("helvetica", "bold");
-  doc.text(data.clientName || "—", PAGE_LEFT + 6, currentY + 13);
-  
+  doc.setTextColor(...GRAY_400);
+  doc.text(clientLabel, PAGE_LEFT, currentY);
+  doc.setDrawColor(...PRIMARY);
+  doc.setLineWidth(0.5);
+  const labelW = doc.getTextWidth(clientLabel) + 2;
+  doc.line(PAGE_LEFT, currentY + 1.5, PAGE_LEFT + labelW, currentY + 1.5);
+  currentY += 6;
+
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(10);
+  doc.setTextColor(...GRAY_700);
+  const fullClientName =
+    [data.clientFirstName, data.clientLastName].filter(Boolean).join(" ") ||
+    data.clientName ||
+    "—";
+  doc.text(fullClientName, PAGE_LEFT, currentY);
+  currentY += 4.5;
+
   doc.setFont("helvetica", "normal");
-  doc.setFontSize(7.5);
+  doc.setFontSize(8.5);
   doc.setTextColor(...GRAY_500);
-  let clY = currentY + 18;
-  if (data.clientAddress) { 
-    const addrLines = doc.splitTextToSize(data.clientAddress, blockWidth - 12);
-    doc.text(addrLines, PAGE_LEFT + 6, clY); 
-    clY += addrLines.length * 3.5; 
+  if (data.clientAddress) {
+    const addrLines = doc.splitTextToSize(data.clientAddress, 100);
+    doc.text(addrLines, PAGE_LEFT, currentY);
+    currentY += addrLines.length * 3.8;
   }
-  if (data.clientPhone) { doc.text(`Tél : ${data.clientPhone}`, PAGE_LEFT + 6, clY); clY += 3.5; }
-  if (data.clientEmail) { doc.text(data.clientEmail, PAGE_LEFT + 6, clY); clY += 3.5; }
+  const locality = [data.clientPostalCode, data.clientCity].filter(Boolean).join(" ").trim();
+  if (locality) { doc.text(locality, PAGE_LEFT, currentY); currentY += 3.8; }
+  const clientContact = [data.clientPhone, data.clientEmail].filter(Boolean).join("  ·  ");
+  if (clientContact) { doc.text(clientContact, PAGE_LEFT, currentY); currentY += 3.8; }
 
-  // Device block (right side)
-  if (hasDevice) {
-    doc.setFillColor(...PRIMARY_LIGHT);
-    doc.roundedRect(deviceBlockX, currentY, deviceBlockW, 34, 2, 2, "F");
-    
-    doc.setFontSize(7);
-    doc.setFont("helvetica", "bold");
-    doc.setTextColor(...PRIMARY);
-    doc.text("APPAREIL", deviceBlockX + 6, currentY + 5.5);
-    
-    doc.setDrawColor(...PRIMARY);
-    doc.line(deviceBlockX + 6, currentY + 7, deviceBlockX + 6 + 22, currentY + 7);
-    
-    doc.setTextColor(...GRAY_700);
-    doc.setFontSize(8.5);
-    doc.setFont("helvetica", "bold");
-    const deviceName = [intake!.deviceBrand, intake!.deviceModel].filter(Boolean).join(" ");
-    doc.text(deviceName, deviceBlockX + 6, currentY + 13);
-    
-    doc.setFont("helvetica", "normal");
-    doc.setFontSize(7.5);
-    doc.setTextColor(...GRAY_500);
-    let devY = currentY + 18;
-    if (intake!.deviceCategory) { doc.text(`Type : ${intake!.deviceCategory}`, deviceBlockX + 6, devY); devY += 3.5; }
-    if (intake!.serialNumber) { doc.text(`IMEI / Série : ${intake!.serialNumber}`, deviceBlockX + 6, devY); devY += 3.5; }
-  }
-
-  currentY += 42;
-
-  // ═══════════════════════════════════════════
-  // DEVICE CONDITION RATINGS (if present)
-  // ═══════════════════════════════════════════
-  
-  if (intake && (intake.screenCondition || intake.frameCondition || intake.backCondition)) {
-    doc.setFontSize(7);
-    doc.setFont("helvetica", "bold");
-    doc.setTextColor(...PRIMARY);
-    doc.text("ÉTAT DE L'APPAREIL", PAGE_LEFT, currentY);
-    doc.setFont("helvetica", "normal");
-    doc.setFontSize(7.5);
-    doc.setTextColor(...GRAY_700);
-    currentY += 5;
-    if (intake.screenCondition) { drawConditionLine(doc, "Écran", intake.screenCondition, PAGE_LEFT + 2, currentY); currentY += 4; }
-    if (intake.frameCondition) { drawConditionLine(doc, "Châssis", intake.frameCondition, PAGE_LEFT + 2, currentY); currentY += 4; }
-    if (intake.backCondition) { drawConditionLine(doc, "Vitre arrière", intake.backCondition, PAGE_LEFT + 2, currentY); currentY += 4; }
-    currentY += 6;
-  }
-
-  // Checklist
-  if (intake?.checklist && intake.checklist.length > 0) {
-    doc.setFontSize(7);
-    doc.setFont("helvetica", "bold");
-    doc.setTextColor(...PRIMARY);
-    doc.text("VÉRIFICATIONS", PAGE_LEFT, currentY);
-    doc.setFont("helvetica", "normal");
-    doc.setFontSize(7.5);
-    doc.setTextColor(...GRAY_700);
-    currentY += 5;
-    intake.checklist.forEach(item => {
-      doc.text(`✓  ${item}`, PAGE_LEFT + 2, currentY);
-      currentY += 3.8;
-    });
-    currentY += 6;
-  }
-
-  // ═══════════════════════════════════════════
-  // DEVICE DETAILS (standalone quote with quoteDeviceInfo)
-  // ═══════════════════════════════════════════
-
-  if (data.quoteDeviceInfo && !isInvoice) {
+  // Device info line for devis only
+  if (!isInvoice && data.quoteDeviceInfo) {
     const di = data.quoteDeviceInfo;
-    const details: string[] = [];
-    if (di.storage) details.push(`Stockage : ${di.storage}`);
-    if (di.color) details.push(`Couleur : ${di.color}`);
-    if (di.condition) details.push(`État esthétique : ${di.condition}`);
-    if (di.accessories) details.push(`Accessoires : ${di.accessories}`);
-    if (di.passwordGiven && di.passwordGiven !== "non") details.push(`Code confié : Oui`);
-    if (di.passwordGiven === "non") details.push(`Code confié : Non`);
-
-    if (details.length > 0 || di.issue || di.observations) {
-      const blockH = 8 + details.length * 3.8 + (di.issue ? 8 : 0) + (di.observations ? 8 : 0);
-      if (currentY + blockH > PAGE_BOTTOM) { doc.addPage(); doc.setFillColor(...PRIMARY); doc.rect(0, 0, 210, 4, "F"); currentY = 14; }
-
-      doc.setFontSize(7); doc.setFont("helvetica", "bold"); doc.setTextColor(...PRIMARY);
-      doc.text("DÉTAILS APPAREIL", PAGE_LEFT, currentY);
-      currentY += 5;
-
-      doc.setFont("helvetica", "normal"); doc.setFontSize(7.5); doc.setTextColor(...GRAY_700);
-      details.forEach(d => {
-        doc.text(d, PAGE_LEFT + 2, currentY);
+    const deviceName = [di.brand, di.model].filter(Boolean).join(" ");
+    if (deviceName) {
+      currentY += 2;
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(8.5);
+      doc.setTextColor(...GRAY_700);
+      doc.text(`Appareil : ${deviceName}`, PAGE_LEFT, currentY);
+      currentY += 3.8;
+      doc.setFont("helvetica", "normal");
+      doc.setTextColor(...GRAY_500);
+      const deviceDetails: string[] = [];
+      if (di.imei) deviceDetails.push(`IMEI ${di.imei}`);
+      if (di.storage) deviceDetails.push(di.storage);
+      if (di.color) deviceDetails.push(di.color);
+      if (deviceDetails.length) {
+        doc.text(deviceDetails.join("  ·  "), PAGE_LEFT, currentY);
         currentY += 3.8;
-      });
-
-      if (di.issue) {
-        currentY += 2;
-        doc.setFont("helvetica", "bold"); doc.setFontSize(7); doc.setTextColor(...PRIMARY);
-        doc.text("Panne signalée :", PAGE_LEFT + 2, currentY);
-        currentY += 4;
-        doc.setFont("helvetica", "normal"); doc.setFontSize(7.5); doc.setTextColor(...GRAY_700);
-        const issueLines = doc.splitTextToSize(di.issue, CONTENT_WIDTH - 6);
-        doc.text(issueLines, PAGE_LEFT + 4, currentY);
-        currentY += issueLines.length * 3.8;
       }
-
-      if (di.observations) {
-        currentY += 2;
-        doc.setFont("helvetica", "bold"); doc.setFontSize(7); doc.setTextColor(...PRIMARY);
-        doc.text("Observations :", PAGE_LEFT + 2, currentY);
-        currentY += 4;
-        doc.setFont("helvetica", "normal"); doc.setFontSize(7.5); doc.setTextColor(...GRAY_700);
-        const obsLines = doc.splitTextToSize(di.observations, CONTENT_WIDTH - 6);
-        doc.text(obsLines, PAGE_LEFT + 4, currentY);
-        currentY += obsLines.length * 3.8;
-      }
-
-      currentY += 6;
     }
   }
 
-  // Page break check
-  if (currentY > PAGE_BOTTOM - 40) {
-    doc.addPage();
-    currentY = 14;
-  }
+  currentY += 6;
+
+  // (Note: intake details — condition stars, checklist, photos, signature — live
+  //  on the separate Prise-en-charge PDF, not on the facture/devis.)
 
   // ═══════════════════════════════════════════
-  // LINES TABLE — professional style
+  // LINES TABLE — thin typographic style, single-page safe
   // ═══════════════════════════════════════════
-  
-  const tableData = data.lines.map(l => [
-    l.description,
-    l.quantity.toString(),
-    `${l.unit_price.toFixed(2)} €`,
-    `${(l.quantity * l.unit_price).toFixed(2)} €`,
-  ]);
+
+  const rowCount = data.lines.length;
+  let tableFont = 9;
+  let cellPadY = 4;
+  if (rowCount > 8)  { tableFont = 8;   cellPadY = 3.3; }
+  if (rowCount > 14) { tableFont = 7.5; cellPadY = 2.6; }
+  if (rowCount > 20) { tableFont = 7;   cellPadY = 2.2; }
+
+  const MAX_VISIBLE = 18;
+  const truncated = rowCount > MAX_VISIBLE ? rowCount - (MAX_VISIBLE - 1) : 0;
+  const displayLines = truncated ? data.lines.slice(0, MAX_VISIBLE - 1) : data.lines;
+
+  // Page-overflow guard: estimate vertical budget left for the table from current
+  // header position to the pinned bottom block, then tighten note rendering when tight.
+  // Below ~140 mm available, drop note size 1pt further AND truncate notes at 80 chars
+  // with an ellipsis so the table cannot push past the bottom legal block.
+  const tableBudget = (297 - 32 - 4) - currentY - 60; // pageH - bottomBlock - margin - currentY - totals/meta zone
+  const TIGHT = tableBudget < 140;
+  const NOTE_TRUNCATE = TIGHT ? 80 : 240;
+  const noteFont = Math.max(tableFont - (TIGHT ? 2 : 1.5), 6);
+
+  const truncateNote = (n: string): string =>
+    n.length > NOTE_TRUNCATE ? `${n.slice(0, NOTE_TRUNCATE - 1).trimEnd()}…` : n;
+
+  // Build rows. If the line carries a note, embed it as a second line in the
+  // description cell (prefixed) so autoTable auto-measures the cell height.
+  // The marker is stripped and restyled as italic grey in didDrawCell.
+  const NOTE_PREFIX = "​"; // zero-width marker
+  const tableData: (string | number)[][] = displayLines.map(l => {
+    const cleanNote = l.note && l.note.trim() ? truncateNote(l.note.trim()) : "";
+    return [
+      cleanNote ? `${l.description}\n${NOTE_PREFIX}${cleanNote}` : l.description,
+      fmtQty(l.quantity),
+      fmtEur(l.unit_price),
+      fmtEur(l.quantity * l.unit_price),
+    ];
+  });
+  if (truncated) {
+    tableData.push([`… et ${truncated} prestation${truncated > 1 ? "s" : ""} supplémentaire${truncated > 1 ? "s" : ""} — voir annexe`, "", "", ""]);
+  }
 
   autoTable(doc, {
     startY: currentY,
     head: [["Désignation", "Qté", "Prix unit. HT", "Total HT"]],
     body: tableData,
     styles: {
-      fontSize: 8.5,
-      cellPadding: { top: 4, bottom: 4, left: 5, right: 5 },
+      fontSize: tableFont,
+      cellPadding: { top: cellPadY, bottom: cellPadY, left: 4, right: 4 },
       textColor: [...GRAY_700],
-      lineColor: [...GRAY_200],
-      lineWidth: 0.2,
+      lineWidth: 0,
+      font: "helvetica",
+      valign: "top",
     },
     headStyles: {
-      fillColor: [...PRIMARY],
-      textColor: [...WHITE],
+      fillColor: [255, 255, 255],
+      textColor: [...GRAY_400],
       fontStyle: "bold",
-      fontSize: 7.5,
-      cellPadding: { top: 5, bottom: 5, left: 5, right: 5 },
-    },
-    alternateRowStyles: {
-      fillColor: [...GRAY_50],
+      fontSize: 7,
+      cellPadding: { top: 3, bottom: 4, left: 4, right: 4 },
+      lineWidth: 0,
     },
     columnStyles: {
-      0: { cellWidth: 85 },
-      1: { halign: "center", cellWidth: 20 },
-      2: { halign: "right", cellWidth: 30 },
-      3: { halign: "right", cellWidth: 35, fontStyle: "bold" },
+      0: { cellWidth: "auto" },
+      1: { halign: "center", cellWidth: 14 },
+      2: { halign: "right", cellWidth: 32 },
+      3: { halign: "right", cellWidth: 32, fontStyle: "bold", textColor: [...GRAY_700] },
     },
     theme: "plain",
-    margin: { left: PAGE_LEFT, right: 20, bottom: FOOTER_ZONE + 5 },
-    tableLineColor: [...GRAY_200],
-    tableLineWidth: 0.2,
-    didDrawPage: (data: any) => {
-      // redraw accent bar on new pages
-      doc.setFillColor(...PRIMARY);
-      doc.rect(0, 0, 210, 4, "F");
+    margin: { left: PAGE_LEFT, right: 18 },
+    tableLineWidth: 0,
+    willDrawCell: (cell: any) => {
+      // Suppress default rendering for description cells that carry a note —
+      // we repaint them fully in didDrawCell for per-line styling.
+      if (
+        cell.section === "body" &&
+        cell.column.index === 0 &&
+        Array.isArray(cell.cell.text) &&
+        cell.cell.text.some((t: string) => t.startsWith(NOTE_PREFIX))
+      ) {
+        cell.cell.text = [];
+      }
+    },
+    didDrawCell: (cell: any) => {
+      if (cell.section === "head" && cell.row.index === 0) {
+        doc.setDrawColor(...PRIMARY);
+        doc.setLineWidth(0.6);
+        doc.line(cell.cell.x, cell.cell.y + cell.cell.height, cell.cell.x + cell.cell.width, cell.cell.y + cell.cell.height);
+      }
+      if (cell.section === "body") {
+        // Row bottom hairline
+        doc.setDrawColor(...GRAY_200);
+        doc.setLineWidth(0.15);
+        doc.line(cell.cell.x, cell.cell.y + cell.cell.height, cell.cell.x + cell.cell.width, cell.cell.y + cell.cell.height);
+
+        // Repaint description cell when it carries a note
+        if (cell.column.index === 0) {
+          const row = displayLines[cell.row.index];
+          if (row?.note && row.note.trim()) {
+            const note = truncateNote(row.note.trim());
+            const textX = cell.cell.x + 4;
+            const textW = cell.cell.width - 8;
+            const topY = cell.cell.y + cellPadY + tableFont * 0.35;
+
+            // Main description — default style
+            doc.setFont("helvetica", "normal");
+            doc.setFontSize(tableFont);
+            doc.setTextColor(...GRAY_700);
+            const descLines = doc.splitTextToSize(row.description, textW);
+            doc.text(descLines, textX, topY);
+
+            // Note — italic, smaller, slate
+            const noteY = topY + descLines.length * tableFont * 0.42 + 1.2;
+            doc.setFont("helvetica", "italic");
+            doc.setFontSize(noteFont);
+            doc.setTextColor(...GRAY_500);
+            const noteLines = doc.splitTextToSize(note, textW);
+            doc.text(noteLines, textX, noteY);
+
+            // Reset font for other cells
+            doc.setFont("helvetica", "normal");
+            doc.setTextColor(...GRAY_700);
+          }
+        }
+      }
     },
   });
 
   // ═══════════════════════════════════════════
-  // TOTALS BLOCK — elegant right-aligned box
+  // TOTALS — right-aligned, large TTC, brand rule
   // ═══════════════════════════════════════════
-  
-  let finalY = (doc as any).lastAutoTable.finalY + 10;
-  const totalsX = 120;
-  const totalsW = PAGE_RIGHT - totalsX;
 
-  // Check if totals fit on current page
-  const totalsHeight = vatEnabled ? 36 : 28;
-  if (finalY + totalsHeight > PAGE_BOTTOM) {
-    doc.addPage();
-    doc.setFillColor(...PRIMARY);
-    doc.rect(0, 0, 210, 4, "F");
-    finalY = 14;
-  }
+  let finalY = (doc as any).lastAutoTable.finalY + 8;
+  const totalsX = PAGE_RIGHT - 70;
 
-  doc.setFillColor(...GRAY_50);
-  doc.roundedRect(totalsX, finalY, totalsW, vatEnabled ? 30 : 22, 2, 2, "F");
-
-  doc.setFontSize(8.5);
+  doc.setFontSize(9);
   doc.setFont("helvetica", "normal");
+  doc.setTextColor(...GRAY_500);
+  doc.text("Sous-total HT", totalsX, finalY);
   doc.setTextColor(...GRAY_700);
-
-  // Total HT
-  doc.text("Total HT", totalsX + 5, finalY + 6);
-  doc.text(`${data.totalHT.toFixed(2)} €`, PAGE_RIGHT - 5, finalY + 6, { align: "right" });
+  doc.text(fmtEur(data.totalHT), PAGE_RIGHT, finalY, { align: "right" });
+  finalY += 5;
 
   if (vatEnabled) {
-    const vatAmount = data.totalTTC - data.totalHT;
-    // TVA
-    doc.text(`TVA (${data.vatRate}%)`, totalsX + 5, finalY + 13);
-    doc.text(`${vatAmount.toFixed(2)} €`, PAGE_RIGHT - 5, finalY + 13, { align: "right" });
-    
-    // Separator
-    doc.setDrawColor(...GRAY_200);
-    doc.setLineWidth(0.3);
-    doc.line(totalsX + 5, finalY + 17, PAGE_RIGHT - 5, finalY + 17);
-    
-    // Total TTC
-    doc.setFontSize(11);
-    doc.setFont("helvetica", "bold");
-    doc.setTextColor(...PRIMARY);
-    doc.text("Total TTC", totalsX + 5, finalY + 25);
-    doc.text(`${data.totalTTC.toFixed(2)} €`, PAGE_RIGHT - 5, finalY + 25, { align: "right" });
-
-    finalY += 38;
-  } else {
-    // TVA non applicable
-    doc.setFontSize(7);
-    doc.setFont("helvetica", "italic");
-    doc.setTextColor(...GRAY_400);
-    doc.text("TVA non applicable, art. 293B du CGI", totalsX + 5, finalY + 12);
-    
-    doc.setDrawColor(...GRAY_200);
-    doc.setLineWidth(0.3);
-    doc.line(totalsX + 5, finalY + 15, PAGE_RIGHT - 5, finalY + 15);
-    
-    doc.setFontSize(11);
-    doc.setFont("helvetica", "bold");
-    doc.setTextColor(...PRIMARY);
-    doc.text("Total", totalsX + 5, finalY + 21);
-    doc.text(`${data.totalHT.toFixed(2)} €`, PAGE_RIGHT - 5, finalY + 21, { align: "right" });
-
-    finalY += 30;
-  }
-
-  // ═══════════════════════════════════════════
-  // PAYMENT METHOD
-  // ═══════════════════════════════════════════
-
-  if (data.paymentMethod) {
-    if (finalY > PAGE_BOTTOM) { doc.addPage(); doc.setFillColor(...PRIMARY); doc.rect(0, 0, 210, 4, "F"); finalY = 14; }
-    doc.setFontSize(8);
-    doc.setFont("helvetica", "normal");
     doc.setTextColor(...GRAY_500);
-    doc.text(`Mode de paiement : ${data.paymentMethod}`, PAGE_LEFT, finalY);
-    finalY += 8;
+    doc.text(`TVA (${data.vatRate} %)`, totalsX, finalY);
+    doc.setTextColor(...GRAY_700);
+    doc.text(fmtEur(data.totalTTC - data.totalHT), PAGE_RIGHT, finalY, { align: "right" });
+    finalY += 3.5;
+  } else {
+    doc.setFont("helvetica", "italic");
+    doc.setFontSize(7.5);
+    doc.setTextColor(...GRAY_400);
+    doc.text("TVA non applicable — art. 293 B du CGI", totalsX, finalY);
+    doc.setFont("helvetica", "normal");
+    finalY += 3.5;
   }
 
+  // Thick violet rule under subtotals
+  doc.setDrawColor(...PRIMARY);
+  doc.setLineWidth(0.8);
+  doc.line(totalsX, finalY, PAGE_RIGHT, finalY);
+  finalY += 6;
+
+  // Grand total — dominant
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(12);
+  doc.setTextColor(...GRAY_700);
+  doc.text(vatEnabled ? "Total TTC" : "Total à payer", totalsX, finalY + 2);
+  doc.setFontSize(17);
+  doc.setTextColor(...PRIMARY);
+  doc.text(fmtEur(vatEnabled ? data.totalTTC : data.totalHT), PAGE_RIGHT, finalY + 2, { align: "right" });
+  finalY += 10;
+
   // ═══════════════════════════════════════════
-  // NOTES
+  // META ROW — payment / validity / due / signature cue
+  // ═══════════════════════════════════════════
+
+  finalY += 4;
+  const metaItems: { label: string; value: string }[] = [];
+  if (isInvoice) {
+    if (data.paymentMethod) metaItems.push({ label: "Mode de paiement", value: data.paymentMethod });
+    metaItems.push({ label: "Échéance", value: "À réception" });
+  } else {
+    metaItems.push({ label: "Validité du devis", value: "30 jours" });
+    metaItems.push({ label: "Acceptation", value: "Signature client requise" });
+  }
+  let mx = PAGE_LEFT;
+  const metaColW = (CONTENT_WIDTH - 10) / Math.max(metaItems.length, 1);
+  metaItems.forEach(m => {
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(6.5);
+    doc.setTextColor(...GRAY_400);
+    doc.text(m.label.toUpperCase(), mx, finalY);
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(9);
+    doc.setTextColor(...GRAY_700);
+    doc.text(m.value, mx, finalY + 5);
+    mx += metaColW;
+  });
+  finalY += 12;
+
+  // ═══════════════════════════════════════════
+  // NOTES (compact, no fill)
   // ═══════════════════════════════════════════
 
   if (data.notes) {
-    const noteLines = doc.splitTextToSize(data.notes, CONTENT_WIDTH - 12);
-    const noteH = noteLines.length * 3.8 + 14;
-    
-    if (finalY + noteH > PAGE_BOTTOM) { doc.addPage(); doc.setFillColor(...PRIMARY); doc.rect(0, 0, 210, 4, "F"); finalY = 14; }
-
-    doc.setFillColor(...GRAY_50);
-    doc.roundedRect(PAGE_LEFT, finalY, CONTENT_WIDTH, noteH, 2, 2, "F");
-
-    doc.setFontSize(7);
+    const noteLines = doc.splitTextToSize(data.notes, CONTENT_WIDTH);
     doc.setFont("helvetica", "bold");
-    doc.setTextColor(...PRIMARY);
-    doc.text("NOTES", PAGE_LEFT + 6, finalY + 6);
-
-    doc.setFont("helvetica", "normal");
-    doc.setFontSize(7.5);
-    doc.setTextColor(...GRAY_500);
-    doc.text(noteLines, PAGE_LEFT + 6, finalY + 12);
-
-    finalY += noteH + 8;
-  }
-
-  // ═══════════════════════════════════════════
-  // CUSTOMER SIGNATURE
-  // ═══════════════════════════════════════════
-
-  if (intake?.signatureUrl && finalY + 30 < PAGE_BOTTOM) {
-    doc.setFontSize(7);
-    doc.setFont("helvetica", "bold");
-    doc.setTextColor(...PRIMARY);
-    doc.text("SIGNATURE CLIENT", PAGE_LEFT, finalY + 4);
-    const sigImg = await loadImage(intake.signatureUrl);
-    if (sigImg) {
-      try {
-        doc.addImage(sigImg, detectImageFormat(sigImg), PAGE_LEFT, finalY + 7, 50, 20);
-      } catch (e) {
-        console.warn("Signature image could not be added to PDF:", e);
-      }
-    }
-    finalY += 32;
-  }
-
-  // "Devis valable 14 jours" for quotes
-  if (!isInvoice) {
-    if (finalY + 10 > PAGE_BOTTOM) { doc.addPage(); doc.setFillColor(...PRIMARY); doc.rect(0, 0, 210, 4, "F"); finalY = 14; }
-    doc.setFontSize(8);
-    doc.setFont("helvetica", "italic");
-    doc.setTextColor(...GRAY_500);
-    doc.text("Devis valable 14 jours", PAGE_LEFT, finalY + 4);
-    finalY += 10;
-  }
-
-  // DEVICE PHOTOS (new page)
-  // ═══════════════════════════════════════════
-
-  if (intake?.photoUrls && intake.photoUrls.length > 0) {
-    doc.addPage();
-    doc.setFillColor(...PRIMARY);
-    doc.rect(0, 0, 210, 4, "F");
-
-    doc.setFontSize(11);
-    doc.setFont("helvetica", "bold");
-    doc.setTextColor(...GRAY_700);
-    doc.text("Photos de l'appareil", PAGE_LEFT, 16);
-    drawLine(doc, 19);
-
-    let photoY = 25;
-    for (const url of intake.photoUrls.slice(0, 6)) {
-      const imgData = await loadImage(url);
-      if (imgData && photoY < 240) {
-        try {
-          doc.addImage(imgData, detectImageFormat(imgData), PAGE_LEFT, photoY, 60, 45);
-        } catch (e) {
-          console.warn("Photo could not be added to PDF:", e);
-          continue;
-        }
-        photoY += 50;
-      }
-    }
-  }
-
-  // ═══════════════════════════════════════════
-  // GOOGLE REVIEW QR CODE
-  // ═══════════════════════════════════════════
-
-  if (org.google_review_url && isInvoice) {
-    const pageCount = doc.getNumberOfPages();
-    doc.setPage(pageCount);
-    const pageH = doc.internal.pageSize.getHeight();
-    const qrBlockH = 32;
-    const qrY = Math.min(finalY + 4, pageH - FOOTER_ZONE - qrBlockH - 2);
-    if (qrY > 14 && qrY < pageH - FOOTER_ZONE - qrBlockH) {
-      try {
-        const qrDataUrl = await QRCode.toDataURL(org.google_review_url, {
-          width: 200,
-          margin: 1,
-          color: { dark: "#1e40af", light: "#ffffff" },
-        });
-        const qrSize = 24;
-        doc.addImage(qrDataUrl, "PNG", PAGE_LEFT, qrY, qrSize, qrSize);
-        
-        doc.setFontSize(8);
-        doc.setFont("helvetica", "bold");
-        doc.setTextColor(...GRAY_700);
-        doc.text("Votre avis compte !", PAGE_LEFT + qrSize + 6, qrY + 8);
-        
-        doc.setFontSize(7.5);
-        doc.setFont("helvetica", "normal");
-        doc.setTextColor(...GRAY_500);
-        doc.text("Scannez ce code pour nous laisser", PAGE_LEFT + qrSize + 6, qrY + 14);
-        doc.text("votre avis. Merci de votre confiance.", PAGE_LEFT + qrSize + 6, qrY + 19);
-      } catch (e) {
-        console.error("QR code generation error:", e);
-      }
-    }
-  }
-
-  // ═══════════════════════════════════════════
-  // CUSTOM FOOTER
-  // ═══════════════════════════════════════════
-
-  if (org.invoice_footer) {
-    const pageCount = doc.getNumberOfPages();
-    for (let i = 1; i <= pageCount; i++) {
-      doc.setPage(i);
-      const pageH = doc.internal.pageSize.getHeight();
-      doc.setFontSize(6.5);
-      doc.setFont("helvetica", "normal");
-      doc.setTextColor(...GRAY_400);
-      const footerLines = doc.splitTextToSize(org.invoice_footer, CONTENT_WIDTH);
-      // Place custom footer above the accent line, with enough clearance
-      const footerTextY = pageH - 20 - (footerLines.length * 3);
-      doc.text(footerLines, 105, footerTextY, { align: "center" });
-      doc.setTextColor(0);
-    }
-  }
-
-  // ═══════════════════════════════════════════
-  // PAGE FOOTER — company summary + page number
-  // ═══════════════════════════════════════════
-
-  const totalPages = doc.getNumberOfPages();
-  for (let i = 1; i <= totalPages; i++) {
-    doc.setPage(i);
-    const pageH = doc.internal.pageSize.getHeight();
-
-    // Bottom accent line — well below content, above company info
-    doc.setDrawColor(...PRIMARY);
-    doc.setLineWidth(0.4);
-    doc.line(PAGE_LEFT, pageH - 14, PAGE_RIGHT, pageH - 14);
-
-    // Company summary — below the accent line
-    doc.setFontSize(6);
-    doc.setFont("helvetica", "normal");
+    doc.setFontSize(6.5);
     doc.setTextColor(...GRAY_400);
-    const footerParts = [org.name, org.siret ? `SIRET : ${org.siret}` : "", org.vat_number ? `TVA : ${org.vat_number}` : "", fullAddress].filter(Boolean);
-    doc.text(footerParts.join("  •  "), 105, pageH - 9, { align: "center" });
-
-    // Page number
-    doc.text(`Page ${i} / ${totalPages}`, PAGE_RIGHT, pageH - 5, { align: "right" });
-    doc.setTextColor(0);
+    doc.text("NOTES", PAGE_LEFT, finalY);
+    finalY += 3.5;
+    doc.setFont("helvetica", "italic");
+    doc.setFontSize(8);
+    doc.setTextColor(...GRAY_500);
+    doc.text(noteLines, PAGE_LEFT, finalY);
+    finalY += noteLines.length * 3.8 + 4;
   }
+
+  // ═══════════════════════════════════════════
+  // BOTTOM BLOCK — pinned to page bottom
+  // Legal mentions, QR review (invoice only), company signature
+  // ═══════════════════════════════════════════
+
+  const pageH = doc.internal.pageSize.getHeight();
+  const bottomTop = pageH - 32;
+
+  // Hairline separator above bottom block
+  doc.setDrawColor(...GRAY_200);
+  doc.setLineWidth(0.3);
+  doc.line(PAGE_LEFT, bottomTop, PAGE_RIGHT, bottomTop);
+
+  let bY = bottomTop + 5;
+  let qrW = 0;
+
+  // Google review QR (invoice only) — small, left-anchored
+  if (isInvoice && org.google_review_url) {
+    try {
+      const qrDataUrl = await QRCode.toDataURL(org.google_review_url, {
+        width: 180, margin: 0,
+        color: { dark: "#5B4BE9", light: "#FFFFFF" },
+      });
+      qrW = 16;
+      doc.addImage(qrDataUrl, "PNG", PAGE_LEFT, bY, qrW, qrW);
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(7.5);
+      doc.setTextColor(...GRAY_700);
+      doc.text("Votre avis compte", PAGE_LEFT + qrW + 3, bY + 5);
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(6.5);
+      doc.setTextColor(...GRAY_500);
+      doc.text("Scannez pour laisser un avis", PAGE_LEFT + qrW + 3, bY + 9.5);
+      doc.text("sur notre atelier. Merci !", PAGE_LEFT + qrW + 3, bY + 13);
+    } catch (e) {
+      console.error("QR code generation error:", e);
+    }
+  }
+
+  // Legal mentions — right side (or full width if no QR)
+  const legalX = PAGE_LEFT + (qrW > 0 ? qrW + 42 : 0);
+  const legalW = PAGE_RIGHT - legalX;
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(6.3);
+  doc.setTextColor(...GRAY_400);
+  const legalLines: string[] = [];
+  if (isInvoice) {
+    legalLines.push("En cas de retard de paiement : pénalités au taux BCE + 10 points et indemnité forfaitaire pour frais de recouvrement de 40 € (art. L441-10 C. com.).");
+    legalLines.push("Pas d'escompte pour paiement anticipé.");
+  } else {
+    legalLines.push("Devis valable 30 jours à compter de sa date d'émission.");
+    legalLines.push("Bon pour accord : signature précédée de la mention manuscrite « Lu et approuvé ».");
+  }
+  if (org.invoice_footer) legalLines.push(org.invoice_footer);
+  const wrappedLegal = doc.splitTextToSize(legalLines.join(" "), legalW);
+  const maxLegalLines = 4;
+  doc.text(wrappedLegal.slice(0, maxLegalLines), legalX, bY + 3);
+
+  // Company signature line — centered, very bottom
+  doc.setFontSize(6);
+  doc.setTextColor(...GRAY_400);
+  const sigParts = [
+    org.name,
+    org.siret ? `SIRET ${org.siret}` : null,
+    org.vat_number ? `TVA ${org.vat_number}` : null,
+    org.ape_code ? `APE ${org.ape_code}` : null,
+  ].filter(Boolean);
+  doc.text(sigParts.join("  ·  "), 105, pageH - 6, { align: "center" });
 
   if (options?.preview) {
     const blob = doc.output("blob");

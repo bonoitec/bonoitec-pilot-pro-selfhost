@@ -86,7 +86,7 @@ export function CreateRepairWizard({ open, onOpenChange }: Props) {
   // Step 1 — Client
   const [clientSearch, setClientSearch] = useState("");
   const [selectedClientId, setSelectedClientId] = useState<string | null>(null);
-  const [newClient, setNewClient] = useState({ name: "", phone: "", email: "", address: "", postal_code: "", city: "", country: "France" });
+  const [newClient, setNewClient] = useState({ first_name: "", last_name: "", phone: "", email: "", address: "", postal_code: "", city: "", country: "France" });
 
   // Step 2 — Device
   const [device, setDevice] = useState({ category: "Smartphone", brand: "", model: "", serial_number: "", storage: "", accessories: "", password: "", observations: "" });
@@ -205,9 +205,10 @@ export function CreateRepairWizard({ open, onOpenChange }: Props) {
   }, [clients, clientSearch]);
 
   const isNewClient = !selectedClientId;
+  const newClientFullName = `${newClient.first_name.trim()} ${newClient.last_name.trim()}`.trim();
   const clientDisplay = selectedClientId
     ? clients.find(c => c.id === selectedClientId)?.name ?? ""
-    : newClient.name;
+    : newClientFullName;
 
   // IMEI auto-detect
   const handleSerialChange = (val: string) => {
@@ -237,7 +238,7 @@ export function CreateRepairWizard({ open, onOpenChange }: Props) {
   // Validation per step
   const canProceed = (): boolean => {
     switch (step) {
-      case 0: return !!(selectedClientId || newClient.name.trim());
+      case 0: return !!(selectedClientId || newClientFullName);
       case 1: return !!(selectedDeviceId || (device.brand.trim() && device.model.trim()));
       case 5: return !!issue.trim();
       default: return true;
@@ -254,9 +255,14 @@ export function CreateRepairWizard({ open, onOpenChange }: Props) {
       let clientId = selectedClientId;
       if (!clientId) {
         const { data: newC, error: cErr } = await supabase.from("clients").insert({
-          organization_id: orgId, name: newClient.name.trim(),
+          organization_id: orgId,
+          first_name: newClient.first_name.trim() || null,
+          last_name: newClient.last_name.trim() || null,
+          name: newClientFullName,
           phone: newClient.phone.trim() || null, email: newClient.email.trim() || null,
-          address: [newClient.address, newClient.postal_code, newClient.city, newClient.country].filter(Boolean).join(", ") || null,
+          address: newClient.address.trim() || null,
+          postal_code: newClient.postal_code.trim() || null,
+          city: newClient.city.trim() || null,
         }).select("id").single();
         if (cErr) throw cErr;
         clientId = newC.id;
@@ -374,7 +380,7 @@ export function CreateRepairWizard({ open, onOpenChange }: Props) {
               template: "repair_created",
               to: clientEmail,
               data: {
-                clientName: repair.clients?.name || newClient.name,
+                clientName: repair.clients?.name || newClientFullName,
                 reference: repair.reference,
                 device: deviceLabel,
                 issue: repair.issue,
@@ -413,7 +419,7 @@ export function CreateRepairWizard({ open, onOpenChange }: Props) {
     // Reset everything
     setStep(0);
     setClientSearch(""); setSelectedClientId(null);
-    setNewClient({ name: "", phone: "", email: "", address: "", postal_code: "", city: "", country: "France" });
+    setNewClient({ first_name: "", last_name: "", phone: "", email: "", address: "", postal_code: "", city: "", country: "France" });
     setDevice({ category: "Smartphone", brand: "", model: "", serial_number: "", storage: "", accessories: "", password: "", observations: "" });
     setSelectedDeviceId(null);
     setChecklist({}); setDiagnosticReason("");
@@ -541,9 +547,13 @@ export function CreateRepairWizard({ open, onOpenChange }: Props) {
                   <CardContent className="pt-4 pb-4 space-y-3">
                     <p className="text-xs font-medium text-muted-foreground flex items-center gap-1"><Plus className="h-3 w-3" />Nouveau client</p>
                     <div className="grid grid-cols-2 gap-3">
-                      <div className="col-span-2">
+                      <div>
+                        <Label className="text-xs">Prénom *</Label>
+                        <Input value={newClient.first_name} onChange={e => setNewClient(c => ({ ...c, first_name: e.target.value }))} placeholder="Julien" />
+                      </div>
+                      <div>
                         <Label className="text-xs">Nom *</Label>
-                        <Input value={newClient.name} onChange={e => setNewClient(c => ({ ...c, name: e.target.value }))} placeholder="Nom du client" />
+                        <Input value={newClient.last_name} onChange={e => setNewClient(c => ({ ...c, last_name: e.target.value }))} placeholder="Moreau" />
                       </div>
                       <div>
                         <Label className="text-xs">Téléphone</Label>
