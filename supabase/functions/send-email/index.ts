@@ -113,30 +113,16 @@ function emailLayout(
           <tr>
             <td bgcolor="${BRAND.primary}" style="background-color:${BRAND.primary};height:5px;line-height:5px;font-size:0;">&nbsp;</td>
           </tr>
-          <!-- Header: clean white banner with full-color BonoitecPilot wordmark + tagline -->
+          <!-- Header: white banner, single centered td so the logo really sits in the middle -->
           <tr>
-            <td bgcolor="${BRAND.white}" style="background-color:${BRAND.white};padding:0;text-align:center;border-bottom:1px solid ${BRAND.border};">
-              <table role="presentation" cellpadding="0" cellspacing="0" border="0" align="center" style="margin:0 auto;width:100%;max-width:460px;">
+            <td bgcolor="${BRAND.white}" align="center" style="background-color:${BRAND.white};padding:42px 32px 32px;text-align:center;border-bottom:1px solid ${BRAND.border};">
+              <img src="https://bonoitecpilot.fr/email-logo.png?v=9" width="260" alt="BonoitecPilot" style="display:block;border:0;outline:none;text-decoration:none;width:260px;max-width:100%;height:auto;margin:0 auto;" />
+              <table role="presentation" cellpadding="0" cellspacing="0" border="0" align="center" style="margin:14px auto 0;">
                 <tr>
-                  <td align="center" style="padding:42px 28px 10px;line-height:0;">
-                    <img src="https://bonoitecpilot.fr/email-logo.png?v=8" width="260" alt="BonoitecPilot" style="display:block;border:0;outline:none;text-decoration:none;width:260px;max-width:100%;height:auto;margin:0 auto;" />
-                  </td>
-                </tr>
-                <tr>
-                  <td align="center" style="padding:14px 28px 0;">
-                    <table role="presentation" cellpadding="0" cellspacing="0" border="0" align="center" style="margin:0 auto;">
-                      <tr>
-                        <td bgcolor="${BRAND.primary}" style="width:60px;height:3px;background-color:${BRAND.primary};line-height:3px;font-size:0;border-radius:3px;">&nbsp;</td>
-                      </tr>
-                    </table>
-                  </td>
-                </tr>
-                <tr>
-                  <td align="center" style="padding:12px 28px 32px;">
-                    <p style="margin:0;color:${BRAND.muted};font-size:11px;line-height:1.6;letter-spacing:1.2px;text-transform:uppercase;font-weight:600;font-family:'Segoe UI',Tahoma,Geneva,Verdana,Arial,sans-serif;">Gestion professionnelle de r&eacute;parations</p>
-                  </td>
+                  <td bgcolor="${BRAND.primary}" style="width:60px;height:3px;background-color:${BRAND.primary};line-height:3px;font-size:0;border-radius:3px;">&nbsp;</td>
                 </tr>
               </table>
+              <p style="margin:14px 0 0;color:${BRAND.muted};font-size:11px;line-height:1.6;letter-spacing:1.2px;text-align:center;text-transform:uppercase;font-weight:600;font-family:'Segoe UI',Tahoma,Geneva,Verdana,Arial,sans-serif;">Gestion professionnelle de r&eacute;parations</p>
             </td>
           </tr>
           <!-- Body -->
