@@ -205,13 +205,14 @@ export async function generatePDF(org: OrgInfo, data: DocData, options?: { previ
   const fmtQty = (n: number) => n.toString().replace(".", ",");
 
   // ═══════════════════════════════════════════
-  // HEADER — logo + atelier info stacked left · doc title + pill top right
+  // HEADER — Logo + CLIENT info stacked left · doc title + atelier info on right
   // ═══════════════════════════════════════════
 
   const headerTop = 18;
   let leftY = headerTop;
+  const colW = 90;
 
-  // Logo top-left — BonoitecPilot product wordmark (always, not the atelier's logo)
+  // BonoitecPilot logo (same wordmark as the navbar)
   {
     const logoImg = await loadImageWithDimensions(bonoitecPilotLogo);
     if (logoImg) {
@@ -221,39 +222,73 @@ export async function generatePDF(org: OrgInfo, data: DocData, options?: { previ
       const h = logoImg.height * ratio;
       try {
         doc.addImage(logoImg.data, detectImageFormat(logoImg.data), PAGE_LEFT, leftY, w, h);
-        leftY += h + 5;
+        leftY += h + 6;
       } catch (e) {
         console.warn("Logo image could not be added to PDF:", e);
       }
     }
   }
 
-  // Atelier info stacked beneath the logo
+  // CLIENT block stacked under the logo
+  const clientLabel = isInvoice ? "FACTURÉ À" : "DEVIS POUR";
+  doc.setFontSize(6.5);
   doc.setFont("helvetica", "bold");
-  doc.setFontSize(9.5);
+  doc.setTextColor(...GRAY_400);
+  doc.text(clientLabel, PAGE_LEFT, leftY);
+  doc.setDrawColor(...PRIMARY);
+  doc.setLineWidth(0.5);
+  doc.line(PAGE_LEFT, leftY + 1.5, PAGE_LEFT + doc.getTextWidth(clientLabel) + 2, leftY + 1.5);
+  leftY += 6;
+
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(10);
   doc.setTextColor(...GRAY_700);
-  const nameLine = org.legal_status ? `${org.name} — ${org.legal_status}` : org.name;
-  doc.text(nameLine, PAGE_LEFT, leftY);
-  leftY += 4;
+  const fullClientName =
+    [data.clientFirstName, data.clientLastName].filter(Boolean).join(" ") ||
+    data.clientName ||
+    "—";
+  doc.text(fullClientName, PAGE_LEFT, leftY);
+  leftY += 4.5;
 
   doc.setFont("helvetica", "normal");
-  doc.setFontSize(8);
+  doc.setFontSize(8.5);
   doc.setTextColor(...GRAY_500);
-  if (fullAddress) {
-    const addrLines = doc.splitTextToSize(fullAddress, 90);
+  if (data.clientAddress) {
+    const addrLines = doc.splitTextToSize(data.clientAddress, colW);
     doc.text(addrLines, PAGE_LEFT, leftY);
-    leftY += addrLines.length * 3.6;
+    leftY += addrLines.length * 3.8;
   }
-  const contactLine = [org.phone, org.email].filter(Boolean).join("  ·  ");
-  if (contactLine) { doc.text(contactLine, PAGE_LEFT, leftY); leftY += 3.6; }
-  const legalBits = [
-    org.siret ? `SIRET ${org.siret}` : null,
-    org.vat_number ? `TVA ${org.vat_number}` : null,
-    org.ape_code ? `APE ${org.ape_code}` : null,
-  ].filter(Boolean);
-  if (legalBits.length) { doc.text(legalBits.join("  ·  "), PAGE_LEFT, leftY); leftY += 3.6; }
+  const locality = [data.clientPostalCode, data.clientCity].filter(Boolean).join(" ").trim();
+  if (locality) { doc.text(locality, PAGE_LEFT, leftY); leftY += 3.8; }
+  const clientContact = [data.clientPhone, data.clientEmail].filter(Boolean).join("  ·  ");
+  if (clientContact) { doc.text(clientContact, PAGE_LEFT, leftY); leftY += 3.8; }
 
-  // Right column — big doc title, N°, date, status pill
+  // Devis only — device info appended to the client block
+  if (!isInvoice && data.quoteDeviceInfo) {
+    const di = data.quoteDeviceInfo;
+    const deviceName = [di.brand, di.model].filter(Boolean).join(" ");
+    if (deviceName) {
+      leftY += 2;
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(8.5);
+      doc.setTextColor(...GRAY_700);
+      doc.text(`Appareil : ${deviceName}`, PAGE_LEFT, leftY);
+      leftY += 3.8;
+      doc.setFont("helvetica", "normal");
+      doc.setTextColor(...GRAY_500);
+      const deviceDetails: string[] = [];
+      if (di.imei) deviceDetails.push(`IMEI ${di.imei}`);
+      if (di.storage) deviceDetails.push(di.storage);
+      if (di.color) deviceDetails.push(di.color);
+      if (deviceDetails.length) {
+        doc.text(deviceDetails.join("  ·  "), PAGE_LEFT, leftY);
+        leftY += 3.8;
+      }
+    }
+  }
+
+  // ── Right column ──
+  // Big doc title at top
   const rightX = PAGE_RIGHT;
   doc.setFont("helvetica", "normal");
   doc.setFontSize(26);
@@ -270,7 +305,7 @@ export async function generatePDF(org: OrgInfo, data: DocData, options?: { previ
   doc.setTextColor(...GRAY_500);
   doc.text(`Émise le ${data.date}`, rightX, headerTop + 20, { align: "right" });
 
-  // Status pill beneath the meta
+  // Status pill
   const statusText = isInvoice ? "À RÉGLER" : "EN ATTENTE D'ACCORD";
   doc.setFontSize(7);
   doc.setFont("helvetica", "bold");
@@ -281,78 +316,47 @@ export async function generatePDF(org: OrgInfo, data: DocData, options?: { previ
   doc.setTextColor(...PRIMARY);
   doc.text(statusText, rightX - pillW / 2, headerTop + 27.3, { align: "center" });
 
-  const rightY = headerTop + 32;
+  // Atelier (Émis par) block under the doc-meta
+  let rightY = headerTop + 36;
+  doc.setFontSize(6.5);
+  doc.setFont("helvetica", "bold");
+  doc.setTextColor(...GRAY_400);
+  doc.text("ÉMIS PAR", rightX, rightY, { align: "right" });
+  doc.setDrawColor(...PRIMARY);
+  doc.setLineWidth(0.5);
+  const emisW = doc.getTextWidth("ÉMIS PAR") + 2;
+  doc.line(rightX - emisW, rightY + 1.5, rightX, rightY + 1.5);
+  rightY += 6;
 
-  // Hairline below the header (below the taller of the two columns)
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(9);
+  doc.setTextColor(...GRAY_700);
+  const nameLine = org.legal_status ? `${org.name} — ${org.legal_status}` : org.name;
+  doc.text(nameLine, rightX, rightY, { align: "right" });
+  rightY += 4;
+
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(8);
+  doc.setTextColor(...GRAY_500);
+  if (fullAddress) {
+    const addrLines = doc.splitTextToSize(fullAddress, colW);
+    addrLines.forEach((l: string) => { doc.text(l, rightX, rightY, { align: "right" }); rightY += 3.6; });
+  }
+  const orgContact = [org.phone, org.email].filter(Boolean).join("  ·  ");
+  if (orgContact) { doc.text(orgContact, rightX, rightY, { align: "right" }); rightY += 3.6; }
+  const legalBits = [
+    org.siret ? `SIRET ${org.siret}` : null,
+    org.vat_number ? `TVA ${org.vat_number}` : null,
+    org.ape_code ? `APE ${org.ape_code}` : null,
+  ].filter(Boolean);
+  if (legalBits.length) { doc.text(legalBits.join("  ·  "), rightX, rightY, { align: "right" }); rightY += 3.6; }
+
+  // Hairline below the taller of the two columns
   let currentY = Math.max(leftY, rightY) + 4;
   doc.setDrawColor(...GRAY_200);
   doc.setLineWidth(0.3);
   doc.line(PAGE_LEFT, currentY, PAGE_RIGHT, currentY);
   currentY += 8;
-
-  // ═══════════════════════════════════════════
-  // CLIENT BLOCK — single column (issuer already in header)
-  // ═══════════════════════════════════════════
-
-  const clientLabel = isInvoice ? "FACTURÉ À" : "DEVIS POUR";
-  doc.setFontSize(6.5);
-  doc.setFont("helvetica", "bold");
-  doc.setTextColor(...GRAY_400);
-  doc.text(clientLabel, PAGE_LEFT, currentY);
-  doc.setDrawColor(...PRIMARY);
-  doc.setLineWidth(0.5);
-  const labelW = doc.getTextWidth(clientLabel) + 2;
-  doc.line(PAGE_LEFT, currentY + 1.5, PAGE_LEFT + labelW, currentY + 1.5);
-  currentY += 6;
-
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(10);
-  doc.setTextColor(...GRAY_700);
-  const fullClientName =
-    [data.clientFirstName, data.clientLastName].filter(Boolean).join(" ") ||
-    data.clientName ||
-    "—";
-  doc.text(fullClientName, PAGE_LEFT, currentY);
-  currentY += 4.5;
-
-  doc.setFont("helvetica", "normal");
-  doc.setFontSize(8.5);
-  doc.setTextColor(...GRAY_500);
-  if (data.clientAddress) {
-    const addrLines = doc.splitTextToSize(data.clientAddress, 100);
-    doc.text(addrLines, PAGE_LEFT, currentY);
-    currentY += addrLines.length * 3.8;
-  }
-  const locality = [data.clientPostalCode, data.clientCity].filter(Boolean).join(" ").trim();
-  if (locality) { doc.text(locality, PAGE_LEFT, currentY); currentY += 3.8; }
-  const clientContact = [data.clientPhone, data.clientEmail].filter(Boolean).join("  ·  ");
-  if (clientContact) { doc.text(clientContact, PAGE_LEFT, currentY); currentY += 3.8; }
-
-  // Device info line for devis only
-  if (!isInvoice && data.quoteDeviceInfo) {
-    const di = data.quoteDeviceInfo;
-    const deviceName = [di.brand, di.model].filter(Boolean).join(" ");
-    if (deviceName) {
-      currentY += 2;
-      doc.setFont("helvetica", "bold");
-      doc.setFontSize(8.5);
-      doc.setTextColor(...GRAY_700);
-      doc.text(`Appareil : ${deviceName}`, PAGE_LEFT, currentY);
-      currentY += 3.8;
-      doc.setFont("helvetica", "normal");
-      doc.setTextColor(...GRAY_500);
-      const deviceDetails: string[] = [];
-      if (di.imei) deviceDetails.push(`IMEI ${di.imei}`);
-      if (di.storage) deviceDetails.push(di.storage);
-      if (di.color) deviceDetails.push(di.color);
-      if (deviceDetails.length) {
-        doc.text(deviceDetails.join("  ·  "), PAGE_LEFT, currentY);
-        currentY += 3.8;
-      }
-    }
-  }
-
-  currentY += 6;
 
   // (Note: intake details — condition stars, checklist, photos, signature — live
   //  on the separate Prise-en-charge PDF, not on the facture/devis.)
@@ -701,14 +705,15 @@ export async function generateIntakePDF(org: OrgInfo, data: IntakePdfData, optio
   const fmtEur = (n: number) => `${n.toFixed(2).replace(".", ",")} €`;
 
   // ═══════════════════════════════════════════
-  // HEADER — BonoitecPilot logo + atelier info stacked left · doc title + pill top right
+  // HEADER — Logo + CLIENT info stacked left · doc title + atelier info on right
   // (matches facture/devis exactly)
   // ═══════════════════════════════════════════
 
   const headerTop = 18;
   let leftY = headerTop;
+  const colW = 90;
 
-  // BonoitecPilot product wordmark — same on every PDF, not the atelier logo
+  // BonoitecPilot logo (same wordmark as the navbar)
   {
     const logoImg = await loadImageWithDimensions(bonoitecPilotLogo);
     if (logoImg) {
@@ -718,39 +723,47 @@ export async function generateIntakePDF(org: OrgInfo, data: IntakePdfData, optio
       const h = logoImg.height * ratio;
       try {
         doc.addImage(logoImg.data, detectImageFormat(logoImg.data), PAGE_LEFT, leftY, w, h);
-        leftY += h + 5;
+        leftY += h + 6;
       } catch (e) {
         console.warn("Logo image could not be added to PDF:", e);
       }
     }
   }
 
-  // Atelier info stacked beneath the logo
+  // CLIENT (DÉPOSÉ PAR) block stacked under the logo
+  doc.setFontSize(6.5);
   doc.setFont("helvetica", "bold");
-  doc.setFontSize(9.5);
+  doc.setTextColor(...GRAY_400);
+  doc.text("DÉPOSÉ PAR", PAGE_LEFT, leftY);
+  doc.setDrawColor(...PRIMARY);
+  doc.setLineWidth(0.5);
+  doc.line(PAGE_LEFT, leftY + 1.5, PAGE_LEFT + doc.getTextWidth("DÉPOSÉ PAR") + 2, leftY + 1.5);
+  leftY += 6;
+
+  const fullClientName =
+    [data.clientFirstName, data.clientLastName].filter(Boolean).join(" ") ||
+    data.clientName ||
+    "—";
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(10);
   doc.setTextColor(...GRAY_700);
-  const nameLine = org.legal_status ? `${shopName} — ${org.legal_status}` : shopName;
-  doc.text(nameLine, PAGE_LEFT, leftY);
-  leftY += 4;
+  doc.text(fullClientName, PAGE_LEFT, leftY);
+  leftY += 4.5;
 
   doc.setFont("helvetica", "normal");
-  doc.setFontSize(8);
+  doc.setFontSize(8.5);
   doc.setTextColor(...GRAY_500);
-  if (fullAddress) {
-    const addrLines = doc.splitTextToSize(fullAddress, 90);
+  if (data.clientAddress) {
+    const addrLines = doc.splitTextToSize(data.clientAddress, colW);
     doc.text(addrLines, PAGE_LEFT, leftY);
-    leftY += addrLines.length * 3.6;
+    leftY += addrLines.length * 3.8;
   }
-  const contactLine = [org.phone, org.email].filter(Boolean).join("  ·  ");
-  if (contactLine) { doc.text(contactLine, PAGE_LEFT, leftY); leftY += 3.6; }
-  const legalBits = [
-    org.siret ? `SIRET ${org.siret}` : null,
-    org.vat_number ? `TVA ${org.vat_number}` : null,
-    org.ape_code ? `APE ${org.ape_code}` : null,
-  ].filter(Boolean);
-  if (legalBits.length) { doc.text(legalBits.join("  ·  "), PAGE_LEFT, leftY); leftY += 3.6; }
+  const locality = [data.clientPostalCode, data.clientCity].filter(Boolean).join(" ").trim();
+  if (locality) { doc.text(locality, PAGE_LEFT, leftY); leftY += 3.8; }
+  const clientContact = [data.clientPhone, data.clientEmail].filter(Boolean).join("  ·  ");
+  if (clientContact) { doc.text(clientContact, PAGE_LEFT, leftY); leftY += 3.8; }
 
-  // Right column: title + N° + date + status pill
+  // ── Right column ──
   const rightX = PAGE_RIGHT;
   doc.setFont("helvetica", "normal");
   doc.setFontSize(26);
@@ -767,7 +780,6 @@ export async function generateIntakePDF(org: OrgInfo, data: IntakePdfData, optio
   doc.setTextColor(...GRAY_500);
   doc.text(`Déposé le ${data.date}`, rightX, headerTop + 20, { align: "right" });
 
-  // Status pill
   const statusText = "DÉPOSÉ EN ATELIER";
   doc.setFontSize(7);
   doc.setFont("helvetica", "bold");
@@ -778,43 +790,46 @@ export async function generateIntakePDF(org: OrgInfo, data: IntakePdfData, optio
   doc.setTextColor(...PRIMARY);
   doc.text(statusText, rightX - pillW / 2, headerTop + 27.3, { align: "center" });
 
-  const rightY = headerTop + 32;
+  // Atelier (Émis par) block on the right under the doc-meta
+  let rightY = headerTop + 36;
+  doc.setFontSize(6.5);
+  doc.setFont("helvetica", "bold");
+  doc.setTextColor(...GRAY_400);
+  doc.text("ÉMIS PAR", rightX, rightY, { align: "right" });
+  doc.setDrawColor(...PRIMARY);
+  doc.setLineWidth(0.5);
+  doc.line(rightX - doc.getTextWidth("ÉMIS PAR") - 2, rightY + 1.5, rightX, rightY + 1.5);
+  rightY += 6;
 
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(9);
+  doc.setTextColor(...GRAY_700);
+  const nameLine = org.legal_status ? `${shopName} — ${org.legal_status}` : shopName;
+  doc.text(nameLine, rightX, rightY, { align: "right" });
+  rightY += 4;
+
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(8);
+  doc.setTextColor(...GRAY_500);
+  if (fullAddress) {
+    const addrLines = doc.splitTextToSize(fullAddress, colW);
+    addrLines.forEach((l: string) => { doc.text(l, rightX, rightY, { align: "right" }); rightY += 3.6; });
+  }
+  const orgContact = [org.phone, org.email].filter(Boolean).join("  ·  ");
+  if (orgContact) { doc.text(orgContact, rightX, rightY, { align: "right" }); rightY += 3.6; }
+  const legalBits = [
+    org.siret ? `SIRET ${org.siret}` : null,
+    org.vat_number ? `TVA ${org.vat_number}` : null,
+    org.ape_code ? `APE ${org.ape_code}` : null,
+  ].filter(Boolean);
+  if (legalBits.length) { doc.text(legalBits.join("  ·  "), rightX, rightY, { align: "right" }); rightY += 3.6; }
+
+  // Hairline below the taller of the two columns
   let currentY = Math.max(leftY, rightY) + 4;
   doc.setDrawColor(...GRAY_200);
   doc.setLineWidth(0.3);
   doc.line(PAGE_LEFT, currentY, PAGE_RIGHT, currentY);
   currentY += 8;
-
-  // ═══════════════════════════════════════════
-  // CLIENT (DÉPOSÉ PAR) — single-column, address + locality + contact
-  // ═══════════════════════════════════════════
-
-  currentY = drawLabel(doc, "DÉPOSÉ PAR", currentY);
-
-  const fullClientName =
-    [data.clientFirstName, data.clientLastName].filter(Boolean).join(" ") ||
-    data.clientName ||
-    "—";
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(10);
-  doc.setTextColor(...GRAY_700);
-  doc.text(fullClientName, PAGE_LEFT, currentY);
-  currentY += 4.5;
-
-  doc.setFont("helvetica", "normal");
-  doc.setFontSize(8.5);
-  doc.setTextColor(...GRAY_500);
-  if (data.clientAddress) {
-    const addrLines = doc.splitTextToSize(data.clientAddress, 110);
-    doc.text(addrLines, PAGE_LEFT, currentY);
-    currentY += addrLines.length * 3.8;
-  }
-  const locality = [data.clientPostalCode, data.clientCity].filter(Boolean).join(" ").trim();
-  if (locality) { doc.text(locality, PAGE_LEFT, currentY); currentY += 3.8; }
-  const clientContact = [data.clientPhone, data.clientEmail].filter(Boolean).join("  ·  ");
-  if (clientContact) { doc.text(clientContact, PAGE_LEFT, currentY); currentY += 3.8; }
-  currentY += 6;
 
   // ═══════════════════════════════════════════
   // APPAREIL — brand+model + serial + extras
