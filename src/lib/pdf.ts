@@ -195,6 +195,25 @@ function drawLine(doc: jsPDF, y: number, color = GRAY_200) {
   doc.line(PAGE_LEFT, y, PAGE_RIGHT, y);
 }
 
+// Legacy clients (pre-split) sometimes have everything stuffed into `address`
+// like "12 rue X, 75011 Paris, France". This extracts a clean { street, postal,
+// city } when separate columns are empty. Returns whatever's still missing.
+function splitLegacyAddress(
+  address: string | undefined,
+  postal: string | undefined,
+  city: string | undefined,
+): { street?: string; postal?: string; city?: string } {
+  if (postal && city) return { street: address, postal, city };
+  if (!address) return { street: address, postal, city };
+  const m = address.match(/^(.*?)[,\s]+(\d{5})\s+([^,]+?)(?:\s*,.*)?$/);
+  if (!m) return { street: address, postal, city };
+  return {
+    street: m[1].trim().replace(/[,\s]+$/, "") || undefined,
+    postal: postal || m[2],
+    city: city || m[3].trim(),
+  };
+}
+
 export async function generatePDF(org: OrgInfo, data: DocData, options?: { preview?: boolean; base64?: boolean }): Promise<string | void> {
   const doc = new jsPDF();
   const isInvoice = data.type === "invoice";
@@ -253,12 +272,14 @@ export async function generatePDF(org: OrgInfo, data: DocData, options?: { previ
   doc.setFont("helvetica", "normal");
   doc.setFontSize(8.5);
   doc.setTextColor(...GRAY_500);
-  if (data.clientAddress) {
-    const addrLines = doc.splitTextToSize(data.clientAddress, colW);
+  // Extract locality from legacy `address` if separate columns are empty
+  const addr = splitLegacyAddress(data.clientAddress, data.clientPostalCode, data.clientCity);
+  if (addr.street) {
+    const addrLines = doc.splitTextToSize(addr.street, colW);
     doc.text(addrLines, PAGE_LEFT, leftY);
     leftY += addrLines.length * 3.8;
   }
-  const locality = [data.clientPostalCode, data.clientCity].filter(Boolean).join(" ").trim();
+  const locality = [addr.postal, addr.city].filter(Boolean).join(" ").trim();
   if (locality) { doc.text(locality, PAGE_LEFT, leftY); leftY += 3.8; }
   const clientContact = [data.clientPhone, data.clientEmail].filter(Boolean).join("  ·  ");
   if (clientContact) { doc.text(clientContact, PAGE_LEFT, leftY); leftY += 3.8; }
@@ -753,12 +774,13 @@ export async function generateIntakePDF(org: OrgInfo, data: IntakePdfData, optio
   doc.setFont("helvetica", "normal");
   doc.setFontSize(8.5);
   doc.setTextColor(...GRAY_500);
-  if (data.clientAddress) {
-    const addrLines = doc.splitTextToSize(data.clientAddress, colW);
+  const addr = splitLegacyAddress(data.clientAddress, data.clientPostalCode, data.clientCity);
+  if (addr.street) {
+    const addrLines = doc.splitTextToSize(addr.street, colW);
     doc.text(addrLines, PAGE_LEFT, leftY);
     leftY += addrLines.length * 3.8;
   }
-  const locality = [data.clientPostalCode, data.clientCity].filter(Boolean).join(" ").trim();
+  const locality = [addr.postal, addr.city].filter(Boolean).join(" ").trim();
   if (locality) { doc.text(locality, PAGE_LEFT, leftY); leftY += 3.8; }
   const clientContact = [data.clientPhone, data.clientEmail].filter(Boolean).join("  ·  ");
   if (clientContact) { doc.text(clientContact, PAGE_LEFT, leftY); leftY += 3.8; }
