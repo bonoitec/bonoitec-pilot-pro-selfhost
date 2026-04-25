@@ -1,6 +1,7 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { useToast } from "@/hooks/use-toast";
 import { Download, X, Loader2, Printer } from "lucide-react";
 
 interface Props {
@@ -13,12 +14,41 @@ interface Props {
 }
 
 export function PDFPreviewDialog({ open, onOpenChange, pdfUrl, loading, reference, onDownload }: Props) {
+  const iframeRef = useRef<HTMLIFrameElement>(null);
+  const { toast } = useToast();
+
   // Cleanup blob URL on unmount
   useEffect(() => {
     return () => {
       if (pdfUrl) URL.revokeObjectURL(pdfUrl);
     };
   }, [pdfUrl]);
+
+  const handlePrint = () => {
+    if (!pdfUrl) return;
+    const win = iframeRef.current?.contentWindow;
+    if (win) {
+      try {
+        win.focus();
+        win.print();
+        return;
+      } catch {
+        // Fall through to fallback
+      }
+    }
+    // Fallback: open in a new tab with a same-origin loader page; the user prints from there.
+    const a = document.createElement("a");
+    a.href = pdfUrl;
+    a.target = "_blank";
+    a.rel = "noopener";
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    toast({
+      title: "Impression",
+      description: "Utilisez ⌘/Ctrl+P dans le nouvel onglet pour imprimer le PDF.",
+    });
+  };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -42,6 +72,7 @@ export function PDFPreviewDialog({ open, onOpenChange, pdfUrl, loading, referenc
             </div>
           ) : pdfUrl ? (
             <iframe
+              ref={iframeRef}
               src={pdfUrl}
               className="w-full h-full border-0"
               title={`Aperçu ${reference}`}
@@ -59,15 +90,7 @@ export function PDFPreviewDialog({ open, onOpenChange, pdfUrl, loading, referenc
           </Button>
           <Button
             variant="outline"
-            onClick={() => {
-              if (!pdfUrl) return;
-              const printWindow = window.open(pdfUrl);
-              if (printWindow) {
-                printWindow.addEventListener("load", () => {
-                  printWindow.print();
-                });
-              }
-            }}
+            onClick={handlePrint}
             disabled={!pdfUrl}
           >
             <Printer className="h-4 w-4 mr-2" />Imprimer
