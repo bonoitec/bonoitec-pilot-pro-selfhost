@@ -26,28 +26,61 @@ export function PDFPreviewDialog({ open, onOpenChange, pdfUrl, loading, referenc
 
   const handlePrint = () => {
     if (!pdfUrl) return;
-    const win = iframeRef.current?.contentWindow;
-    if (win) {
+
+    // 1. Try the visible preview iframe first.
+    const visible = iframeRef.current?.contentWindow;
+    if (visible) {
       try {
-        win.focus();
-        win.print();
+        visible.focus();
+        visible.print();
         return;
-      } catch {
-        // Fall through to fallback
-      }
+      } catch { /* fall through */ }
     }
-    // Fallback: open in a new tab with a same-origin loader page; the user prints from there.
-    const a = document.createElement("a");
-    a.href = pdfUrl;
-    a.target = "_blank";
-    a.rel = "noopener";
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-    toast({
-      title: "Impression",
-      description: "Utilisez ⌘/Ctrl+P dans le nouvel onglet pour imprimer le PDF.",
-    });
+
+    // 2. Fallback: a HIDDEN iframe attached to document.body. This avoids
+    // window.open / new-tab navigation entirely (those routes were getting
+    // blocked by host security pages — "Contact site owner") and prints the
+    // blob: URL directly through the browser's native PDF dialog.
+    const hidden = document.createElement("iframe");
+    hidden.setAttribute("aria-hidden", "true");
+    hidden.style.position = "fixed";
+    hidden.style.right = "0";
+    hidden.style.bottom = "0";
+    hidden.style.width = "1px";
+    hidden.style.height = "1px";
+    hidden.style.opacity = "0";
+    hidden.style.border = "0";
+    hidden.style.pointerEvents = "none";
+    hidden.src = pdfUrl;
+
+    let printed = false;
+    hidden.onload = () => {
+      // Some browsers need a tick for the PDF viewer to mount.
+      setTimeout(() => {
+        try {
+          hidden.contentWindow?.focus();
+          hidden.contentWindow?.print();
+          printed = true;
+        } catch { /* fall through to download */ }
+        // Clean up after the user has had time to interact with the print dialog.
+        setTimeout(() => hidden.remove(), 60_000);
+      }, 200);
+    };
+
+    // 3. If even the hidden iframe fails to mount or print within 1.5s,
+    // fall back to the download path so the user always gets the PDF.
+    setTimeout(() => {
+      if (!printed) {
+        hidden.remove();
+        onDownload();
+        toast({
+          title: "Impression non disponible",
+          description: "Le PDF a été téléchargé. Ouvrez-le pour imprimer (Ctrl/⌘ + P).",
+        });
+      }
+    }, 1500);
+
+    document.body.appendChild(hidden);
   };
 
   return (
