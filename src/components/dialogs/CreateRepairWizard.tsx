@@ -356,7 +356,7 @@ export function CreateRepairWizard({ open, onOpenChange }: Props) {
           return parts.length > 0 ? parts.join("\n\n") : null;
         })(),
         diagnostic: null,
-      } as any).select("*, clients(name, phone, email, address), devices(brand, model)").single();
+      } as any).select("*, clients(name, first_name, last_name, phone, email, address, postal_code, city), devices(brand, model)").single();
       if (rErr) throw rErr;
       return repair;
     },
@@ -446,7 +446,11 @@ export function CreateRepairWizard({ open, onOpenChange }: Props) {
         reference: createdRepair.reference,
         date: new Date().toLocaleDateString("fr-FR"),
         clientName: createdRepair.clients?.name,
+        clientFirstName: createdRepair.clients?.first_name ?? undefined,
+        clientLastName: createdRepair.clients?.last_name ?? undefined,
         clientAddress: createdRepair.clients?.address,
+        clientPostalCode: createdRepair.clients?.postal_code ?? undefined,
+        clientCity: createdRepair.clients?.city ?? undefined,
         clientPhone: createdRepair.clients?.phone,
         clientEmail: createdRepair.clients?.email,
         issue: createdRepair.issue,

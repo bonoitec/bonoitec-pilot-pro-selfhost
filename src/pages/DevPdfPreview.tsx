@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { generatePDF } from "@/lib/pdf";
+import { generatePDF, generateIntakePDF } from "@/lib/pdf";
 import atelierLogo from "@/assets/brand-logo-light@2x.png";
 
 // ─── Mock org (what lives on the facture/devis header) ──────────────────
@@ -113,9 +113,21 @@ const mockQuote = {
   },
 };
 
+const mockIntakeDoc = {
+  reference: "REP-20260424-AB12",
+  date: "24/04/2026",
+  ...sharedClient,
+  issue: "Chute sur sol dur — vitre éclatée en haut à droite, tactile partiellement fonctionnel. Le client signale aussi un Face ID HS depuis l'incident et un haut-parleur faible.",
+  repairType: "Remplacement écran + diagnostic Face ID",
+  estimatedPrice: 189,
+  intake: mockIntake,
+  trackingCode: "ABCD1234",
+};
+
 export default function DevPdfPreview() {
   const [invoiceUrl, setInvoiceUrl] = useState<string | null>(null);
   const [quoteUrl, setQuoteUrl] = useState<string | null>(null);
+  const [intakeUrl, setIntakeUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -123,12 +135,14 @@ export default function DevPdfPreview() {
     setLoading(true);
     setError(null);
     try {
-      const [inv, qu] = await Promise.all([
+      const [inv, qu, intake] = await Promise.all([
         generatePDF(mockOrg, mockInvoice, { preview: true }) as Promise<string>,
         generatePDF(mockOrg, mockQuote, { preview: true }) as Promise<string>,
+        generateIntakePDF(mockOrg, mockIntakeDoc, { preview: true }) as Promise<string>,
       ]);
       setInvoiceUrl(inv);
       setQuoteUrl(qu);
+      setIntakeUrl(intake);
     } catch (e: any) {
       setError(e?.message || "PDF generation failed");
     } finally {
@@ -141,6 +155,7 @@ export default function DevPdfPreview() {
     return () => {
       if (invoiceUrl) URL.revokeObjectURL(invoiceUrl);
       if (quoteUrl) URL.revokeObjectURL(quoteUrl);
+      if (intakeUrl) URL.revokeObjectURL(intakeUrl);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -215,6 +230,27 @@ export default function DevPdfPreview() {
             </div>
           </section>
         </div>
+
+        <section className="mt-4 bg-white rounded-lg border border-slate-200 overflow-hidden shadow-sm">
+          <div className="px-4 py-2 border-b border-slate-200 bg-slate-50">
+            <h2 className="text-sm font-semibold text-slate-800">
+              PRISE EN CHARGE — {mockIntakeDoc.reference}
+            </h2>
+          </div>
+          <div className="h-[110vh] bg-slate-50">
+            {loading || !intakeUrl ? (
+              <div className="flex items-center justify-center h-full text-slate-400 text-sm">
+                Génération…
+              </div>
+            ) : (
+              <iframe
+                src={intakeUrl}
+                title="Prise en charge preview"
+                className="w-full h-full border-0"
+              />
+            )}
+          </div>
+        </section>
       </main>
     </div>
   );

@@ -2,6 +2,7 @@ import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import QRCode from "qrcode";
 import { getSignedFileUrl } from "@/lib/storage";
+import bonoitecPilotLogo from "@/assets/brand-logo-light@2x.png";
 
 interface OrgInfo {
   name: string;
@@ -210,10 +211,9 @@ export async function generatePDF(org: OrgInfo, data: DocData, options?: { previ
   const headerTop = 18;
   let leftY = headerTop;
 
-  // Logo top-left
-  if (org.logo_url) {
-    const resolvedLogoUrl = await getSignedFileUrl(org.logo_url);
-    const logoImg = await loadImageWithDimensions(resolvedLogoUrl);
+  // Logo top-left — BonoitecPilot product wordmark (always, not the atelier's logo)
+  {
+    const logoImg = await loadImageWithDimensions(bonoitecPilotLogo);
     if (logoImg) {
       const maxW = 56, maxH = 30;
       const ratio = Math.min(maxW / logoImg.width, maxH / logoImg.height);
@@ -659,14 +659,18 @@ export async function generatePDF(org: OrgInfo, data: DocData, options?: { previ
 }
 
 // ═══════════════════════════════════════════
-// PRISE EN CHARGE PDF — Professional intake form
+// PRISE EN CHARGE PDF — same brand language as facture/devis
 // ═══════════════════════════════════════════
 
 interface IntakePdfData {
   reference: string;
   date: string;
   clientName?: string;
+  clientFirstName?: string;
+  clientLastName?: string;
   clientAddress?: string;
+  clientPostalCode?: string;
+  clientCity?: string;
   clientPhone?: string;
   clientEmail?: string;
   issue: string;
@@ -676,28 +680,17 @@ interface IntakePdfData {
   trackingCode?: string;
 }
 
-// Section title helper
-function drawSectionTitle(doc: jsPDF, text: string, y: number): number {
-  if (y > PAGE_BOTTOM - 10) { doc.addPage(); doc.setFillColor(...PRIMARY); doc.rect(0, 0, 210, 4, "F"); y = 14; }
-  doc.setFillColor(...PRIMARY);
-  doc.roundedRect(PAGE_LEFT, y, CONTENT_WIDTH, 7, 1.5, 1.5, "F");
-  doc.setFontSize(8);
+// Label-with-violet-underline section header (matches facture/devis style)
+function drawLabel(doc: jsPDF, text: string, y: number): number {
+  doc.setFontSize(6.5);
   doc.setFont("helvetica", "bold");
-  doc.setTextColor(...WHITE);
-  doc.text(text, PAGE_LEFT + 5, y + 5);
-  return y + 11;
-}
-
-// Info row helper for key-value display
-function drawInfoRow(doc: jsPDF, label: string, value: string, x: number, y: number, labelW: number = 32): number {
-  doc.setFontSize(7.5);
-  doc.setFont("helvetica", "bold");
-  doc.setTextColor(...GRAY_500);
-  doc.text(label, x, y);
-  doc.setFont("helvetica", "normal");
-  doc.setTextColor(...GRAY_700);
-  doc.text(value || "—", x + labelW, y);
-  return y + 4.2;
+  doc.setTextColor(...GRAY_400);
+  doc.text(text, PAGE_LEFT, y);
+  doc.setDrawColor(...PRIMARY);
+  doc.setLineWidth(0.5);
+  const w = doc.getTextWidth(text) + 2;
+  doc.line(PAGE_LEFT, y + 1.5, PAGE_LEFT + w, y + 1.5);
+  return y + 6;
 }
 
 export async function generateIntakePDF(org: OrgInfo, data: IntakePdfData, options?: { preview?: boolean; base64?: boolean }): Promise<string | void> {
@@ -705,377 +698,441 @@ export async function generateIntakePDF(org: OrgInfo, data: IntakePdfData, optio
   const fullAddress = [org.address, [org.postal_code, org.city].filter(Boolean).join(" ")].filter(Boolean).join(", ");
   const shopName = org.name;
   const intake = data.intake;
+  const fmtEur = (n: number) => `${n.toFixed(2).replace(".", ",")} €`;
 
-  const newPage = () => { doc.addPage(); doc.setFillColor(...PRIMARY); doc.rect(0, 0, 210, 5, "F"); };
-  const checkPage = (needed: number, cy: number): number => { if (cy + needed > PAGE_BOTTOM) { newPage(); return 14; } return cy; };
+  // ═══════════════════════════════════════════
+  // HEADER — BonoitecPilot logo + atelier info stacked left · doc title + pill top right
+  // (matches facture/devis exactly)
+  // ═══════════════════════════════════════════
 
-  // ── HEADER ──
-  doc.setFillColor(...PRIMARY);
-  doc.rect(0, 0, 210, 5, "F");
+  const headerTop = 18;
+  let leftY = headerTop;
 
-  let headerY = 14;
-  if (org.logo_url) {
-    const resolvedLogoUrl = await getSignedFileUrl(org.logo_url);
-    const logoImg = await loadImageWithDimensions(resolvedLogoUrl);
+  // BonoitecPilot product wordmark — same on every PDF, not the atelier logo
+  {
+    const logoImg = await loadImageWithDimensions(bonoitecPilotLogo);
     if (logoImg) {
-      const maxW = 34, maxH = 24;
+      const maxW = 56, maxH = 30;
       const ratio = Math.min(maxW / logoImg.width, maxH / logoImg.height);
-      try { doc.addImage(logoImg.data, detectImageFormat(logoImg.data), PAGE_LEFT, headerY, logoImg.width * ratio, logoImg.height * ratio); } catch {}
-    }
-  }
-
-  doc.setFontSize(13); doc.setFont("helvetica", "bold"); doc.setTextColor(...GRAY_700);
-  doc.text(org.name, PAGE_RIGHT, headerY, { align: "right" });
-  doc.setFontSize(7); doc.setFont("helvetica", "normal"); doc.setTextColor(...GRAY_500);
-  let infoY = headerY + 5;
-  if (org.legal_status) { doc.text(org.legal_status, PAGE_RIGHT, infoY, { align: "right" }); infoY += 3; }
-  if (fullAddress) { doc.text(fullAddress, PAGE_RIGHT, infoY, { align: "right" }); infoY += 3; }
-  if (org.phone) { doc.text(`Tél : ${org.phone}`, PAGE_RIGHT, infoY, { align: "right" }); infoY += 3; }
-  if (org.email) { doc.text(org.email, PAGE_RIGHT, infoY, { align: "right" }); infoY += 3; }
-  if (org.website) { doc.text(org.website, PAGE_RIGHT, infoY, { align: "right" }); infoY += 3; }
-  const legalParts: string[] = [];
-  if (org.siret) legalParts.push(`SIRET : ${org.siret}`);
-  if (org.vat_number) legalParts.push(`TVA : ${org.vat_number}`);
-  if (org.ape_code) legalParts.push(`APE : ${org.ape_code}`);
-  if (legalParts.length) { doc.text(legalParts.join("  •  "), PAGE_RIGHT, infoY, { align: "right" }); infoY += 3; }
-
-  // ── TITLE ──
-  let currentY = Math.max(infoY + 4, 46);
-  doc.setDrawColor(...PRIMARY); doc.setLineWidth(0.5);
-  doc.line(PAGE_LEFT, currentY, PAGE_RIGHT, currentY);
-  currentY += 4;
-
-  const title = "PRISE EN CHARGE";
-  doc.setFillColor(...PRIMARY);
-  const titleW = doc.getStringUnitWidth(title) * 14 / doc.internal.scaleFactor + 16;
-  doc.roundedRect(PAGE_LEFT, currentY, titleW, 9, 2, 2, "F");
-  doc.setFontSize(13); doc.setFont("helvetica", "bold"); doc.setTextColor(...WHITE);
-  doc.text(title, PAGE_LEFT + titleW / 2, currentY + 6.5, { align: "center" });
-
-  doc.setTextColor(...GRAY_700); doc.setFontSize(9); doc.setFont("helvetica", "bold");
-  doc.text(`N° ${data.reference}`, PAGE_RIGHT, currentY + 3.5, { align: "right" });
-  doc.setTextColor(...GRAY_500); doc.setFontSize(8); doc.setFont("helvetica", "normal");
-  doc.text(`Date : ${data.date}`, PAGE_RIGHT, currentY + 8, { align: "right" });
-  currentY += 14;
-
-  // ── CLIENT + APPAREIL side by side ──
-  const hasDevice = intake && (intake.deviceBrand || intake.deviceModel);
-  const colW = (CONTENT_WIDTH - 6) / 2;
-  const cardH = 26;
-
-  // Client card
-  doc.setFillColor(...GRAY_50);
-  doc.roundedRect(PAGE_LEFT, currentY, hasDevice ? colW : CONTENT_WIDTH, cardH, 1.5, 1.5, "F");
-  doc.setFontSize(7); doc.setFont("helvetica", "bold"); doc.setTextColor(...PRIMARY);
-  doc.text("CLIENT", PAGE_LEFT + 4, currentY + 4.5);
-  doc.setTextColor(...GRAY_700); doc.setFontSize(8.5); doc.setFont("helvetica", "bold");
-  doc.text(data.clientName || "—", PAGE_LEFT + 4, currentY + 10);
-  doc.setFont("helvetica", "normal"); doc.setFontSize(7); doc.setTextColor(...GRAY_500);
-  let clY = currentY + 14;
-  if (data.clientAddress) { doc.text(data.clientAddress, PAGE_LEFT + 4, clY); clY += 3.2; }
-  if (data.clientPhone) { doc.text(`Tél : ${data.clientPhone}`, PAGE_LEFT + 4, clY); clY += 3.2; }
-  if (data.clientEmail) { doc.text(data.clientEmail, PAGE_LEFT + 4, clY); }
-
-  // Device card
-  if (hasDevice) {
-    const devX = PAGE_LEFT + colW + 6;
-    doc.setFillColor(...PRIMARY_LIGHT);
-    doc.roundedRect(devX, currentY, colW, cardH, 1.5, 1.5, "F");
-    doc.setFontSize(7); doc.setFont("helvetica", "bold"); doc.setTextColor(...PRIMARY);
-    doc.text("APPAREIL", devX + 4, currentY + 4.5);
-    doc.setTextColor(...GRAY_700); doc.setFontSize(8.5); doc.setFont("helvetica", "bold");
-    doc.text([intake!.deviceBrand, intake!.deviceModel].filter(Boolean).join(" "), devX + 4, currentY + 10);
-    doc.setFont("helvetica", "normal"); doc.setFontSize(7); doc.setTextColor(...GRAY_500);
-    let devY2 = currentY + 14;
-    if (intake!.deviceCategory) { doc.text(`Type : ${intake!.deviceCategory}`, devX + 4, devY2); devY2 += 3.2; }
-    if (intake!.serialNumber) { doc.text(`IMEI / Série : ${intake!.serialNumber}`, devX + 4, devY2); devY2 += 3.2; }
-
-    // Extra device info below the card if present
-    const extraLines: string[] = [];
-    if (intake!.accessories) extraLines.push(`Accessoires : ${intake!.accessories}`);
-    if (intake!.password) {
-      const pwdDisplay = intake!.password.startsWith("pattern:")
-        ? `Schéma (${intake!.password.slice(8).split(",").length} points)`
-        : intake!.password;
-      extraLines.push(`Code / MdP confié : ${pwdDisplay}`);
-    }
-    if (intake!.observations) extraLines.push(`Observations : ${intake!.observations}`);
-    if (extraLines.length > 0) {
-      // Extend card height dynamically
-      const extraH = extraLines.length * 3.5;
-      doc.setFillColor(...PRIMARY_LIGHT);
-      doc.roundedRect(devX, currentY + cardH, colW, extraH + 2, 0, 0, "F");
-      let ey = currentY + cardH + 2;
-      doc.setFontSize(6.5); doc.setFont("helvetica", "normal"); doc.setTextColor(...GRAY_500);
-      for (const line of extraLines) {
-        doc.text(line, devX + 4, ey); ey += 3.5;
+      const w = logoImg.width * ratio;
+      const h = logoImg.height * ratio;
+      try {
+        doc.addImage(logoImg.data, detectImageFormat(logoImg.data), PAGE_LEFT, leftY, w, h);
+        leftY += h + 5;
+      } catch (e) {
+        console.warn("Logo image could not be added to PDF:", e);
       }
     }
   }
 
-  const extraDeviceLines = intake?.accessories || intake?.password || intake?.observations ? [intake?.accessories, intake?.password, intake?.observations].filter(Boolean).length : 0;
-  currentY += cardH + (extraDeviceLines > 0 ? extraDeviceLines * 3.5 + 2 : 0) + 4;
+  // Atelier info stacked beneath the logo
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(9.5);
+  doc.setTextColor(...GRAY_700);
+  const nameLine = org.legal_status ? `${shopName} — ${org.legal_status}` : shopName;
+  doc.text(nameLine, PAGE_LEFT, leftY);
+  leftY += 4;
 
-  // ── PANNE SIGNALÉE ──
-  currentY = drawSectionTitle(doc, "PANNE SIGNALÉE", currentY);
-  const issueLines = doc.splitTextToSize(data.issue || "—", CONTENT_WIDTH - 10);
-  doc.setFontSize(7.5); doc.setFont("helvetica", "normal"); doc.setTextColor(...GRAY_700);
-  doc.text(issueLines, PAGE_LEFT + 4, currentY);
-  currentY += issueLines.length * 3.5 + 2;
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(8);
+  doc.setTextColor(...GRAY_500);
+  if (fullAddress) {
+    const addrLines = doc.splitTextToSize(fullAddress, 90);
+    doc.text(addrLines, PAGE_LEFT, leftY);
+    leftY += addrLines.length * 3.6;
+  }
+  const contactLine = [org.phone, org.email].filter(Boolean).join("  ·  ");
+  if (contactLine) { doc.text(contactLine, PAGE_LEFT, leftY); leftY += 3.6; }
+  const legalBits = [
+    org.siret ? `SIRET ${org.siret}` : null,
+    org.vat_number ? `TVA ${org.vat_number}` : null,
+    org.ape_code ? `APE ${org.ape_code}` : null,
+  ].filter(Boolean);
+  if (legalBits.length) { doc.text(legalBits.join("  ·  "), PAGE_LEFT, leftY); leftY += 3.6; }
+
+  // Right column: title + N° + date + status pill
+  const rightX = PAGE_RIGHT;
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(26);
+  doc.setTextColor(...PRIMARY);
+  doc.text("Prise en charge", rightX, headerTop + 8, { align: "right" });
+
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(10);
+  doc.setTextColor(...GRAY_700);
+  doc.text(`N° ${data.reference}`, rightX, headerTop + 15, { align: "right" });
+
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(8.5);
+  doc.setTextColor(...GRAY_500);
+  doc.text(`Déposé le ${data.date}`, rightX, headerTop + 20, { align: "right" });
+
+  // Status pill
+  const statusText = "DÉPOSÉ EN ATELIER";
+  doc.setFontSize(7);
+  doc.setFont("helvetica", "bold");
+  const pillW = doc.getTextWidth(statusText) + 10;
+  const pillH = 6.5;
+  doc.setFillColor(...PRIMARY_LIGHT);
+  doc.roundedRect(rightX - pillW, headerTop + 23, pillW, pillH, 3.25, 3.25, "F");
+  doc.setTextColor(...PRIMARY);
+  doc.text(statusText, rightX - pillW / 2, headerTop + 27.3, { align: "center" });
+
+  const rightY = headerTop + 32;
+
+  let currentY = Math.max(leftY, rightY) + 4;
+  doc.setDrawColor(...GRAY_200);
+  doc.setLineWidth(0.3);
+  doc.line(PAGE_LEFT, currentY, PAGE_RIGHT, currentY);
+  currentY += 8;
+
+  // ═══════════════════════════════════════════
+  // CLIENT (DÉPOSÉ PAR) — single-column, address + locality + contact
+  // ═══════════════════════════════════════════
+
+  currentY = drawLabel(doc, "DÉPOSÉ PAR", currentY);
+
+  const fullClientName =
+    [data.clientFirstName, data.clientLastName].filter(Boolean).join(" ") ||
+    data.clientName ||
+    "—";
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(10);
+  doc.setTextColor(...GRAY_700);
+  doc.text(fullClientName, PAGE_LEFT, currentY);
+  currentY += 4.5;
+
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(8.5);
+  doc.setTextColor(...GRAY_500);
+  if (data.clientAddress) {
+    const addrLines = doc.splitTextToSize(data.clientAddress, 110);
+    doc.text(addrLines, PAGE_LEFT, currentY);
+    currentY += addrLines.length * 3.8;
+  }
+  const locality = [data.clientPostalCode, data.clientCity].filter(Boolean).join(" ").trim();
+  if (locality) { doc.text(locality, PAGE_LEFT, currentY); currentY += 3.8; }
+  const clientContact = [data.clientPhone, data.clientEmail].filter(Boolean).join("  ·  ");
+  if (clientContact) { doc.text(clientContact, PAGE_LEFT, currentY); currentY += 3.8; }
+  currentY += 6;
+
+  // ═══════════════════════════════════════════
+  // APPAREIL — brand+model + serial + extras
+  // ═══════════════════════════════════════════
+
+  if (intake && (intake.deviceBrand || intake.deviceModel)) {
+    currentY = drawLabel(doc, "APPAREIL", currentY);
+
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(10);
+    doc.setTextColor(...GRAY_700);
+    const deviceName = [intake.deviceBrand, intake.deviceModel].filter(Boolean).join(" ");
+    doc.text(deviceName || "—", PAGE_LEFT, currentY);
+    currentY += 4.5;
+
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(8.5);
+    doc.setTextColor(...GRAY_500);
+
+    const subline: string[] = [];
+    if (intake.deviceCategory) subline.push(intake.deviceCategory);
+    if (intake.serialNumber) subline.push(`IMEI / Série ${intake.serialNumber}`);
+    if (subline.length) { doc.text(subline.join("  ·  "), PAGE_LEFT, currentY); currentY += 3.8; }
+
+    if (intake.accessories) { doc.text(`Accessoires : ${intake.accessories}`, PAGE_LEFT, currentY); currentY += 3.8; }
+    if (intake.password) {
+      const pwdDisplay = intake.password.startsWith("pattern:")
+        ? `Schéma (${intake.password.slice(8).split(",").length} points)`
+        : intake.password;
+      doc.text(`Code / mot de passe confié : ${pwdDisplay}`, PAGE_LEFT, currentY); currentY += 3.8;
+    }
+    if (intake.observations) {
+      const obsLines = doc.splitTextToSize(`Observations : ${intake.observations}`, CONTENT_WIDTH);
+      doc.text(obsLines, PAGE_LEFT, currentY); currentY += obsLines.length * 3.8;
+    }
+    currentY += 6;
+  }
+
+  // ═══════════════════════════════════════════
+  // PANNE SIGNALÉE
+  // ═══════════════════════════════════════════
+
+  currentY = drawLabel(doc, "PANNE SIGNALÉE", currentY);
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(9);
+  doc.setTextColor(...GRAY_700);
+  const issueLines = doc.splitTextToSize(data.issue || "—", CONTENT_WIDTH);
+  doc.text(issueLines, PAGE_LEFT, currentY);
+  currentY += issueLines.length * 4;
   if (data.repairType) {
-    doc.setFontSize(6.5); doc.setFont("helvetica", "italic"); doc.setTextColor(...GRAY_500);
-    doc.text(`Type : ${data.repairType}`, PAGE_LEFT + 4, currentY);
+    doc.setFontSize(7.5);
+    doc.setFont("helvetica", "italic");
+    doc.setTextColor(...GRAY_500);
+    doc.text(`Type d'intervention : ${data.repairType}`, PAGE_LEFT, currentY);
     currentY += 4;
   }
-  currentY += 2;
+  currentY += 6;
 
-  // ── ÉTAT DE L'APPAREIL — only filled data ──
+  // ═══════════════════════════════════════════
+  // ÉTAT DE L'APPAREIL — vector stars in compact rows
+  // ═══════════════════════════════════════════
+
   const hasConditions = intake && (intake.screenCondition || intake.frameCondition || intake.backCondition);
-  const hasChecklist = intake?.checklist && intake.checklist.length > 0;
-
-  if (hasConditions || hasChecklist) {
-    currentY = drawSectionTitle(doc, "ÉTAT DE L'APPAREIL", currentY);
-
-    // Ratings drawn with vector stars via didDrawCell
+  if (hasConditions) {
+    currentY = drawLabel(doc, "ÉTAT DE L'APPAREIL", currentY);
     type ConditionEntry = { label: string; rating: number };
-    const conditionEntries: ConditionEntry[] = [];
-    if (intake?.screenCondition) conditionEntries.push({ label: "Écran", rating: intake.screenCondition });
-    if (intake?.frameCondition) conditionEntries.push({ label: "Châssis / Contours", rating: intake.frameCondition });
-    if (intake?.backCondition) conditionEntries.push({ label: "Vitre arrière", rating: intake.backCondition });
+    const entries: ConditionEntry[] = [];
+    if (intake?.screenCondition) entries.push({ label: "Écran", rating: intake.screenCondition });
+    if (intake?.frameCondition) entries.push({ label: "Châssis / Contours", rating: intake.frameCondition });
+    if (intake?.backCondition) entries.push({ label: "Vitre arrière", rating: intake.backCondition });
 
-    const ratingLabel = (val: number): string => {
-      if (val >= 5) return "Excellent";
-      if (val >= 4) return "Bon";
-      if (val >= 3) return "Moyen";
-      if (val >= 2) return "Usé";
-      return "Mauvais";
-    };
+    const rateText = (v: number) =>
+      v >= 5 ? "Excellent" : v >= 4 ? "Bon" : v >= 3 ? "Moyen" : v >= 2 ? "Usé" : "Mauvais";
 
-    // Checklist items as simple rows
-    const checklistRows: [string, string][] = [];
-    if (hasChecklist) {
-      for (const item of intake!.checklist!) {
-        const lower = item.toLowerCase();
-        if (lower.includes("écran") || lower.includes("châssis") || lower.includes("vitre")) continue;
-        checklistRows.push([item, "Vérifié"]);
+    for (const e of entries) {
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(8.5);
+      doc.setTextColor(...GRAY_700);
+      doc.text(e.label, PAGE_LEFT, currentY);
+
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(8);
+      doc.setTextColor(...GRAY_500);
+      doc.text(rateText(e.rating), PAGE_LEFT + 50, currentY);
+
+      drawStars(doc, PAGE_LEFT + 80, currentY, e.rating);
+
+      doc.setFontSize(7.5);
+      doc.setTextColor(...GRAY_400);
+      doc.text(`(${e.rating}/5)`, PAGE_LEFT + 110, currentY);
+
+      currentY += 5;
+    }
+    currentY += 4;
+  }
+
+  // ═══════════════════════════════════════════
+  // VÉRIFICATIONS — checklist (skip items that overlap with conditions)
+  // ═══════════════════════════════════════════
+
+  if (intake?.checklist && intake.checklist.length > 0) {
+    const visibleChecks = intake.checklist.filter(item => {
+      const lower = item.toLowerCase();
+      return !lower.includes("écran") && !lower.includes("châssis") && !lower.includes("vitre arrière");
+    });
+    if (visibleChecks.length > 0) {
+      currentY = drawLabel(doc, "VÉRIFICATIONS", currentY);
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(8);
+      doc.setTextColor(...GRAY_700);
+
+      // Two-column grid
+      const colWidth = (CONTENT_WIDTH - 8) / 2;
+      let col = 0;
+      let lineY = currentY;
+      for (const item of visibleChecks) {
+        const x = PAGE_LEFT + col * (colWidth + 8);
+        // Green dot
+        doc.setFillColor(34, 197, 94);
+        doc.circle(x + 1.4, lineY - 1.4, 1.3, "F");
+        // Label
+        doc.setTextColor(...GRAY_700);
+        const itemLines = doc.splitTextToSize(item, colWidth - 6);
+        doc.text(itemLines[0], x + 5, lineY);
+        col = 1 - col;
+        if (col === 0) lineY += 4.5;
       }
-    }
-
-    // Build combined body: condition rows use placeholder text, stars drawn in didDrawCell
-    const bodyRows: [string, string][] = [
-      ...conditionEntries.map(e => [e.label, ratingLabel(e.rating)] as [string, string]),
-      ...checklistRows,
-    ];
-
-    if (bodyRows.length > 0) {
-      const condCount = conditionEntries.length;
-      autoTable(doc, {
-        startY: currentY,
-        head: [["Point de contrôle", "État constaté"]],
-        body: bodyRows,
-        styles: {
-          fontSize: 7.5,
-          cellPadding: { top: 3, bottom: 3, left: 5, right: 5 },
-          textColor: [...GRAY_700],
-          lineColor: [...GRAY_200],
-          lineWidth: 0.15,
-        },
-        headStyles: {
-          fillColor: [...PRIMARY],
-          textColor: [...WHITE],
-          fontStyle: "bold",
-          fontSize: 7,
-          cellPadding: { top: 3, bottom: 3, left: 5, right: 5 },
-        },
-        alternateRowStyles: { fillColor: [...GRAY_50] },
-        columnStyles: {
-          0: { cellWidth: 55, fontStyle: "bold" },
-          1: { cellWidth: CONTENT_WIDTH - 55 },
-        },
-        theme: "plain",
-        margin: { left: PAGE_LEFT, right: 20, bottom: FOOTER_ZONE + 5 },
-        tableLineColor: [...GRAY_200],
-        tableLineWidth: 0.15,
-        didDrawPage: () => { doc.setFillColor(...PRIMARY); doc.rect(0, 0, 210, 5, "F"); },
-        didDrawCell: (cellData: any) => {
-          // Draw vector stars for condition rows (column 1, body rows within condCount)
-          if (cellData.section === "body" && cellData.column.index === 1 && cellData.row.index < condCount) {
-            const entry = conditionEntries[cellData.row.index];
-            if (entry) {
-              // Draw stars after the text label
-              const textW = doc.getTextWidth(ratingLabel(entry.rating) + "  ");
-              const starX = cellData.cell.x + 5 + textW;
-              const starY = cellData.cell.y + cellData.cell.height / 2 + 1;
-              drawStars(doc, starX, starY, entry.rating);
-            }
-          }
-          // Draw a check mark for checklist rows
-          if (cellData.section === "body" && cellData.column.index === 1 && cellData.row.index >= condCount) {
-            const cellX = cellData.cell.x + 5;
-            const cellY = cellData.cell.y + cellData.cell.height / 2;
-            doc.setFillColor(34, 197, 94); // green
-            doc.circle(cellX - 2.5, cellY - 0.5, 1.4, "F");
-          }
-        },
-      });
-      currentY = (doc as any).lastAutoTable.finalY + 4;
+      currentY = lineY + (col === 1 ? 4.5 : 0) + 4;
     }
   }
 
-  // ── ESTIMATION ──
+  // ═══════════════════════════════════════════
+  // ESTIMATION (right-aligned chip)
+  // ═══════════════════════════════════════════
+
   if (data.estimatedPrice) {
-    currentY = checkPage(12, currentY);
-    doc.setFillColor(...PRIMARY_LIGHT);
-    doc.roundedRect(PAGE_LEFT, currentY, CONTENT_WIDTH, 9, 1.5, 1.5, "F");
-    doc.setFontSize(9); doc.setFont("helvetica", "bold"); doc.setTextColor(...PRIMARY);
-    doc.text(`Prix estimé : ${data.estimatedPrice.toFixed(2)} €`, PAGE_LEFT + 5, currentY + 6.2);
-    currentY += 13;
+    currentY = drawLabel(doc, "ESTIMATION", currentY);
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(14);
+    doc.setTextColor(...PRIMARY);
+    doc.text(fmtEur(data.estimatedPrice), PAGE_LEFT, currentY + 1);
+    doc.setFont("helvetica", "italic");
+    doc.setFontSize(7.5);
+    doc.setTextColor(...GRAY_500);
+    doc.text("Prix indicatif — peut varier après diagnostic interne", PAGE_LEFT + 50, currentY + 1);
+    currentY += 8;
   }
 
-  // ── SIGNATURE ──
-  currentY = checkPage(35, currentY);
-  doc.setFontSize(7); doc.setFont("helvetica", "bold"); doc.setTextColor(...PRIMARY);
-  doc.text("SIGNATURE CLIENT", PAGE_LEFT, currentY);
-  currentY += 4;
+  // ═══════════════════════════════════════════
+  // SIGNATURE + QR DE SUIVI — side-by-side at bottom of page 1
+  // ═══════════════════════════════════════════
 
+  // Signature on the left
+  currentY = drawLabel(doc, "SIGNATURE CLIENT", currentY);
   if (intake?.signatureUrl) {
     const sigImg = await loadImage(intake.signatureUrl);
     if (sigImg) {
+      doc.setDrawColor(...GRAY_200);
+      doc.setLineWidth(0.3);
+      doc.roundedRect(PAGE_LEFT, currentY, 60, 22, 1.5, 1.5, "S");
+      try { doc.addImage(sigImg, detectImageFormat(sigImg), PAGE_LEFT + 1, currentY + 1, 58, 20); } catch {}
+    } else {
       doc.setDrawColor(...GRAY_200); doc.setLineWidth(0.3);
-      doc.roundedRect(PAGE_LEFT, currentY, 55, 22, 1, 1, "S");
-      try { doc.addImage(sigImg, detectImageFormat(sigImg), PAGE_LEFT + 1, currentY + 1, 53, 20); } catch {}
+      doc.roundedRect(PAGE_LEFT, currentY, 60, 22, 1.5, 1.5, "S");
     }
-    currentY += 24;
   } else {
     doc.setDrawColor(...GRAY_200); doc.setLineWidth(0.3);
-    doc.roundedRect(PAGE_LEFT, currentY, 55, 22, 1, 1, "S");
+    doc.roundedRect(PAGE_LEFT, currentY, 60, 22, 1.5, 1.5, "S");
     doc.setFontSize(6.5); doc.setFont("helvetica", "italic"); doc.setTextColor(...GRAY_400);
     doc.text("Signature du client", PAGE_LEFT + 5, currentY + 12);
-    currentY += 24;
   }
+  // Caption under sig
+  doc.setFont("helvetica", "italic");
+  doc.setFontSize(6.5);
+  doc.setTextColor(...GRAY_500);
+  doc.text(`Signé le ${data.date}`, PAGE_LEFT, currentY + 26);
+  doc.text("Le client reconnaît avoir lu et accepté les CGV (page 2).", PAGE_LEFT, currentY + 29);
 
-  doc.setFontSize(6.5); doc.setFont("helvetica", "italic"); doc.setTextColor(...GRAY_500);
-  doc.text(`Signé le : ${data.date}`, PAGE_LEFT, currentY);
-  currentY += 3.5;
-  doc.text("Le client reconnaît avoir lu et accepté les conditions générales ci-dessous.", PAGE_LEFT, currentY);
-  currentY += 6;
-
-  // ── QR CODE DE SUIVI ──
+  // QR de suivi on the right
   if (data.trackingCode) {
     const baseUrl = (import.meta.env.VITE_APP_URL as string | undefined) ?? window.location.origin;
     const trackingUrl = `${baseUrl}/repair/${data.trackingCode}`;
     try {
-      const qrDataUrl = await QRCode.toDataURL(trackingUrl, { width: 200, margin: 1, color: { dark: "#1a1a2e", light: "#ffffff" } });
-      const qrSize = 24;
-      const boxW = CONTENT_WIDTH;
-      const boxH = qrSize + 14;
-      // Place QR at bottom of page 1 — never overflow to page 2
-      doc.setDrawColor(...GRAY_200); doc.setFillColor(248, 250, 252); doc.setLineWidth(0.3);
-      doc.roundedRect(PAGE_LEFT, currentY, boxW, boxH, 1.5, 1.5, "FD");
-      doc.setFontSize(7); doc.setFont("helvetica", "bold"); doc.setTextColor(...PRIMARY);
-      doc.text("ACCÈS AU SUIVI EN LIGNE", PAGE_LEFT + 4, currentY + 5);
-      try { doc.addImage(qrDataUrl, "PNG", PAGE_LEFT + 4, currentY + 8, qrSize, qrSize); } catch {}
-      const textX = PAGE_LEFT + qrSize + 10;
-      doc.setFontSize(6.5); doc.setFont("helvetica", "normal"); doc.setTextColor(...GRAY_700);
-      doc.text("Scannez pour suivre votre réparation", textX, currentY + 14);
-      doc.setFontSize(6); doc.setFont("helvetica", "italic"); doc.setTextColor(...GRAY_500);
-      doc.text(`Code de suivi : ${data.trackingCode}`, textX, currentY + 19);
-      doc.setFontSize(5.5); doc.setTextColor(...GRAY_400);
-      doc.text(trackingUrl, textX, currentY + 24);
-      currentY += boxH + 4;
+      const qrDataUrl = await QRCode.toDataURL(trackingUrl, {
+        width: 200, margin: 0,
+        color: { dark: "#5B4BE9", light: "#FFFFFF" },
+      });
+      const qrSize = 22;
+      const qrX = PAGE_RIGHT - qrSize;
+      doc.addImage(qrDataUrl, "PNG", qrX, currentY, qrSize, qrSize);
+
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(7.5);
+      doc.setTextColor(...GRAY_700);
+      doc.text("Suivi en ligne", qrX - 4, currentY + 4, { align: "right" });
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(6.5);
+      doc.setTextColor(...GRAY_500);
+      doc.text("Scannez pour suivre", qrX - 4, currentY + 9, { align: "right" });
+      doc.text("votre réparation", qrX - 4, currentY + 12.5, { align: "right" });
+      doc.setFont("helvetica", "italic");
+      doc.setFontSize(6);
+      doc.setTextColor(...GRAY_400);
+      doc.text(`Code : ${data.trackingCode}`, qrX - 4, currentY + 17, { align: "right" });
     } catch (e) {
       console.error("QR code generation failed:", e);
     }
   }
 
-  // ── Force page 2 for CGV ──
+  // ═══════════════════════════════════════════
+  // PAGE 2 — CGV + photos
+  // ═══════════════════════════════════════════
+
   doc.addPage();
-  doc.setFillColor(...PRIMARY); doc.rect(0, 0, 210, 4, "F");
-  currentY = 14;
+  currentY = 18;
 
-  // ── CONDITIONS GÉNÉRALES ──
-  const lineH = 3.2;
-  const condMargin = PAGE_LEFT + 3;
+  // Subtle page-2 header: small wordmark "Prise en charge — N° ..."
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(9);
+  doc.setTextColor(...GRAY_500);
+  doc.text(`Prise en charge — N° ${data.reference}`, PAGE_LEFT, currentY);
+  doc.setTextColor(...GRAY_400);
+  doc.text(data.date, PAGE_RIGHT, currentY, { align: "right" });
+  currentY += 3;
+  doc.setDrawColor(...GRAY_200);
+  doc.setLineWidth(0.3);
+  doc.line(PAGE_LEFT, currentY, PAGE_RIGHT, currentY);
+  currentY += 8;
 
+  // Conditions
+  currentY = drawLabel(doc, "CONDITIONS GÉNÉRALES DE RÉPARATION", currentY);
+
+  const lineH = 3.6;
   function addCondBullet(text: string, y: number): number {
-    y = checkPage(8, y);
-    doc.setFontSize(6); doc.setFont("helvetica", "normal"); doc.setTextColor(...GRAY_700);
-    const wrapped = doc.splitTextToSize(`• ${text}`, CONTENT_WIDTH - 6);
-    doc.text(wrapped, condMargin, y);
-    return y + wrapped.length * lineH + 0.8;
-  }
-
-  function addCondParagraph(text: string, y: number): number {
-    y = checkPage(8, y);
-    doc.setFontSize(6); doc.setFont("helvetica", "normal"); doc.setTextColor(...GRAY_700);
-    const wrapped = doc.splitTextToSize(text, CONTENT_WIDTH - 6);
-    doc.text(wrapped, condMargin, y);
+    if (y > 270) { doc.addPage(); y = 18; }
+    doc.setFontSize(7); doc.setFont("helvetica", "normal"); doc.setTextColor(...GRAY_700);
+    const wrapped = doc.splitTextToSize(`•  ${text}`, CONTENT_WIDTH - 4);
+    doc.text(wrapped, PAGE_LEFT + 2, y);
     return y + wrapped.length * lineH + 1;
   }
-
-  // Section title inline (compact)
-  currentY = checkPage(10, currentY);
-  doc.setFontSize(7); doc.setFont("helvetica", "bold"); doc.setTextColor(...PRIMARY);
-  doc.text("CONDITIONS GÉNÉRALES DE RÉPARATION", PAGE_LEFT, currentY);
-  currentY += 4;
+  function addCondPara(text: string, y: number): number {
+    if (y > 270) { doc.addPage(); y = 18; }
+    doc.setFontSize(7); doc.setFont("helvetica", "normal"); doc.setTextColor(...GRAY_700);
+    const wrapped = doc.splitTextToSize(text, CONTENT_WIDTH);
+    doc.text(wrapped, PAGE_LEFT, y);
+    return y + wrapped.length * lineH + 1.5;
+  }
 
   currentY = addCondBullet(`Je reconnais avoir pris connaissance que ${shopName} ne peut être tenu responsable de la perte de mes données et que certaines pannes ne peuvent être révélées que lors du démontage de l'appareil.`, currentY);
   currentY = addCondBullet("Certaines réparations sont effectuées avec des pièces compatibles et la garantie constructeur de mon appareil peut être annulée.", currentY);
-  currentY = addCondBullet("Un message indiquant l'usage de pièce non d'origine peut apparaitre dans les réglages de l'appareil.", currentY);
-  currentY = addCondBullet("Si une intervention est annulée par le client ou le réparateur, les frais de diagnostic seront appliqués (29€).", currentY);
+  currentY = addCondBullet("Un message indiquant l'usage de pièce non d'origine peut apparaître dans les réglages de l'appareil.", currentY);
+  currentY = addCondBullet("Si une intervention est annulée par le client ou le réparateur, les frais de diagnostic seront appliqués (29 €).", currentY);
   currentY = addCondBullet(`${shopName} ne peut être tenu responsable de la panne d'un appareil quelle que soit la cause si le diagnostic est impossible à effectuer avant l'intervention.`, currentY);
   currentY = addCondBullet("Votre réparation sera garantie pendant 12 mois (sauf contre-indication) pour tout usage correct de votre appareil, hors casse et oxydation.", currentY);
   currentY = addCondBullet("La résistance à l'eau et à la poussière n'est jamais garantie après une intervention.", currentY);
-  currentY = addCondBullet("La garantie ne couvre pas : les logiciels internes et mises à jour ; les dommages cosmétiques ; les dommages causés par un accident, l'usage abusif, ou toute cause externe ; les dommages causés par une intervention réalisée par une personne autre que " + shopName + " ; les défauts résultant de l'usure normale ; les réparations sur un appareil oxydé ; et les mauvaises utilisations faites avec l'appareil.", currentY);
+  currentY = addCondBullet(`La garantie ne couvre pas : les logiciels internes et mises à jour ; les dommages cosmétiques ; les dommages causés par un accident, l'usage abusif, ou toute cause externe ; les dommages causés par une intervention réalisée par une personne autre que ${shopName} ; les défauts résultant de l'usure normale ; les réparations sur un appareil oxydé ; et les mauvaises utilisations faites avec l'appareil.`, currentY);
   currentY = addCondBullet("Vous certifiez avoir 18 ans ou plus et être en pleine possession de vos capacités.", currentY);
 
-  currentY += 2;
-  currentY = checkPage(10, currentY);
-  doc.setFontSize(7); doc.setFont("helvetica", "bold"); doc.setTextColor(...PRIMARY);
-  doc.text("ACCORD DE CONFIDENTIALITÉ", PAGE_LEFT, currentY);
   currentY += 4;
+  currentY = drawLabel(doc, "ACCORD DE CONFIDENTIALITÉ", currentY);
+  currentY = addCondPara("Cet accord définit l'engagement de notre entreprise à respecter la confidentialité et la sécurité des données de nos clients.", currentY);
+  currentY = addCondPara("1. Accès aux données : Nous n'accédons pas aux données personnelles pendant une réparation. Notre accès est limité aux réglages ou applications natives pour vérifier le bon fonctionnement après réparation.", currentY);
+  currentY = addCondPara("2. Utilisation : Les coordonnées ne sont utilisées qu'aux fins de la réparation. Aucune information inutile n'est conservée.", currentY);
+  currentY = addCondPara("3. Sécurité : Nous utilisons des logiciels et protocoles de sécurité fiables pour prévenir toute fuite de données.", currentY);
+  currentY = addCondPara("4. Suppression : Nous supprimons une fiche client sur simple demande (cela implique la perte de l'historique des factures).", currentY);
+  currentY = addCondPara("5. Contrôle qualité : Si le client ne partage pas son code, le contrôle qualité sera effectué en sa présence.", currentY);
 
-  currentY = addCondParagraph("Cet accord définit l'engagement de notre entreprise à respecter la confidentialité et la sécurité des données de nos clients.", currentY);
-  currentY = addCondParagraph("1. Accès aux Données : Nous n'accédons pas aux données personnelles pendant une réparation. Notre accès est limité aux réglages ou applications natives pour vérifier le bon fonctionnement après réparation.", currentY);
-  currentY = addCondParagraph("2. Utilisation : Les coordonnées ne sont utilisées qu'aux fins de la réparation. Aucune information inutile n'est conservée.", currentY);
-  currentY = addCondParagraph("3. Sécurité : Nous utilisons des logiciels et protocoles de sécurité fiables pour prévenir toute fuite de données.", currentY);
-  currentY = addCondParagraph("4. Suppression : Nous supprimons une fiche client sur simple demande (cela implique la perte de l'historique des factures).", currentY);
-  currentY = addCondParagraph("5. Contrôle Qualité : Si le client ne partage pas son code, le contrôle qualité sera effectué en sa présence.", currentY);
-  currentY += 1;
-  currentY = addCondParagraph("En signant, nous nous engageons à respecter ces principes et à garantir la sécurité des données de nos clients.", currentY);
+  // ═══════════════════════════════════════════
+  // PHOTOS — grid (if any), starts a new page if needed
+  // ═══════════════════════════════════════════
 
-  // ── PHOTOS — inline on remaining space, no extra page ──
   if (intake?.photoUrls && intake.photoUrls.length > 0) {
-    currentY = checkPage(40, currentY);
-    doc.setFontSize(7); doc.setFont("helvetica", "bold"); doc.setTextColor(...PRIMARY);
-    doc.text("PHOTOS", PAGE_LEFT, currentY);
     currentY += 4;
-    const photoW = 40, photoH = 30;
-    let px = PAGE_LEFT;
-    for (const url of intake.photoUrls.slice(0, 4)) {
-      if (px + photoW > PAGE_RIGHT) { px = PAGE_LEFT; currentY += photoH + 3; }
-      currentY = checkPage(photoH + 4, currentY);
+    if (currentY > 220) { doc.addPage(); currentY = 18; }
+    currentY = drawLabel(doc, "PHOTOS DE L'APPAREIL", currentY);
+
+    const photoW = 42, photoH = 32;
+    const cols = 3;
+    let col = 0;
+    let rowY = currentY;
+    for (const url of intake.photoUrls.slice(0, 9)) {
+      const x = PAGE_LEFT + col * (photoW + 4);
+      if (rowY + photoH > 282) { doc.addPage(); rowY = 18; col = 0; }
       const imgData = await loadImage(url);
       if (imgData) {
-        doc.setDrawColor(...GRAY_200); doc.setLineWidth(0.2);
-        doc.roundedRect(px, currentY, photoW, photoH, 1, 1, "S");
-        try { doc.addImage(imgData, detectImageFormat(imgData), px + 1, currentY + 1, photoW - 2, photoH - 2); } catch {}
+        doc.setDrawColor(...GRAY_200);
+        doc.setLineWidth(0.2);
+        doc.roundedRect(x, rowY, photoW, photoH, 1, 1, "S");
+        try { doc.addImage(imgData, detectImageFormat(imgData), x + 1, rowY + 1, photoW - 2, photoH - 2); } catch {}
       }
-      px += photoW + 4;
+      col = (col + 1) % cols;
+      if (col === 0) rowY += photoH + 4;
     }
   }
 
-  // ── PAGE FOOTERS ──
+  // ═══════════════════════════════════════════
+  // PAGE FOOTERS — same as facture/devis
+  // ═══════════════════════════════════════════
+
   const totalPages = doc.getNumberOfPages();
+  const pageH = doc.internal.pageSize.getHeight();
   for (let i = 1; i <= totalPages; i++) {
     doc.setPage(i);
-    const pageH = doc.internal.pageSize.getHeight();
-    doc.setDrawColor(...PRIMARY); doc.setLineWidth(0.4);
-    doc.line(PAGE_LEFT, pageH - 14, PAGE_RIGHT, pageH - 14);
-    doc.setFontSize(6); doc.setFont("helvetica", "normal"); doc.setTextColor(...GRAY_400);
-    const footerParts = [org.name, org.siret ? `SIRET : ${org.siret}` : "", fullAddress].filter(Boolean);
-    doc.text(footerParts.join("  •  "), 105, pageH - 9, { align: "center" });
-    doc.text(`Page ${i} / ${totalPages}`, PAGE_RIGHT, pageH - 5, { align: "right" });
+    doc.setDrawColor(...GRAY_200);
+    doc.setLineWidth(0.3);
+    doc.line(PAGE_LEFT, pageH - 12, PAGE_RIGHT, pageH - 12);
+
+    doc.setFontSize(6);
+    doc.setFont("helvetica", "normal");
+    doc.setTextColor(...GRAY_400);
+    const sigParts = [
+      shopName,
+      org.siret ? `SIRET ${org.siret}` : null,
+      org.vat_number ? `TVA ${org.vat_number}` : null,
+      org.ape_code ? `APE ${org.ape_code}` : null,
+    ].filter(Boolean);
+    doc.text(sigParts.join("  ·  "), 105, pageH - 8, { align: "center" });
+    doc.text(`Page ${i} / ${totalPages}`, PAGE_RIGHT, pageH - 4, { align: "right" });
     doc.setTextColor(0);
   }
 
