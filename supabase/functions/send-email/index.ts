@@ -112,7 +112,7 @@ function emailLayout(
               <table role="presentation" cellpadding="0" cellspacing="0" border="0" align="center" style="margin:0 auto 18px;">
                 <tr>
                   <td style="vertical-align:middle;line-height:0;">
-                    <img src="https://bonoitecpilot.fr/email-logo.png" width="220" alt="BonoitecPilot" style="display:block;border:0;outline:none;width:220px;height:auto;" />
+                    <img src="https://bonoitecpilot.fr/email-logo.png?v=3" width="220" alt="BonoitecPilot" style="display:block;border:0;outline:none;width:220px;height:auto;" />
                   </td>
                 </tr>
               </table>

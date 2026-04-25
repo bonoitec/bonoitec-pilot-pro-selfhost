@@ -442,17 +442,20 @@ export function CreateRepairWizard({ open, onOpenChange }: Props) {
       const intakeChecklist = Object.entries(checklist).filter(([, v]) => v).map(([k]) => k === "Diagnostic impossible" ? `${k}: ${diagnosticReason}` : k);
       const photoUrls = (createdRepair.photos as string[]) || [];
 
+      // Prefer the values just typed in the wizard form for new clients,
+      // fall back to the joined repair.clients row for existing clients.
+      const isNew = !selectedClientId;
       await generateIntakePDF(org as any, {
         reference: createdRepair.reference,
         date: new Date().toLocaleDateString("fr-FR"),
-        clientName: createdRepair.clients?.name,
-        clientFirstName: createdRepair.clients?.first_name ?? undefined,
-        clientLastName: createdRepair.clients?.last_name ?? undefined,
-        clientAddress: createdRepair.clients?.address,
-        clientPostalCode: createdRepair.clients?.postal_code ?? undefined,
-        clientCity: createdRepair.clients?.city ?? undefined,
-        clientPhone: createdRepair.clients?.phone,
-        clientEmail: createdRepair.clients?.email,
+        clientName: (isNew ? newClientFullName : createdRepair.clients?.name) || createdRepair.clients?.name,
+        clientFirstName: (isNew ? newClient.first_name.trim() : createdRepair.clients?.first_name) || undefined,
+        clientLastName: (isNew ? newClient.last_name.trim() : createdRepair.clients?.last_name) || undefined,
+        clientAddress: (isNew ? newClient.address.trim() : createdRepair.clients?.address) || undefined,
+        clientPostalCode: (isNew ? newClient.postal_code.trim() : createdRepair.clients?.postal_code) || undefined,
+        clientCity: (isNew ? newClient.city.trim() : createdRepair.clients?.city) || undefined,
+        clientPhone: (isNew ? newClient.phone.trim() : createdRepair.clients?.phone) || undefined,
+        clientEmail: (isNew ? newClient.email.trim() : createdRepair.clients?.email) || undefined,
         issue: createdRepair.issue,
         repairType: repairType || undefined,
         estimatedPrice: createdRepair.estimated_price,
