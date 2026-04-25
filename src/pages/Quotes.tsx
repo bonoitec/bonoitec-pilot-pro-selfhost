@@ -62,10 +62,23 @@ const Quotes = () => {
     onSuccess: () => { toast({ title: "Devis envoyé" }); qc.invalidateQueries({ queryKey: ["quotes"] }); },
   });
 
+  // Always fetch the freshest client row directly from DB so React Query staleness
+  // can't leave us with an empty address.
+  const fetchFreshClient = async (clientId: string | null | undefined): Promise<any> => {
+    if (!clientId) return null;
+    const { data } = await supabase
+      .from("clients")
+      .select("name, first_name, last_name, address, postal_code, city, email, phone")
+      .eq("id", clientId)
+      .single();
+    return data;
+  };
+
   const buildPdfParams = async (quote: any) => {
     const lines = Array.isArray(quote.lines) ? quote.lines : [];
     const repair = quote.repairs;
     const device = quote.devices;
+    const fresh = (await fetchFreshClient(quote.client_id)) || quote.clients || {};
 
     // Build intake info from linked repair, resolving signed URLs for private storage
     let intake: any = undefined;
@@ -125,14 +138,14 @@ const Quotes = () => {
       type: "quote" as const,
       reference: quote.reference,
       date: format(new Date(quote.created_at), "dd/MM/yyyy"),
-      clientName: quote.clients?.name,
-      clientFirstName: quote.clients?.first_name ?? undefined,
-      clientLastName: quote.clients?.last_name ?? undefined,
-      clientAddress: quote.clients?.address,
-      clientPostalCode: quote.clients?.postal_code ?? undefined,
-      clientCity: quote.clients?.city ?? undefined,
-      clientPhone: quote.clients?.phone,
-      clientEmail: quote.clients?.email,
+      clientName: fresh.name,
+      clientFirstName: fresh.first_name ?? undefined,
+      clientLastName: fresh.last_name ?? undefined,
+      clientAddress: fresh.address,
+      clientPostalCode: fresh.postal_code ?? undefined,
+      clientCity: fresh.city ?? undefined,
+      clientPhone: fresh.phone,
+      clientEmail: fresh.email,
       lines,
       totalHT: Number(quote.total_ht),
       totalTTC: Number(quote.total_ttc),

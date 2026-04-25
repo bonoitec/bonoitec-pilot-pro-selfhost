@@ -75,6 +75,9 @@ export function EditClientDialog({ open, onOpenChange, client }: Props) {
     onSuccess: () => {
       toast({ title: "Client modifié avec succès" });
       qc.invalidateQueries({ queryKey: ["clients"] });
+      qc.invalidateQueries({ queryKey: ["invoices"] });
+      qc.invalidateQueries({ queryKey: ["quotes"] });
+      qc.invalidateQueries({ queryKey: ["repairs"] });
       onOpenChange(false);
     },
     onError: (e: Error) => toast({ title: "Erreur", description: e.message, variant: "destructive" }),

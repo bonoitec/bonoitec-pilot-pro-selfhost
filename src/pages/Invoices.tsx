@@ -64,20 +64,34 @@ const Invoices = () => {
     onSuccess: () => { toast({ title: "Facture marquée payée" }); qc.invalidateQueries({ queryKey: ["invoices"] }); },
   });
 
-  const buildPdfParams = (inv: any) => {
+  // Always fetch the freshest client row directly from DB so React Query staleness
+  // can never leave us with an empty address. invoices list is cached but the PDF
+  // must reflect what's in DB right now.
+  const fetchFreshClient = async (clientId: string | null | undefined): Promise<any> => {
+    if (!clientId) return null;
+    const { data } = await supabase
+      .from("clients")
+      .select("name, first_name, last_name, address, postal_code, city, email, phone")
+      .eq("id", clientId)
+      .single();
+    return data;
+  };
+
+  const buildPdfParams = async (inv: any) => {
     const lines = Array.isArray(inv.lines) ? inv.lines : [];
+    const fresh = (await fetchFreshClient(inv.client_id)) || inv.clients || {};
     return {
       type: "invoice" as const,
       reference: inv.reference,
       date: format(new Date(inv.created_at), "dd/MM/yyyy"),
-      clientName: inv.clients?.name,
-      clientFirstName: inv.clients?.first_name ?? undefined,
-      clientLastName: inv.clients?.last_name ?? undefined,
-      clientAddress: inv.clients?.address,
-      clientPostalCode: inv.clients?.postal_code ?? undefined,
-      clientCity: inv.clients?.city ?? undefined,
-      clientPhone: inv.clients?.phone,
-      clientEmail: inv.clients?.email,
+      clientName: fresh.name,
+      clientFirstName: fresh.first_name ?? undefined,
+      clientLastName: fresh.last_name ?? undefined,
+      clientAddress: fresh.address,
+      clientPostalCode: fresh.postal_code ?? undefined,
+      clientCity: fresh.city ?? undefined,
+      clientPhone: fresh.phone,
+      clientEmail: fresh.email,
       lines,
       totalHT: Number(inv.total_ht),
       totalTTC: Number(inv.total_ttc),
@@ -97,7 +111,7 @@ const Invoices = () => {
       if (!org) throw new Error("Organisation introuvable");
 
       // Generate PDF as base64
-      const pdfBase64 = await generatePDF(org, buildPdfParams(inv), { base64: true }) as string;
+      const pdfBase64 = await generatePDF(org, await buildPdfParams(inv), { base64: true }) as string;
 
       await sendTransactionalEmail({
         template: "invoice_sent",
@@ -138,7 +152,7 @@ const Invoices = () => {
     try {
       const { data: org } = await supabase.rpc("get_org_safe_data").single();
       if (!org) return;
-      const url = await generatePDF(org, buildPdfParams(inv), { preview: true });
+      const url = await generatePDF(org, await buildPdfParams(inv), { preview: true });
       setPreviewUrl(url as string);
     } catch (e) {
       toast({ title: "Erreur", description: "Impossible de générer l'aperçu", variant: "destructive" });
@@ -151,13 +165,13 @@ const Invoices = () => {
     if (!previewInv) return;
     const { data: org } = await supabase.rpc("get_org_safe_data").single();
     if (!org) return;
-    await generatePDF(org, buildPdfParams(previewInv));
+    await generatePDF(org, await buildPdfParams(previewInv));
   };
 
   const downloadPDF = async (inv: any) => {
     const { data: org } = await supabase.rpc("get_org_safe_data").single();
     if (!org) return;
-    await generatePDF(org, buildPdfParams(inv));
+    await generatePDF(org, await buildPdfParams(inv));
   };
 
   return (
